@@ -73,6 +73,8 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
   const [baseNutrition, setBaseNutrition] = useState<BaseNutrition | null>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const onlineSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeOnlineRequest = useRef<AbortController | null>(null);
+  const onlineRequestId = useRef(0);
 
   const unitOptions = language === 'de' ? UNIT_OPTIONS_DE : UNIT_OPTIONS_EN;
 
@@ -120,6 +122,13 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
     void loadCustomProducts();
   }, [user, open]);
 
+  useEffect(() => {
+    return () => {
+      if (onlineSearchTimer.current) clearTimeout(onlineSearchTimer.current);
+      activeOnlineRequest.current?.abort();
+    };
+  }, []);
+
   const buildSuggestions = useCallback((query: string, online: FoodEntry[] = []) => {
     const normalized = query.trim().toLowerCase();
     const dbMatches = searchFoods(query, language as 'de' | 'en');
@@ -145,23 +154,39 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
 
   const triggerOnlineSearch = useCallback((query: string) => {
     if (onlineSearchTimer.current) clearTimeout(onlineSearchTimer.current);
+    activeOnlineRequest.current?.abort();
 
-    if (query.trim().length < 3) {
+    const normalizedQuery = query.trim();
+    if (normalizedQuery.length < 3) {
       setOnlineResults([]);
       setSearchingOnline(false);
       return;
     }
 
     setSearchingOnline(true);
+    const requestId = ++onlineRequestId.current;
+
     onlineSearchTimer.current = setTimeout(async () => {
-      const results = await searchOpenFoodFacts(query, language as 'de' | 'en');
-      setOnlineResults(results);
-      setSearchingOnline(false);
-      // Merge with current local suggestions
-      const local = buildSuggestions(query, results);
-      setSuggestions(local);
-      setShowSuggestions(true);
-    }, 800);
+      const controller = new AbortController();
+      activeOnlineRequest.current = controller;
+
+      try {
+        const results = await searchOpenFoodFacts(normalizedQuery, language as 'de' | 'en', {
+          signal: controller.signal,
+        });
+
+        if (requestId !== onlineRequestId.current) return;
+
+        setOnlineResults(results);
+        setSuggestions(buildSuggestions(normalizedQuery, results));
+        setShowSuggestions(true);
+      } finally {
+        if (requestId === onlineRequestId.current) {
+          setSearchingOnline(false);
+          activeOnlineRequest.current = null;
+        }
+      }
+    }, 300);
   }, [language, buildSuggestions]);
 
   const scaleByGrams = (base: BaseNutrition, gramsAmount: number) => {
@@ -187,9 +212,9 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
     setForm(prev => ({ ...prev, [field]: value }));
 
     if (field === 'food_name' && typeof value === 'string') {
-      const results = buildSuggestions(value, onlineResults);
+      const results = buildSuggestions(value);
       setSuggestions(results);
-      setShowSuggestions(true);
+      setShowSuggestions(value.trim().length > 0);
       triggerOnlineSearch(value);
     }
   };
@@ -265,9 +290,9 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
                 value={form.food_name}
                 onChange={e => update('food_name', e.target.value)}
                 onFocus={() => {
-                  const results = buildSuggestions(form.food_name);
+                  const results = buildSuggestions(form.food_name, onlineResults);
                   setSuggestions(results);
-                  setShowSuggestions(results.length > 0);
+                  setShowSuggestions(results.length > 0 || form.food_name.trim().length >= 3);
                 }}
                 onBlur={() => {
                   setTimeout(() => setShowSuggestions(false), 200);
