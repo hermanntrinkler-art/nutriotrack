@@ -111,12 +111,12 @@ export default function OnboardingPage() {
     { value: 'other', label: t('onboarding.other') },
   ];
 
-  const activityOptions: { value: ActivityLevel; label: string }[] = [
-    { value: 'sedentary', label: t('onboarding.sedentary') },
-    { value: 'lightly_active', label: t('onboarding.lightlyActive') },
-    { value: 'moderately_active', label: t('onboarding.moderatelyActive') },
-    { value: 'very_active', label: t('onboarding.veryActive') },
-    { value: 'extremely_active', label: t('onboarding.extremelyActive') },
+  const activityOptions: { value: ActivityLevel; label: string; desc: string }[] = [
+    { value: 'sedentary', label: t('onboarding.sedentary'), desc: t('onboarding.sedentaryDesc') },
+    { value: 'lightly_active', label: t('onboarding.lightlyActive'), desc: t('onboarding.lightlyActiveDesc') },
+    { value: 'moderately_active', label: t('onboarding.moderatelyActive'), desc: t('onboarding.moderatelyActiveDesc') },
+    { value: 'very_active', label: t('onboarding.veryActive'), desc: t('onboarding.veryActiveDesc') },
+    { value: 'extremely_active', label: t('onboarding.extremelyActive'), desc: t('onboarding.extremelyActiveDesc') },
   ];
 
   const goalOptions: { value: GoalType; label: string }[] = [
