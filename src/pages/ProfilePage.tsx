@@ -305,10 +305,12 @@ export default function ProfilePage() {
       </motion.div>
 
       {/* Logout */}
-      <Button variant="outline" onClick={handleLogout} className="w-full">
-        <LogOut className="h-4 w-4 mr-2" />
-        {t('auth.logout')}
-      </Button>
+      <motion.div variants={fadeUp}>
+        <Button variant="outline" onClick={handleLogout} className="w-full rounded-xl">
+          <LogOut className="h-4 w-4 mr-2" />
+          {t('auth.logout')}
+        </Button>
+      </motion.div>
 
       {showPaywall && (
         <PaywallScreen
