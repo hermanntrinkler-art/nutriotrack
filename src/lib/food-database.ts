@@ -26,6 +26,20 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Wasser', name_en: 'Water', quantity: 250, unit: 'ml', calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0, category: 'drinks' },
   { name: 'Proteinshake', name_en: 'Protein Shake', quantity: 300, unit: 'ml', calories: 150, protein_g: 25, fat_g: 2, carbs_g: 8, category: 'drinks' },
 
+  // Alkoholische Getränke / Alcoholic Drinks
+  { name: 'Prosecco', name_en: 'Prosecco', quantity: 100, unit: 'ml', calories: 75, protein_g: 0, fat_g: 0, carbs_g: 1, category: 'drinks' },
+  { name: 'Sekt', name_en: 'Sparkling Wine', quantity: 100, unit: 'ml', calories: 78, protein_g: 0, fat_g: 0, carbs_g: 2, category: 'drinks' },
+  { name: 'Weißwein', name_en: 'White Wine', quantity: 150, unit: 'ml', calories: 110, protein_g: 0, fat_g: 0, carbs_g: 3, category: 'drinks' },
+  { name: 'Rotwein', name_en: 'Red Wine', quantity: 150, unit: 'ml', calories: 125, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'drinks' },
+  { name: 'Rosé', name_en: 'Rosé Wine', quantity: 150, unit: 'ml', calories: 105, protein_g: 0, fat_g: 0, carbs_g: 3, category: 'drinks' },
+  { name: 'Bier (Pils)', name_en: 'Beer (Pilsner)', quantity: 330, unit: 'ml', calories: 140, protein_g: 1, fat_g: 0, carbs_g: 10, category: 'drinks' },
+  { name: 'Bier (Weizen)', name_en: 'Wheat Beer', quantity: 500, unit: 'ml', calories: 230, protein_g: 2, fat_g: 0, carbs_g: 18, category: 'drinks' },
+  { name: 'Radler', name_en: 'Shandy', quantity: 330, unit: 'ml', calories: 130, protein_g: 0, fat_g: 0, carbs_g: 18, category: 'drinks' },
+  { name: 'Aperol Spritz', name_en: 'Aperol Spritz', quantity: 200, unit: 'ml', calories: 140, protein_g: 0, fat_g: 0, carbs_g: 12, category: 'drinks' },
+  { name: 'Hugo', name_en: 'Hugo Cocktail', quantity: 200, unit: 'ml', calories: 130, protein_g: 0, fat_g: 0, carbs_g: 14, category: 'drinks' },
+  { name: 'Gin Tonic', name_en: 'Gin & Tonic', quantity: 250, unit: 'ml', calories: 170, protein_g: 0, fat_g: 0, carbs_g: 14, category: 'drinks' },
+  { name: 'Wodka', name_en: 'Vodka', quantity: 40, unit: 'ml', calories: 90, protein_g: 0, fat_g: 0, carbs_g: 0, category: 'drinks' },
+
   // Brot / Bread
   { name: 'Vollkornbrot', name_en: 'Whole Grain Bread', quantity: 1, unit: 'Scheibe', calories: 110, protein_g: 4, fat_g: 1, carbs_g: 20, category: 'bread' },
   { name: 'Weißbrot', name_en: 'White Bread', quantity: 1, unit: 'Scheibe', calories: 75, protein_g: 2, fat_g: 1, carbs_g: 14, category: 'bread' },
