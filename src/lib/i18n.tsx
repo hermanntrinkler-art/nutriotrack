@@ -30,6 +30,8 @@ const translations = {
     'auth.createAccount': 'Konto erstellen',
     'auth.subtitle': 'Dein smarter Ernährungsbegleiter',
     'auth.checkEmail': 'Bitte bestätige deine E-Mail-Adresse.',
+    'auth.orContinueWith': 'Oder weiter mit',
+    'auth.googleSignIn': 'Mit Google anmelden',
 
     // Onboarding
     'onboarding.title': 'Lass uns loslegen!',
