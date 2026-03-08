@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserGoals, MealEntry } from '@/lib/types';
+import { Button } from '@/components/ui/button';
 import { Plus, TrendingDown, TrendingUp, Minus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
