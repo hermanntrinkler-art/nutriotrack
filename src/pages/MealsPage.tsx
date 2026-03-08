@@ -12,6 +12,7 @@ import AnalyseScreen from '@/components/meals/AnalyseScreen';
 import EditableFoodItemsList from '@/components/meals/EditableFoodItemsList';
 import FoodItemEditorModal from '@/components/meals/FoodItemEditorModal';
 import SaveMealConfirmation from '@/components/meals/SaveMealConfirmation';
+import BarcodeScanner from '@/components/meals/BarcodeScanner';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 type Step = 'select-type' | 'select-method' | 'analyzing' | 'review' | 'confirm';
