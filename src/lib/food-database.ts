@@ -138,13 +138,46 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Salatdressing', name_en: 'Salad Dressing', quantity: 30, unit: 'ml', calories: 70, protein_g: 0, fat_g: 6, carbs_g: 3, category: 'sauces' },
 ];
 
+function normalizeSearchText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .replace(/ß/g, 'ss')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function searchFoods(query: string, language: 'de' | 'en'): FoodEntry[] {
-  if (!query || query.length < 1) return [];
-  const q = query.toLowerCase();
-  return foodDatabase
-    .filter(f => {
-      const name = language === 'de' ? f.name : f.name_en;
-      return name.toLowerCase().includes(q);
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return [];
+
+  const scored = foodDatabase
+    .map((entry) => {
+      const primaryName = language === 'de' ? entry.name : entry.name_en;
+      const primary = normalizeSearchText(primaryName);
+      const secondary = normalizeSearchText(language === 'de' ? entry.name_en : entry.name);
+
+      if (primary.startsWith(normalizedQuery) || secondary.startsWith(normalizedQuery)) {
+        return { entry, score: 3 };
+      }
+
+      if (primary.includes(normalizedQuery) || secondary.includes(normalizedQuery)) {
+        return { entry, score: 2 };
+      }
+
+      const words = `${primary} ${secondary}`.split(' ');
+      if (words.some((word) => word.startsWith(normalizedQuery))) {
+        return { entry, score: 1 };
+      }
+
+      return null;
     })
-    .slice(0, 8);
+    .filter((result): result is { entry: FoodEntry; score: number } => result !== null)
+    .sort((a, b) => b.score - a.score || a.entry.name.localeCompare(b.entry.name));
+
+  return scored.slice(0, 8).map((result) => result.entry);
 }
