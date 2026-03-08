@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import logo from '@/assets/logo.png';
+
+const REMEMBERED_EMAIL_KEY = 'nutriotrack_remembered_email';
 
 export default function LoginPage() {
   const { signIn } = useAuth();
@@ -13,13 +16,29 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(REMEMBERED_EMAIL_KEY);
+    if (saved) {
+      setEmail(saved);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    if (rememberMe) {
+      localStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim());
+    } else {
+      localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+    }
+
     const { error } = await signIn(email.trim(), password);
     if (error) {
       setError(error.message);
@@ -49,6 +68,17 @@ export default function LoginPage() {
           <div className="space-y-2">
             <Label htmlFor="password">{t('auth.password')}</Label>
             <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="rememberMe"
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(checked === true)}
+            />
+            <Label htmlFor="rememberMe" className="text-sm font-normal cursor-pointer">
+              {t('auth.rememberMe')}
+            </Label>
           </div>
 
           {error && <p className="text-destructive text-sm">{error}</p>}
