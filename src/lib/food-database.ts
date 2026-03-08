@@ -138,6 +138,80 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Salatdressing', name_en: 'Salad Dressing', quantity: 30, unit: 'ml', calories: 70, protein_g: 0, fat_g: 6, carbs_g: 3, category: 'sauces' },
 ];
 
+// Synonym / slang map: keys are normalized aliases, values are normalized canonical names
+// When a user types a brand name or slang term, it also matches the generic food entry
+const SYNONYMS: Record<string, string[]> = {
+  // Frischkäse / Cream Cheese brands
+  'philadelphia': ['frischkaese', 'cream cheese'],
+  'buko': ['frischkaese', 'cream cheese'],
+  'exquisa': ['frischkaese', 'cream cheese'],
+  'almette': ['frischkaese', 'cream cheese'],
+  // Nutella / chocolate spread
+  'nutella': ['nutella'], // already in DB by name
+  'nuss nougat creme': ['nutella'],
+  // Joghurt brands
+  'activia': ['joghurt natur', 'plain yogurt'],
+  'alpro': ['joghurt natur', 'plain yogurt'],
+  'muesli': ['muesli', 'muesli'],
+  // Quark
+  'quark': ['magerquark', 'low-fat quark'],
+  // Skyr brands
+  'arla': ['skyr'],
+  'milbona': ['skyr', 'joghurt natur', 'milch'],
+  // Käse brands
+  'leerdammer': ['kaese (gouda)', 'gouda cheese'],
+  'babybel': ['kaese (gouda)', 'gouda cheese'],
+  // Wurst / Aufschnitt
+  'fleischwurst': ['salami'],
+  'mortadella': ['salami'],
+  'putenbrust': ['schinken', 'ham'],
+  'truthahn': ['schinken', 'ham'],
+  // Brot
+  'toastbrot': ['toast'],
+  'semmel': ['broetchen', 'roll'],
+  'weckerl': ['broetchen', 'roll'],
+  'schrippe': ['broetchen', 'roll'],
+  // Getränke
+  'cola zero': ['cola'],
+  'pepsi': ['cola'],
+  'fanta': ['orangensaft', 'orange juice'],
+  'eistee': ['tee', 'tea'],
+  'ice tea': ['tee', 'tea'],
+  // Fleisch
+  'haehnchen': ['haehnchenbrust', 'chicken breast'],
+  'chicken': ['haehnchenbrust', 'chicken breast'],
+  'huhn': ['haehnchenbrust', 'chicken breast'],
+  'poulet': ['haehnchenbrust', 'chicken breast'],
+  'rind': ['rindfleisch', 'beef'],
+  'steak': ['rindfleisch', 'beef'],
+  'hackfleisch': ['hackfleisch (gemischt)', 'mixed ground meat'],
+  'faschiertes': ['hackfleisch (gemischt)', 'mixed ground meat'],
+  'gehacktes': ['hackfleisch (gemischt)', 'mixed ground meat'],
+  // Fisch
+  'thunfisch': ['thunfisch (dose)', 'canned tuna'],
+  'tuna': ['thunfisch (dose)', 'canned tuna'],
+  // Beilagen
+  'spaghetti': ['nudeln (gekocht)', 'cooked pasta'],
+  'penne': ['nudeln (gekocht)', 'cooked pasta'],
+  'pasta': ['nudeln (gekocht)', 'cooked pasta'],
+  'kartoffel': ['kartoffeln (gekocht)', 'boiled potatoes'],
+  'erdaepfel': ['kartoffeln (gekocht)', 'boiled potatoes'],
+  'fritten': ['pommes frites', 'french fries'],
+  'pommes': ['pommes frites', 'french fries'],
+  // Obst
+  'birne': ['apfel', 'apple'],
+  // Snacks
+  'schoki': ['schokolade (milch)', 'milk chocolate'],
+  'schoko': ['schokolade (milch)', 'milk chocolate'],
+  // Eier
+  'ei': ['ei gekocht', 'boiled egg'],
+  'eier': ['ei gekocht', 'boiled egg'],
+  'ruehrei': ['ruehrei (2 eier)', 'scrambled eggs (2)'],
+  // Fertiggerichte
+  'kebab': ['doener kebab'],
+  'doener': ['doener kebab'],
+};
+
 function normalizeSearchText(value: string): string {
   return value
     .toLowerCase()
@@ -149,6 +223,17 @@ function normalizeSearchText(value: string): string {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function findSynonymTargets(query: string): string[] {
+  const normalized = normalizeSearchText(query);
+  const targets: string[] = [];
+  for (const [alias, canonicals] of Object.entries(SYNONYMS)) {
+    if (normalized.includes(alias) || alias.includes(normalized)) {
+      targets.push(...canonicals.map(normalizeSearchText));
+    }
+  }
+  return targets;
 }
 
 function levenshteinDistance(a: string, b: string): number {
@@ -186,6 +271,7 @@ export function searchFoods(query: string, language: 'de' | 'en'): FoodEntry[] {
   if (!normalizedQuery) return [];
 
   const queryTokens = tokenize(normalizedQuery);
+  const synonymTargets = findSynonymTargets(normalizedQuery);
 
   const scored = foodDatabase
     .map((entry) => {
@@ -198,6 +284,16 @@ export function searchFoods(query: string, language: 'de' | 'en'): FoodEntry[] {
       const secondaryTokens = tokenize(secondaryName);
 
       let score = 0;
+
+      // Check synonym matches
+      if (synonymTargets.length > 0) {
+        for (const target of synonymTargets) {
+          if (primary.includes(target) || secondary.includes(target)) {
+            score = Math.max(score, 70);
+            break;
+          }
+        }
+      }
 
       if (primary === normalizedQuery || secondary === normalizedQuery) score = Math.max(score, 100);
       if (primary.startsWith(normalizedQuery) || secondary.startsWith(normalizedQuery)) score = Math.max(score, 80);
