@@ -120,7 +120,7 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
     void loadCustomProducts();
   }, [user, open]);
 
-  const buildSuggestions = (query: string) => {
+  const buildSuggestions = useCallback((query: string, online: FoodEntry[] = []) => {
     const normalized = query.trim().toLowerCase();
     const dbMatches = searchFoods(query, language as 'de' | 'en');
 
@@ -130,7 +130,7 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
         )
       : customProducts;
 
-    const merged = [...customMatches, ...dbMatches];
+    const merged = [...customMatches, ...dbMatches, ...online];
     const seen = new Set<string>();
 
     return merged
@@ -140,8 +140,30 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
         seen.add(key);
         return true;
       })
-      .slice(0, 8);
-  };
+      .slice(0, 12);
+  }, [customProducts, language]);
+
+  const triggerOnlineSearch = useCallback((query: string) => {
+    if (onlineSearchTimer.current) clearTimeout(onlineSearchTimer.current);
+
+    if (query.trim().length < 3) {
+      setOnlineResults([]);
+      setSearchingOnline(false);
+      return;
+    }
+
+    setSearchingOnline(true);
+    onlineSearchTimer.current = setTimeout(async () => {
+      const results = await searchOpenFoodFacts(query, language as 'de' | 'en');
+      setOnlineResults(results);
+      setSearchingOnline(false);
+      // Merge with current local suggestions
+      const local = buildSuggestions(query, results);
+      setSuggestions(local);
+      setShowSuggestions(local.length > 0);
+    }, 500);
+  }, [language, buildSuggestions]);
+
   const scaleByGrams = (base: BaseNutrition, gramsAmount: number) => {
     const baseGrams = getGramsEquivalent(base.baseQuantity, base.baseUnit);
     if (baseGrams === 0) return { calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0 };
@@ -165,9 +187,11 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
     setForm(prev => ({ ...prev, [field]: value }));
 
     if (field === 'food_name' && typeof value === 'string') {
-      const results = buildSuggestions(value);
+      const results = buildSuggestions(value, onlineResults);
       setSuggestions(results);
-      setShowSuggestions(results.length > 0);
+      setShowSuggestions(true);
+      triggerOnlineSearch(value);
+    }
     }
   };
 
