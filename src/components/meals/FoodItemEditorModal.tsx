@@ -444,9 +444,13 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
 
           {baseNutrition && (
             <p className="text-[10px] text-muted-foreground italic">
-              {language === 'de'
-                ? `Nährwerte skalieren automatisch (Basis: ${baseNutrition.baseQuantity} ${baseNutrition.baseUnit})`
-                : `Nutrition scales automatically (base: ${baseNutrition.baseQuantity} ${baseNutrition.baseUnit})`}
+              {form.unit === 'Stück' && getPieceWeight(form.food_name) > 0
+                ? (language === 'de'
+                    ? `1 Stück ≈ ${getPieceWeight(form.food_name)}g · Nährwerte skalieren automatisch`
+                    : `1 piece ≈ ${getPieceWeight(form.food_name)}g · Nutrition scales automatically`)
+                : (language === 'de'
+                    ? `Nährwerte skalieren automatisch (Basis: ${baseNutrition.baseQuantity} ${baseNutrition.baseUnit})`
+                    : `Nutrition scales automatically (base: ${baseNutrition.baseQuantity} ${baseNutrition.baseUnit})`)}
             </p>
           )}
 
