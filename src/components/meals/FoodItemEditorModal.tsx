@@ -5,7 +5,7 @@ import { searchFoods, type FoodEntry } from '@/lib/food-database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Search } from 'lucide-react';
 
 interface FoodItemEditorModalProps {
@@ -15,6 +15,15 @@ interface FoodItemEditorModalProps {
   onSave: (item: AnalyzedFoodItem) => void;
 }
 
+// Store the "per base unit" nutrition from the database entry
+interface BaseNutrition {
+  baseQuantity: number;
+  calories: number;
+  protein_g: number;
+  fat_g: number;
+  carbs_g: number;
+}
+
 export default function FoodItemEditorModal({ item, open, onClose, onSave }: FoodItemEditorModalProps) {
   const { t, language } = useTranslation();
   const [form, setForm] = useState<AnalyzedFoodItem>({
@@ -22,14 +31,36 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
   });
   const [suggestions, setSuggestions] = useState<FoodEntry[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [baseNutrition, setBaseNutrition] = useState<BaseNutrition | null>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (item) setForm({ ...item });
+    if (item) {
+      setForm({ ...item });
+      setBaseNutrition(null); // Reset base when opening with a new item
+    }
   }, [item]);
 
+  const scaleNutrition = (base: BaseNutrition, newQuantity: number) => {
+    if (base.baseQuantity === 0) return { calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0 };
+    const factor = newQuantity / base.baseQuantity;
+    return {
+      calories: Math.round(base.calories * factor),
+      protein_g: Math.round(base.protein_g * factor),
+      fat_g: Math.round(base.fat_g * factor),
+      carbs_g: Math.round(base.carbs_g * factor),
+    };
+  };
+
   const update = (field: keyof AnalyzedFoodItem, value: string | number) => {
+    if (field === 'quantity' && baseNutrition && typeof value === 'number') {
+      const scaled = scaleNutrition(baseNutrition, value);
+      setForm(prev => ({ ...prev, quantity: value, ...scaled }));
+      return;
+    }
+
     setForm(prev => ({ ...prev, [field]: value }));
+
     if (field === 'food_name' && typeof value === 'string') {
       const results = searchFoods(value, language as 'de' | 'en');
       setSuggestions(results);
@@ -39,6 +70,14 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
 
   const selectSuggestion = (food: FoodEntry) => {
     const name = language === 'de' ? food.name : food.name_en;
+    const base: BaseNutrition = {
+      baseQuantity: food.quantity,
+      calories: food.calories,
+      protein_g: food.protein_g,
+      fat_g: food.fat_g,
+      carbs_g: food.carbs_g,
+    };
+    setBaseNutrition(base);
     setForm({
       food_name: name,
       quantity: food.quantity,
@@ -63,6 +102,9 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
       <DialogContent className="max-w-sm mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg">{t('meals.editFood')}</DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            {t('meals.editHint')}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -82,7 +124,6 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
                   }
                 }}
                 onBlur={() => {
-                  // Delay to allow click on suggestion
                   setTimeout(() => setShowSuggestions(false), 200);
                 }}
                 className="pl-9"
@@ -133,6 +174,15 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
               <Input value={form.unit} onChange={e => update('unit', e.target.value)} />
             </div>
           </div>
+
+          {/* Scaled nutrition hint */}
+          {baseNutrition && (
+            <p className="text-[10px] text-muted-foreground italic">
+              {language === 'de'
+                ? `Nährwerte skalieren automatisch (Basis: ${baseNutrition.baseQuantity} ${form.unit})`
+                : `Nutrition scales automatically (base: ${baseNutrition.baseQuantity} ${form.unit})`}
+            </p>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
