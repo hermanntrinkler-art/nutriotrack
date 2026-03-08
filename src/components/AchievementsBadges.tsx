@@ -99,6 +99,28 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
     prevUnlocked.current = unlockedCount;
   }, [unlockedCount]);
 
+  const handleShare = async () => {
+    setSharing(true);
+    try {
+      const blob = await generateShareImage({
+        name: userName,
+        streak,
+        totalMeals,
+        unlockedAchievements: unlockedCount,
+        totalAchievements: achievements.length,
+        language: language as 'de' | 'en',
+      });
+      const shared = await shareImage(blob, language as 'de' | 'en');
+      if (!shared) {
+        toast.success(language === 'de' ? 'Bild heruntergeladen!' : 'Image downloaded!');
+      }
+    } catch {
+      toast.error(language === 'de' ? 'Teilen fehlgeschlagen' : 'Sharing failed');
+    } finally {
+      setSharing(false);
+    }
+  };
+
   return (
     <motion.div className="nutri-card space-y-3" variants={fadeUp}>
       <div className="flex items-center justify-between">
@@ -106,7 +128,18 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
           <Trophy className="h-5 w-5 text-energy" />
           <h3 className="font-semibold text-sm">{t('profile.achievements')}</h3>
         </div>
-        <span className="text-xs font-bold text-muted-foreground">{unlockedCount}/{achievements.length}</span>
+        <div className="flex items-center gap-2">
+          <motion.button
+            onClick={handleShare}
+            disabled={sharing}
+            whileTap={{ scale: 0.9 }}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-colors disabled:opacity-50"
+          >
+            {sharing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Share2 className="h-3 w-3" />}
+            {language === 'de' ? 'Teilen' : 'Share'}
+          </motion.button>
+          <span className="text-xs font-bold text-muted-foreground">{unlockedCount}/{achievements.length}</span>
+        </div>
       </div>
 
       <motion.div
