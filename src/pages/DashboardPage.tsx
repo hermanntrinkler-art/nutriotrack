@@ -400,6 +400,9 @@ export default function DashboardPage() {
         )}
       </motion.div>
 
+      {/* Water Tracker */}
+      <WaterTracker />
+
       {/* Hints */}
       {hints.length > 0 && (
         <motion.div
