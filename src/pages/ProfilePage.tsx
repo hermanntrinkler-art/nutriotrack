@@ -14,6 +14,7 @@ import PaywallScreen from '@/components/PaywallScreen';
 import { motion } from 'framer-motion';
 import { hapticFeedback } from '@/lib/haptics';
 import AchievementsBadges from '@/components/AchievementsBadges';
+import ReminderSettings from '@/components/ReminderSettings';
 import type { MealEntry } from '@/lib/types';
 
 const fadeUp = {
@@ -360,6 +361,9 @@ export default function ProfilePage() {
             </button>
           </div>
         </div>
+
+        {/* Reminders */}
+        <ReminderSettings />
 
         {/* Edit Goals */}
         <button onClick={() => navigate('/onboarding')} className="nutri-card w-full flex items-center gap-3 hover:border-primary/30 transition-colors">

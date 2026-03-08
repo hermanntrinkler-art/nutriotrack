@@ -9,7 +9,9 @@ import { Plus, TrendingDown, TrendingUp, Minus, Flame, Zap, Dumbbell, Droplets, 
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import WaterTracker from '@/components/WaterTracker';
+import ReminderBanner from '@/components/ReminderBanner';
 import { fireConfetti } from '@/lib/confetti';
+import { markTodayHasMeals, initReminders } from '@/components/ReminderSettings';
 
 // --- Animated Macro Ring ---
 function MacroRing({ label, current, target, color, icon: Icon, delay = 0 }: {
@@ -134,6 +136,8 @@ export default function DashboardPage() {
           fat: today_meals.reduce((s, m) => s + Number(m.total_fat_g), 0),
           carbs: today_meals.reduce((s, m) => s + Number(m.total_carbs_g), 0),
         });
+        if (today_meals.length > 0) markTodayHasMeals();
+        initReminders();
       });
   }, [user]);
 
@@ -291,6 +295,9 @@ export default function DashboardPage() {
           </p>
         </div>
       </motion.div>
+
+      {/* Reminder Banner */}
+      <ReminderBanner hasMealsToday={todayMeals.length > 0} />
 
       {/* Motivational Message */}
       <motion.div
