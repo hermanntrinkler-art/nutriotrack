@@ -454,7 +454,7 @@ const translations = {
     'common.of': 'of',
 
     // Paywall
-    'paywall.title': 'Upgrade to Snap2Fit Pro',
+    'paywall.title': 'Upgrade to NutrioTrack Pro',
     'paywall.subtitle': 'Unlock all premium features and reach your goals faster.',
     'paywall.featureUnlimitedScans': 'Unlimited photo analysis',
     'paywall.featureWeeklyStats': 'Detailed weekly statistics',

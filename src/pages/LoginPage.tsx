@@ -33,7 +33,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-background">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center space-y-2">
-          <img src={logo} alt="Snap2Fit" className="h-32 mx-auto mb-2 object-contain" />
+          <img src={logo} alt="NutrioTrack" className="h-32 mx-auto mb-2 object-contain" />
           <p className="text-muted-foreground text-sm">{t('auth.subtitle')}</p>
         </div>
 
