@@ -6,7 +6,7 @@ import { calculateNutrition } from '@/lib/nutrition';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull } from 'lucide-react';
+import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 
 const DEFICIT_VALUES = [300, 500, 750, 1000, 1250];
