@@ -209,7 +209,7 @@ export default function MealsPage() {
             <span className="font-medium">{currentMealType?.label}</span>
           </div>
 
-          <label htmlFor="camera-input" className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors cursor-pointer">
+          <div className="relative nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
               <Camera className="h-6 w-6 text-primary" />
             </div>
@@ -217,9 +217,17 @@ export default function MealsPage() {
               <p className="font-medium">{t('meals.takePhoto')}</p>
               <p className="text-xs text-muted-foreground">{t('meals.aiDescription')}</p>
             </div>
-          </label>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="absolute inset-0 z-10 opacity-0 cursor-pointer"
+              onChange={handleCameraSelect}
+              aria-label={t('meals.takePhoto')}
+            />
+          </div>
 
-          <label htmlFor="file-input" className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors cursor-pointer">
+          <div className="relative nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-info/10 flex items-center justify-center">
               <Upload className="h-6 w-6 text-info" />
             </div>
@@ -227,7 +235,14 @@ export default function MealsPage() {
               <p className="font-medium">{t('meals.uploadImage')}</p>
               <p className="text-xs text-muted-foreground">{t('meals.aiDescription')}</p>
             </div>
-          </label>
+            <input
+              type="file"
+              accept="image/*"
+              className="absolute inset-0 z-10 opacity-0 cursor-pointer"
+              onChange={handleFileSelect}
+              aria-label={t('meals.uploadImage')}
+            />
+          </div>
 
           <button onClick={handleManualEntry} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-warning/10 flex items-center justify-center">
