@@ -28,6 +28,12 @@ export default function MealsPage() {
   const [saving, setSaving] = useState(false);
   const [isAiResult, setIsAiResult] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraLoading, setCameraLoading] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const mealTypes: { value: MealType; label: string; emoji: string }[] = [
     { value: 'breakfast', label: t('meals.breakfast'), emoji: '🌅' },
