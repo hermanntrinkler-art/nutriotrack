@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
+import { useTheme } from '@/lib/theme';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateNutrition } from '@/lib/nutrition';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull, Activity, Crown } from 'lucide-react';
+import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull, Activity, Crown, Sun, Moon, Monitor } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
 import { motion } from 'framer-motion';
+import { hapticFeedback } from '@/lib/haptics';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -24,11 +26,12 @@ const container = {
 
 const DEFICIT_VALUES = [300, 500, 750, 1000, 1250];
 const SURPLUS_VALUES = [200, 300, 450, 600, 800];
-const WEEKLY_LOSS = [0.3, 0.5, 0.75, 1.0, 1.25]; // approximate kg/week
+const WEEKLY_LOSS = [0.3, 0.5, 0.75, 1.0, 1.25];
 
 export default function ProfilePage() {
   const { user, profile, signOut } = useAuth();
   const { t, language, setLanguage } = useTranslation();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const subscription = useSubscription();
   const [showPaywall, setShowPaywall] = useState(false);
@@ -86,6 +89,7 @@ export default function ProfilePage() {
     } as any).eq('user_id', user.id);
 
     setGoals((prev: any) => ({ ...prev, deficit_intensity: intensity, calorie_target: result.calorieTarget }));
+    hapticFeedback('success');
     toast.success(t('profile.intensitySaved'));
     setSaving(false);
   };
@@ -139,6 +143,12 @@ export default function ProfilePage() {
 
   const deficitValue = goalType === 'lose' ? DEFICIT_VALUES[intensity - 1] : SURPLUS_VALUES[intensity - 1];
   const weeklyValue = WEEKLY_LOSS[intensity - 1];
+
+  const themeOptions = [
+    { value: 'light' as const, label: t('profile.themeLight'), icon: Sun },
+    { value: 'dark' as const, label: t('profile.themeDark'), icon: Moon },
+    { value: 'system' as const, label: t('profile.themeSystem'), icon: Monitor },
+  ];
 
   return (
     <motion.div
@@ -202,7 +212,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Slider */}
           <div className="px-1">
             <Slider
               min={1}
@@ -223,7 +232,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Info box */}
           <div className={`rounded-xl p-3 ${getIntensityBgColor(intensity)} space-y-1.5`}>
             <p className={`text-sm font-medium ${getIntensityColor(intensity)}`}>
               {getIntensityHint(intensity)}
@@ -244,7 +252,6 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* Warning for extreme levels */}
           {intensity >= 4 && (
             <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3">
               <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
@@ -270,6 +277,28 @@ export default function ProfilePage() {
       {/* Settings */}
       <motion.div className="space-y-2" variants={fadeUp}>
         <h3 className="font-semibold text-sm px-1">{t('profile.settings')}</h3>
+
+        {/* Theme */}
+        <div className="nutri-card space-y-3">
+          <div className="flex items-center gap-3">
+            <Sun className="h-5 w-5 text-muted-foreground" />
+            <span className="font-medium text-sm">{t('profile.theme')}</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {themeOptions.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => { setTheme(opt.value); hapticFeedback('light'); }}
+                className={`py-2.5 rounded-xl text-sm font-medium transition-colors border flex items-center justify-center gap-1.5 ${
+                  theme === opt.value ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:bg-accent'
+                }`}
+              >
+                <opt.icon className="h-3.5 w-3.5" />
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Language */}
         <div className="nutri-card space-y-3">

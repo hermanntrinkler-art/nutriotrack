@@ -9,6 +9,7 @@ import { Camera, Upload, PenLine, ScanBarcode } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
+import { hapticFeedback } from '@/lib/haptics';
 
 import AnalyseScreen from '@/components/meals/AnalyseScreen';
 import EditableFoodItemsList from '@/components/meals/EditableFoodItemsList';
@@ -273,6 +274,7 @@ export default function MealsPage() {
 
     await supabase.from('meal_food_items').insert(foodItems as any);
 
+    hapticFeedback('success');
     toast.success(t('meals.saved'));
     setSaving(false);
     handleReset();
