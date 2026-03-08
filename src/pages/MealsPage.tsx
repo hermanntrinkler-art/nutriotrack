@@ -86,8 +86,10 @@ export default function MealsPage() {
 
   const handleManualEntry = () => {
     setIsAiResult(false);
-    setItems([{ food_name: '', quantity: 100, unit: 'g', calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0, confidence_score: 1 }]);
+    const emptyItem: AnalyzedFoodItem = { food_name: '', quantity: 100, unit: 'g', calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0, confidence_score: 1 };
+    setItems([emptyItem]);
     setStep('review');
+    setEditingIndex(0); // Immediately open editor for the first item
   };
 
   const updateItem = (index: number, field: keyof AnalyzedFoodItem, value: string | number) => {
