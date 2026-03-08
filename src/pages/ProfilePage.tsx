@@ -10,6 +10,17 @@ import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, S
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
+import { motion } from 'framer-motion';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' as const } },
+};
+
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+};
 
 const DEFICIT_VALUES = [300, 500, 750, 1000, 1250];
 const SURPLUS_VALUES = [200, 300, 450, 600, 800];
@@ -130,11 +141,16 @@ export default function ProfilePage() {
   const weeklyValue = WEEKLY_LOSS[intensity - 1];
 
   return (
-    <div className="page-container space-y-4">
-      <h1 className="text-xl font-bold">{t('profile.title')}</h1>
+    <motion.div
+      className="page-container space-y-4"
+      variants={container}
+      initial="hidden"
+      animate="show"
+    >
+      <motion.h1 className="text-xl font-bold" variants={fadeUp}>{t('profile.title')}</motion.h1>
 
       {/* Subscription Status */}
-      <div className="nutri-card flex items-center justify-between">
+      <motion.div className="nutri-card flex items-center justify-between" variants={fadeUp}>
         <div className="flex items-center gap-3">
           <Crown className={`h-5 w-5 ${subscription.isPro ? 'text-primary' : 'text-muted-foreground'}`} />
           <div>
@@ -149,10 +165,10 @@ export default function ProfilePage() {
             {t('paywall.upgradeButton')}
           </Button>
         )}
-      </div>
+      </motion.div>
 
       {/* User info */}
-      <div className="nutri-card flex items-center gap-4">
+      <motion.div className="nutri-card flex items-center gap-4" variants={fadeUp}>
         <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
           <Leaf className="h-7 w-7 text-primary" />
         </div>
@@ -160,22 +176,22 @@ export default function ProfilePage() {
           <p className="font-semibold">{profile?.name || user?.email?.split('@')[0]}</p>
           <p className="text-sm text-muted-foreground">{user?.email}</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Activity Level Info */}
       {goals && (
-        <div className="nutri-card flex items-center gap-3">
+        <motion.div className="nutri-card flex items-center gap-3" variants={fadeUp}>
           <Activity className="h-5 w-5 text-primary flex-shrink-0" />
           <div>
             <p className="font-semibold text-sm">{currentActivity.label}</p>
             <p className="text-xs text-muted-foreground">{currentActivity.desc}</p>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Deficit Intensity Slider */}
       {isLoseOrGain && goals && (
-        <div className="nutri-card space-y-4">
+        <motion.div className="nutri-card space-y-4" variants={fadeUp}>
           <div className="flex items-center gap-3">
             {getIntensityIcon(intensity)}
             <div>
@@ -248,11 +264,11 @@ export default function ProfilePage() {
           >
             {saving ? t('common.loading') : t('common.save')}
           </Button>
-        </div>
+        </motion.div>
       )}
 
       {/* Settings */}
-      <div className="space-y-2">
+      <motion.div className="space-y-2" variants={fadeUp}>
         <h3 className="font-semibold text-sm px-1">{t('profile.settings')}</h3>
 
         {/* Language */}
@@ -286,13 +302,15 @@ export default function ProfilePage() {
           <Target className="h-5 w-5 text-muted-foreground" />
           <span className="font-medium text-sm">{t('profile.editGoals')}</span>
         </button>
-      </div>
+      </motion.div>
 
       {/* Logout */}
-      <Button variant="outline" onClick={handleLogout} className="w-full">
-        <LogOut className="h-4 w-4 mr-2" />
-        {t('auth.logout')}
-      </Button>
+      <motion.div variants={fadeUp}>
+        <Button variant="outline" onClick={handleLogout} className="w-full rounded-xl">
+          <LogOut className="h-4 w-4 mr-2" />
+          {t('auth.logout')}
+        </Button>
+      </motion.div>
 
       {showPaywall && (
         <PaywallScreen
@@ -304,6 +322,6 @@ export default function ProfilePage() {
           }}
         />
       )}
-    </div>
+    </motion.div>
   );
 }

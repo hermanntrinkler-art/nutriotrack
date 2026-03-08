@@ -13,6 +13,17 @@ import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
 import { ProBadge } from '@/components/ProBadge';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' as const } },
+};
+
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+};
 
 function getMonday(d: Date): Date {
   const date = new Date(d);
@@ -85,9 +96,15 @@ export default function HistoryPage() {
   const monthLabel = monthDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 
   return (
-    <div className="page-container space-y-4">
-      <h1 className="text-xl font-bold">{t('history.title')}</h1>
+    <motion.div
+      className="page-container space-y-4"
+      variants={container}
+      initial="hidden"
+      animate="show"
+    >
+      <motion.h1 className="text-xl font-bold" variants={fadeUp}>{t('history.title')}</motion.h1>
 
+      <motion.div variants={fadeUp}>
       <Tabs defaultValue="daily" className="w-full">
         <TabsList className="w-full">
           <TabsTrigger value="daily" className="flex-1">{t('history.daily')}</TabsTrigger>
@@ -182,6 +199,7 @@ export default function HistoryPage() {
         </TabsContent>
 
       </Tabs>
+      </motion.div>
 
       {showPaywall && (
         <PaywallScreen
@@ -193,6 +211,6 @@ export default function HistoryPage() {
           }}
         />
       )}
-    </div>
+    </motion.div>
   );
 }
