@@ -91,7 +91,13 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     setScanning(false);
     setNotFound(null);
 
-    try { await scannerRef.current?.stop(); } catch {}
+    try { 
+      const s = scannerRef.current;
+      if (s) {
+        const state = s.getState();
+        if (state === 2 || state === 3) await s.stop();
+      }
+    } catch {}
 
     // 1. Check personal DB first
     if (user) {
