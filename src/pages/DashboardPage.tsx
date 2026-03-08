@@ -450,7 +450,57 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* Weekly Report */}
+      {/* 7-Day Macro Sparklines */}
+      <motion.div
+        className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
+        variants={fadeUp}
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <BarChart3 className="h-4 w-4 text-primary" />
+          <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">
+            {language === 'de' ? '7-Tage Trend' : '7-Day Trend'}
+          </h3>
+        </div>
+        <div className="space-y-3">
+          {([
+            { key: 'calories' as const, label: t('dashboard.kcal'), color: 'hsl(var(--primary))' },
+            { key: 'protein' as const, label: t('dashboard.protein'), color: 'hsl(var(--protein))' },
+            { key: 'fat' as const, label: t('dashboard.fat'), color: 'hsl(var(--fat))' },
+            { key: 'carbs' as const, label: t('dashboard.carbs'), color: 'hsl(var(--carbs))' },
+          ]).map(({ key, label, color }) => {
+            const values = last7DaysData.map(d => d[key]);
+            const max = Math.max(...values, 1);
+            return (
+              <div key={key} className="flex items-center gap-3">
+                <span className="text-[10px] font-bold text-muted-foreground w-12 text-right">{label}</span>
+                <div className="flex-1 flex items-end gap-0.5 h-6">
+                  {values.map((v, i) => (
+                    <motion.div
+                      key={i}
+                      className="flex-1 rounded-sm"
+                      style={{ backgroundColor: color, opacity: i === 6 ? 1 : 0.5 }}
+                      initial={{ height: 0 }}
+                      animate={{ height: `${Math.max((v / max) * 100, 4)}%` }}
+                      transition={{ duration: 0.6, delay: i * 0.05 }}
+                    />
+                  ))}
+                </div>
+                <span className="text-[10px] font-bold tabular-nums text-foreground w-10">
+                  {Math.round(values[6])}{key !== 'calories' ? 'g' : ''}
+                </span>
+              </div>
+            );
+          })}
+          <div className="flex justify-between px-12 mt-1">
+            {last7DaysData.map((d, i) => (
+              <span key={i} className={`text-[8px] font-medium flex-1 text-center ${i === 6 ? 'text-foreground' : 'text-muted-foreground'}`}>
+                {d.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
       <motion.div
         className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
         variants={fadeUp}
