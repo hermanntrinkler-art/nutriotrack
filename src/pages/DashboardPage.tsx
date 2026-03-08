@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import WaterTracker from '@/components/WaterTracker';
 import ReminderBanner from '@/components/ReminderBanner';
 import CalendarHeatmap from '@/components/CalendarHeatmap';
+import WeeklySummaryReport from '@/components/WeeklySummaryReport';
 import { fireConfetti } from '@/lib/confetti';
 import { markTodayHasMeals, initReminders } from '@/components/ReminderSettings';
 
@@ -271,6 +272,9 @@ export default function DashboardPage() {
           {t('dashboard.goal')}
         </motion.div>
       </motion.div>
+
+      {/* Weekly Summary Report (Sundays) */}
+      <WeeklySummaryReport meals={allMeals} goals={goals} />
 
       {/* Streak Counter */}
       <motion.div
