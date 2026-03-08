@@ -96,7 +96,7 @@ export default function OnboardingPage() {
 
     await refreshProfile();
     setLoading(false);
-    navigate('/');
+    navigate('/dashboard');
   };
 
   const canNext = () => {
