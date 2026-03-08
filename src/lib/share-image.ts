@@ -350,32 +350,52 @@ export async function shareImage(blob: Blob, language: 'de' | 'en', customShareT
     ? 'Schau dir meine Fortschritte bei NutrioTrack an! 🔥💪'
     : 'Check out my progress on NutrioTrack! 🔥💪';
 
-  if (navigator.share && navigator.canShare?.({ files: [file] })) {
+  const text = customShareText || defaultText;
+
+  // Try native share with file (shows Facebook, WhatsApp, etc. on mobile)
+  if (navigator.share) {
     try {
-      await navigator.share({
-        title: 'NutrioTrack',
-        text: customShareText || defaultText,
-        files: [file],
-      });
-      return true;
-    } catch {
-      // User cancelled or share failed
+      const canShareFiles = navigator.canShare?.({ files: [file] });
+      if (canShareFiles) {
+        await navigator.share({
+          title: 'NutrioTrack',
+          text,
+          files: [file],
+        });
+        return true;
+      }
+    } catch (e) {
+      // User cancelled or error – fall through
+      if ((e as Error)?.name === 'AbortError') return true;
     }
   }
 
-  // Fallback: download
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'nutriotrack-achievement.png';
-  a.click();
-  URL.revokeObjectURL(url);
-  return false;
+  // Fallback: save to device (works on all browsers)
+  try {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'nutriotrack-achievement.png';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    // Clean up after small delay to ensure download starts
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 500);
+    return false;
+  } catch {
+    // Last resort: open image in new tab so user can save/share manually
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    return false;
+  }
 }
 
 /**
- * Share a badge via link (for social media OG preview).
- * Falls back to image sharing if link sharing is not supported.
+ * @deprecated Use shareImage directly instead
  */
 export async function shareBadgeLink(badgeId: string, language: 'de' | 'en', shareText: string) {
   const shareUrl = `${window.location.origin}/share/${badgeId}`;
@@ -393,7 +413,6 @@ export async function shareBadgeLink(badgeId: string, language: 'de' | 'en', sha
     }
   }
 
-  // Fallback: copy link
   try {
     await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
     return 'copied';
