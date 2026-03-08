@@ -109,7 +109,7 @@ export default function OnboardingPage() {
       {/* Header */}
       <div className="px-6 pt-8 pb-4">
         <div className="flex items-center gap-2 mb-6">
-          <Leaf className="h-6 w-6 text-primary" />
+          <img src={logo} alt="Snap2Fit" className="h-8" />
           <span className="font-bold text-lg">Snap2Fit</span>
         </div>
         <h1 className="text-2xl font-bold">{t('onboarding.title')}</h1>
