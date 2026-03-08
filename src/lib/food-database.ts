@@ -487,15 +487,17 @@ function normalizeSearchText(value: string): string {
     .trim();
 }
 
-function findSynonymTargets(query: string): string[] {
+function findSynonymMatches(query: string): { targets: string[]; alias: string } | null {
   const normalized = normalizeSearchText(query);
-  const targets: string[] = [];
   for (const [alias, canonicals] of Object.entries(SYNONYMS)) {
     if (normalized.includes(alias) || alias.includes(normalized)) {
-      targets.push(...canonicals.map(normalizeSearchText));
+      return {
+        targets: canonicals.map(normalizeSearchText),
+        alias,
+      };
     }
   }
-  return targets;
+  return null;
 }
 
 function levenshteinDistance(a: string, b: string): number {
