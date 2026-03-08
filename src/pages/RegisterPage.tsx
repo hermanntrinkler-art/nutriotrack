@@ -5,7 +5,8 @@ import { useTranslation } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Leaf, CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 export default function RegisterPage() {
   const { signUp } = useAuth();
