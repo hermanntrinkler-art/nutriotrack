@@ -138,6 +138,7 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
       })
       .slice(0, 8);
   };
+  const scaleByGrams = (base: BaseNutrition, gramsAmount: number) => {
     const baseGrams = getGramsEquivalent(base.baseQuantity, base.baseUnit);
     if (baseGrams === 0) return { calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0 };
     const factor = gramsAmount / baseGrams;
