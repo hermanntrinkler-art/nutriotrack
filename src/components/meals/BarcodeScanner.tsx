@@ -324,6 +324,32 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
                 })}
               </div>
             )}
+            {foodSuggestions.length === 0 && !customForm.food_name.trim() && (
+              <div className="space-y-1.5">
+                <p className="text-xs text-muted-foreground">{t('meals.quickSelect') || 'Schnellauswahl:'}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {(() => {
+                    const lang = (document.documentElement.lang === 'en' ? 'en' : 'de') as 'de' | 'en';
+                    const quickItems = ['Prosecco', 'Bier (Pils)', 'Weißwein', 'Rotwein', 'Aperol Spritz', 'Radler'];
+                    return quickItems.map((name) => {
+                      const entry = searchFoods(name, lang).find(e => e.name === name);
+                      if (!entry) return null;
+                      const displayName = lang === 'de' ? entry.name : entry.name_en;
+                      return (
+                        <button
+                          key={name}
+                          type="button"
+                          className="px-2.5 py-1 text-xs rounded-full border border-border bg-muted hover:bg-accent/50 transition-colors"
+                          onClick={() => selectFoodSuggestion(entry)}
+                        >
+                          {displayName}
+                        </button>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
