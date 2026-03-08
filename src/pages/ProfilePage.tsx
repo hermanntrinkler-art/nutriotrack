@@ -141,8 +141,13 @@ export default function ProfilePage() {
   const weeklyValue = WEEKLY_LOSS[intensity - 1];
 
   return (
-    <div className="page-container space-y-4">
-      <h1 className="text-xl font-bold">{t('profile.title')}</h1>
+    <motion.div
+      className="page-container space-y-4"
+      variants={container}
+      initial="hidden"
+      animate="show"
+    >
+      <motion.h1 className="text-xl font-bold" variants={fadeUp}>{t('profile.title')}</motion.h1>
 
       {/* Subscription Status */}
       <div className="nutri-card flex items-center justify-between">
