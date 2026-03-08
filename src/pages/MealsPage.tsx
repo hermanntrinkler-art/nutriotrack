@@ -1,28 +1,34 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
-import { analyzeFoodImage } from '@/lib/mock-ai';
+import { analyzeFoodImage } from '@/lib/ai-analysis';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Camera, Upload, PenLine, Plus, Trash2, Loader2, Check } from 'lucide-react';
+import { Camera, Upload, PenLine } from 'lucide-react';
 import { toast } from 'sonner';
 
+import AnalyseScreen from '@/components/meals/AnalyseScreen';
+import EditableFoodItemsList from '@/components/meals/EditableFoodItemsList';
+import FoodItemEditorModal from '@/components/meals/FoodItemEditorModal';
+import SaveMealConfirmation from '@/components/meals/SaveMealConfirmation';
+
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-type Step = 'select-type' | 'select-method' | 'analyzing' | 'review' | 'manual';
+type Step = 'select-type' | 'select-method' | 'analyzing' | 'review' | 'confirm';
 
 export default function MealsPage() {
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<Step>('select-type');
   const [mealType, setMealType] = useState<MealType>('lunch');
   const [items, setItems] = useState<AnalyzedFoodItem[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [isAiResult, setIsAiResult] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const mealTypes: { value: MealType; label: string; emoji: string }[] = [
     { value: 'breakfast', label: t('meals.breakfast'), emoji: '🌅' },
@@ -31,20 +37,37 @@ export default function MealsPage() {
     { value: 'snack', label: t('meals.snack'), emoji: '🍎' },
   ];
 
+  const currentMealType = mealTypes.find(m => m.value === mealType);
+
   const handleImageUpload = async (file: File) => {
     setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
     setStep('analyzing');
+    setIsAiResult(true);
+
     try {
-      const results = await analyzeFoodImage();
+      const results = await analyzeFoodImage(file, language);
+      if (results.length === 0) {
+        toast.error(t('meals.analysisFailed'));
+        handleManualEntry();
+        return;
+      }
       setItems(results);
       setStep('review');
-    } catch {
-      setStep('select-method');
+    } catch (err: any) {
+      if (err.message === 'RATE_LIMIT') {
+        toast.error(t('meals.rateLimited'));
+      } else if (err.message === 'PAYMENT_REQUIRED') {
+        toast.error(t('meals.paymentRequired'));
+      } else {
+        toast.error(t('meals.analysisFailed'));
+      }
+      // Fall back to manual entry with the image still attached
+      handleManualEntry();
     }
   };
 
   const handleTakePhoto = () => {
-    // Create a file input that accepts camera
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -62,12 +85,13 @@ export default function MealsPage() {
   };
 
   const handleManualEntry = () => {
+    setIsAiResult(false);
     setItems([{ food_name: '', quantity: 100, unit: 'g', calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0, confidence_score: 1 }]);
-    setStep('manual');
+    setStep('review');
   };
 
   const updateItem = (index: number, field: keyof AnalyzedFoodItem, value: string | number) => {
-    setItems(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
+    setItems(prev => prev.map((item, i) => i === index ? { ...item, [field]: value, confidence_score: 1 } : item));
   };
 
   const removeItem = (index: number) => {
@@ -76,12 +100,19 @@ export default function MealsPage() {
 
   const addItem = () => {
     setItems(prev => [...prev, { food_name: '', quantity: 100, unit: 'g', calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0, confidence_score: 1 }]);
+    setEditingIndex(items.length);
   };
 
-  const totalCalories = items.reduce((s, i) => s + Number(i.calories), 0);
-  const totalProtein = items.reduce((s, i) => s + Number(i.protein_g), 0);
-  const totalFat = items.reduce((s, i) => s + Number(i.fat_g), 0);
-  const totalCarbs = items.reduce((s, i) => s + Number(i.carbs_g), 0);
+  const handleEditItem = (index: number) => {
+    setEditingIndex(index);
+  };
+
+  const handleSaveEditedItem = (updatedItem: AnalyzedFoodItem) => {
+    if (editingIndex !== null) {
+      setItems(prev => prev.map((item, i) => i === editingIndex ? updatedItem : item));
+    }
+    setEditingIndex(null);
+  };
 
   const handleSave = async () => {
     if (!user || items.length === 0) return;
@@ -97,6 +128,11 @@ export default function MealsPage() {
       }
     }
 
+    const totalCalories = items.reduce((s, i) => s + Number(i.calories), 0);
+    const totalProtein = items.reduce((s, i) => s + Number(i.protein_g), 0);
+    const totalFat = items.reduce((s, i) => s + Number(i.fat_g), 0);
+    const totalCarbs = items.reduce((s, i) => s + Number(i.carbs_g), 0);
+
     const now = new Date();
     const { data: mealData, error: mealError } = await supabase.from('meal_entries').insert({
       user_id: user.id,
@@ -108,10 +144,11 @@ export default function MealsPage() {
       total_protein_g: totalProtein,
       total_fat_g: totalFat,
       total_carbs_g: totalCarbs,
-      ai_analysis_status: imageFile ? 'completed' : 'manual',
+      ai_analysis_status: isAiResult ? 'completed' : 'manual',
     } as any).select().single();
 
     if (mealError || !mealData) {
+      toast.error(t('common.error'));
       setSaving(false);
       return;
     }
@@ -133,15 +170,16 @@ export default function MealsPage() {
 
     toast.success(t('meals.saved'));
     setSaving(false);
-    setStep('select-type');
-    setItems([]);
-    setImageFile(null);
+    handleReset();
   };
 
   const handleReset = () => {
     setStep('select-type');
     setItems([]);
     setImageFile(null);
+    setImagePreview(null);
+    setIsAiResult(false);
+    setEditingIndex(null);
   };
 
   return (
@@ -171,8 +209,8 @@ export default function MealsPage() {
       {step === 'select-method' && (
         <div className="space-y-3 animate-fade-in">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-2xl">{mealTypes.find(m => m.value === mealType)?.emoji}</span>
-            <span className="font-medium">{mealTypes.find(m => m.value === mealType)?.label}</span>
+            <span className="text-2xl">{currentMealType?.emoji}</span>
+            <span className="font-medium">{currentMealType?.label}</span>
           </div>
 
           <button onClick={handleTakePhoto} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
@@ -181,7 +219,7 @@ export default function MealsPage() {
             </div>
             <div className="text-left">
               <p className="font-medium">{t('meals.takePhoto')}</p>
-              <p className="text-xs text-muted-foreground">KI analysiert dein Essen</p>
+              <p className="text-xs text-muted-foreground">{t('meals.aiDescription')}</p>
             </div>
           </button>
 
@@ -191,6 +229,7 @@ export default function MealsPage() {
             </div>
             <div className="text-left">
               <p className="font-medium">{t('meals.uploadImage')}</p>
+              <p className="text-xs text-muted-foreground">{t('meals.aiDescription')}</p>
             </div>
           </button>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
@@ -212,84 +251,53 @@ export default function MealsPage() {
 
       {/* Step: Analyzing */}
       {step === 'analyzing' && (
-        <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
-          <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
-          <p className="font-medium">{t('meals.analyzing')}</p>
-        </div>
+        <AnalyseScreen imagePreview={imagePreview} />
       )}
 
-      {/* Step: Review / Manual */}
-      {(step === 'review' || step === 'manual') && (
+      {/* Step: Review */}
+      {step === 'review' && (
         <div className="space-y-4 animate-fade-in">
-          <p className="text-sm text-muted-foreground">{t('meals.editHint')}</p>
-
-          {items.map((item, i) => (
-            <div key={i} className="nutri-card space-y-3">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 space-y-2">
-                  <Input
-                    value={item.food_name}
-                    onChange={e => updateItem(i, 'food_name', e.target.value)}
-                    placeholder={t('meals.foodName')}
-                    className="font-medium"
-                  />
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label className="text-xs">{t('meals.quantity')}</Label>
-                      <Input type="number" value={item.quantity} onChange={e => updateItem(i, 'quantity', Number(e.target.value))} />
-                    </div>
-                    <div>
-                      <Label className="text-xs">{t('meals.unit')}</Label>
-                      <Input value={item.unit} onChange={e => updateItem(i, 'unit', e.target.value)} />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    <div>
-                      <Label className="text-xs">{t('dashboard.kcal')}</Label>
-                      <Input type="number" value={item.calories} onChange={e => updateItem(i, 'calories', Number(e.target.value))} />
-                    </div>
-                    <div>
-                      <Label className="text-xs">P (g)</Label>
-                      <Input type="number" value={item.protein_g} onChange={e => updateItem(i, 'protein_g', Number(e.target.value))} />
-                    </div>
-                    <div>
-                      <Label className="text-xs">F (g)</Label>
-                      <Input type="number" value={item.fat_g} onChange={e => updateItem(i, 'fat_g', Number(e.target.value))} />
-                    </div>
-                    <div>
-                      <Label className="text-xs">C (g)</Label>
-                      <Input type="number" value={item.carbs_g} onChange={e => updateItem(i, 'carbs_g', Number(e.target.value))} />
-                    </div>
-                  </div>
-                </div>
-                <button onClick={() => removeItem(i)} className="ml-2 p-2 text-destructive hover:bg-destructive/10 rounded-lg">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
+          {/* Image preview if available */}
+          {imagePreview && (
+            <div className="w-full rounded-2xl overflow-hidden border border-border">
+              <img src={imagePreview} alt="Meal" className="w-full h-40 object-cover" />
             </div>
-          ))}
+          )}
 
-          <Button variant="outline" onClick={addItem} className="w-full">
-            <Plus className="h-4 w-4 mr-1" /> {t('meals.addItem')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <span className="text-xl">{currentMealType?.emoji}</span>
+            <h2 className="font-semibold">{currentMealType?.label}</h2>
+            {isAiResult && (
+              <span className="text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">KI</span>
+            )}
+          </div>
 
-          {/* Totals */}
+          <EditableFoodItemsList
+            items={items}
+            isAiResult={isAiResult}
+            onUpdateItem={updateItem}
+            onRemoveItem={removeItem}
+            onAddItem={addItem}
+            onEditItem={handleEditItem}
+          />
+
+          {/* Totals bar */}
           <div className="nutri-card-highlight">
             <div className="grid grid-cols-4 gap-2 text-center text-sm">
               <div>
-                <p className="font-bold text-foreground">{Math.round(totalCalories)}</p>
+                <p className="font-bold text-foreground">{Math.round(items.reduce((s, i) => s + Number(i.calories), 0))}</p>
                 <p className="text-xs text-muted-foreground">{t('dashboard.kcal')}</p>
               </div>
               <div>
-                <p className="font-bold text-protein">{Math.round(totalProtein)}g</p>
+                <p className="font-bold text-protein">{Math.round(items.reduce((s, i) => s + Number(i.protein_g), 0))}g</p>
                 <p className="text-xs text-muted-foreground">{t('dashboard.protein')}</p>
               </div>
               <div>
-                <p className="font-bold text-fat">{Math.round(totalFat)}g</p>
+                <p className="font-bold text-fat">{Math.round(items.reduce((s, i) => s + Number(i.fat_g), 0))}g</p>
                 <p className="text-xs text-muted-foreground">{t('dashboard.fat')}</p>
               </div>
               <div>
-                <p className="font-bold text-carbs">{Math.round(totalCarbs)}g</p>
+                <p className="font-bold text-carbs">{Math.round(items.reduce((s, i) => s + Number(i.carbs_g), 0))}g</p>
                 <p className="text-xs text-muted-foreground">{t('dashboard.carbs')}</p>
               </div>
             </div>
@@ -299,13 +307,33 @@ export default function MealsPage() {
             <Button variant="outline" onClick={handleReset} className="flex-1">
               {t('meals.cancel')}
             </Button>
-            <Button onClick={handleSave} disabled={saving || items.length === 0} className="flex-1">
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
+            <Button onClick={() => setStep('confirm')} disabled={items.length === 0 || items.some(i => !i.food_name)} className="flex-1">
               {t('meals.confirmSave')}
             </Button>
           </div>
         </div>
       )}
+
+      {/* Step: Confirmation */}
+      {step === 'confirm' && (
+        <SaveMealConfirmation
+          items={items}
+          mealTypeLabel={currentMealType?.label || ''}
+          mealEmoji={currentMealType?.emoji || ''}
+          imagePreview={imagePreview}
+          saving={saving}
+          onConfirm={handleSave}
+          onCancel={() => setStep('review')}
+        />
+      )}
+
+      {/* Editor Modal */}
+      <FoodItemEditorModal
+        item={editingIndex !== null ? items[editingIndex] : null}
+        open={editingIndex !== null}
+        onClose={() => setEditingIndex(null)}
+        onSave={handleSaveEditedItem}
+      />
     </div>
   );
 }
