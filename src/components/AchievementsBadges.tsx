@@ -33,8 +33,9 @@ const stagger = {
   show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
 };
 
-export default function AchievementsBadges({ totalMeals, streak, goalReached }: AchievementsBadgesProps) {
-  const { t } = useTranslation();
+export default function AchievementsBadges({ totalMeals, streak, goalReached, userName = '' }: AchievementsBadgesProps) {
+  const { t, language } = useTranslation();
+  const [sharing, setSharing] = useState(false);
 
   const achievements: Achievement[] = useMemo(() => [
     {
