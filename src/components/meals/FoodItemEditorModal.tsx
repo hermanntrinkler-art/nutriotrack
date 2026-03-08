@@ -34,8 +34,65 @@ const UNIT_TO_GRAMS: Record<string, number> = {
   ml: 1,
   TL: 5,
   EL: 15,
-  'Stück': 0,
+  'Stück': 0, // dynamic, looked up per food
 };
+
+// Average weight per piece in grams for common foods
+const PIECE_WEIGHTS: Record<string, number> = {
+  // Fruits
+  erdbeere: 20, erdbeeren: 20, strawberry: 20, strawberries: 20,
+  apfel: 180, apple: 180, äpfel: 180,
+  banane: 120, banana: 120, bananen: 120,
+  orange: 180, orangen: 180,
+  mandarine: 80, mandarinen: 80, tangerine: 80, clementine: 80,
+  birne: 180, pear: 180, birnen: 180,
+  pfirsich: 150, peach: 150,
+  pflaume: 50, plum: 50, pflaumen: 50,
+  kiwi: 75, kiwis: 75,
+  tomate: 120, tomaten: 120, tomato: 120, tomatoes: 120,
+  kirsche: 8, kirschen: 8, cherry: 8, cherries: 8,
+  traube: 5, trauben: 5, grape: 5, grapes: 5,
+  feige: 50, fig: 50, feigen: 50,
+  aprikose: 40, apricot: 40, aprikosen: 40,
+  zitrone: 80, lemon: 80, limette: 60, lime: 60,
+  mango: 300, mangos: 300,
+  avocado: 200, avocados: 200,
+  // Vegetables
+  kartoffel: 150, kartoffeln: 150, potato: 150, potatoes: 150,
+  karotte: 80, karotten: 80, möhre: 80, möhren: 80, carrot: 80,
+  paprika: 160, pepper: 160, bell_pepper: 160,
+  gurke: 400, cucumber: 400, salatgurke: 400,
+  zucchini: 200,
+  aubergine: 300, eggplant: 300,
+  champignon: 20, mushroom: 20, pilz: 20, pilze: 20,
+  zwiebel: 100, onion: 100, zwiebeln: 100,
+  knoblauchzehe: 5, garlic_clove: 5,
+  // Protein
+  ei: 60, eier: 60, egg: 60, eggs: 60,
+  hühnerbrust: 200, chicken_breast: 200,
+  würstchen: 80, sausage: 80, wiener: 50,
+  frikadelle: 80, meatball: 30,
+  // Bakery
+  brötchen: 60, semmel: 60, roll: 60,
+  scheibe_brot: 40, slice_bread: 40,
+  croissant: 60,
+  brezel: 85, pretzel: 85,
+  // Snacks
+  keks: 10, cookie: 15,
+  riegel: 40, bar: 40,
+  praline: 12, bonbon: 5,
+};
+
+function getPieceWeight(foodName: string): number {
+  const normalized = foodName.trim().toLowerCase();
+  // Direct match
+  if (PIECE_WEIGHTS[normalized]) return PIECE_WEIGHTS[normalized];
+  // Partial match: check if any key is contained in the food name
+  for (const [key, weight] of Object.entries(PIECE_WEIGHTS)) {
+    if (normalized.includes(key) || key.includes(normalized)) return weight;
+  }
+  return 0; // unknown
+}
 
 const UNIT_OPTIONS_DE = [
   { value: 'g', label: 'g (Gramm)' },
@@ -53,7 +110,11 @@ const UNIT_OPTIONS_EN = [
   { value: 'Stück', label: 'piece' },
 ];
 
-function getGramsEquivalent(quantity: number, unit: string): number {
+function getGramsEquivalent(quantity: number, unit: string, foodName?: string): number {
+  if (unit === 'Stück') {
+    const pw = foodName ? getPieceWeight(foodName) : 0;
+    return pw > 0 ? quantity * pw : quantity;
+  }
   const factor = UNIT_TO_GRAMS[unit];
   if (factor === undefined || factor === 0) return quantity;
   return quantity * factor;
@@ -190,7 +251,7 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
   }, [language, buildSuggestions]);
 
   const scaleByGrams = (base: BaseNutrition, gramsAmount: number) => {
-    const baseGrams = getGramsEquivalent(base.baseQuantity, base.baseUnit);
+    const baseGrams = getGramsEquivalent(base.baseQuantity, base.baseUnit, form.food_name);
     if (baseGrams === 0) return { calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0 };
     const factor = gramsAmount / baseGrams;
     return {
@@ -203,7 +264,7 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
 
   const update = (field: keyof AnalyzedFoodItem, value: string | number) => {
     if (field === 'quantity' && baseNutrition && typeof value === 'number') {
-      const grams = getGramsEquivalent(value, form.unit);
+      const grams = getGramsEquivalent(value, form.unit, form.food_name);
       const scaled = scaleByGrams(baseNutrition, grams);
       setForm(prev => ({ ...prev, quantity: value, ...scaled }));
       return;
@@ -225,18 +286,28 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
       return;
     }
 
-    // Keep the same gram-equivalent, recalculate quantity for new unit
-    const currentGrams = getGramsEquivalent(form.quantity, form.unit);
-    const newFactor = UNIT_TO_GRAMS[newUnit];
+    const currentGrams = getGramsEquivalent(form.quantity, form.unit, form.food_name);
     let newQuantity: number;
 
-    if (newFactor && newFactor > 0) {
-      newQuantity = Math.round((currentGrams / newFactor) * 10) / 10;
+    if (newUnit === 'Stück') {
+      const pw = getPieceWeight(form.food_name);
+      if (pw > 0) {
+        newQuantity = Math.round((currentGrams / pw) * 10) / 10;
+      } else {
+        // Unknown piece weight – default to 1 piece, keep nutrition
+        newQuantity = 1;
+      }
     } else {
-      newQuantity = form.quantity;
+      const newFactor = UNIT_TO_GRAMS[newUnit];
+      if (newFactor && newFactor > 0) {
+        newQuantity = Math.round((currentGrams / newFactor) * 10) / 10;
+      } else {
+        newQuantity = form.quantity;
+      }
     }
 
-    const scaled = scaleByGrams(baseNutrition, currentGrams);
+    const newGrams = getGramsEquivalent(newQuantity, newUnit, form.food_name);
+    const scaled = scaleByGrams(baseNutrition, newGrams);
     setForm(prev => ({ ...prev, unit: newUnit, quantity: newQuantity, ...scaled }));
   };
 
@@ -373,9 +444,13 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
 
           {baseNutrition && (
             <p className="text-[10px] text-muted-foreground italic">
-              {language === 'de'
-                ? `Nährwerte skalieren automatisch (Basis: ${baseNutrition.baseQuantity} ${baseNutrition.baseUnit})`
-                : `Nutrition scales automatically (base: ${baseNutrition.baseQuantity} ${baseNutrition.baseUnit})`}
+              {form.unit === 'Stück' && getPieceWeight(form.food_name) > 0
+                ? (language === 'de'
+                    ? `1 Stück ≈ ${getPieceWeight(form.food_name)}g · Nährwerte skalieren automatisch`
+                    : `1 piece ≈ ${getPieceWeight(form.food_name)}g · Nutrition scales automatically`)
+                : (language === 'de'
+                    ? `Nährwerte skalieren automatisch (Basis: ${baseNutrition.baseQuantity} ${baseNutrition.baseUnit})`
+                    : `Nutrition scales automatically (base: ${baseNutrition.baseQuantity} ${baseNutrition.baseUnit})`)}
             </p>
           )}
 
