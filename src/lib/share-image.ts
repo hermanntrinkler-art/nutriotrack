@@ -412,7 +412,7 @@ export async function shareImage(blob: Blob, language: 'de' | 'en', customShareT
  * Opens Facebook share dialog with a branded share page URL (professional preview).
  */
 export async function shareImageToFacebook(badgeId: string, language: 'de' | 'en', shareText: string) {
-  const shareUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/share-badge?badge=${encodeURIComponent(badgeId)}&lang=${encodeURIComponent(language)}`;
+  const shareUrl = `${window.location.origin}/share/${encodeURIComponent(badgeId)}?lang=${encodeURIComponent(language)}`;
   const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
 
   const popup = window.open(fbShareUrl, '_blank', 'noopener,noreferrer');
