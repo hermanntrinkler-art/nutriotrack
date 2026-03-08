@@ -417,7 +417,7 @@ export async function shareImageToFacebook(badgeId: string, language: 'de' | 'en
 
   const popup = window.open(fbShareUrl, '_blank', 'noopener,noreferrer');
   if (!popup) {
-    window.location.href = fbShareUrl;
+    return false;
   }
 
   return true;
