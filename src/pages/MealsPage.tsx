@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { analyzeFoodImage } from '@/lib/ai-analysis';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, PenLine, ScanBarcode, Search } from 'lucide-react';
+import { Camera, Upload, PenLine, ScanBarcode, Search, BookOpen, BookmarkPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
@@ -17,9 +17,10 @@ import FoodItemEditorModal from '@/components/meals/FoodItemEditorModal';
 import SaveMealConfirmation from '@/components/meals/SaveMealConfirmation';
 import BarcodeScanner from '@/components/meals/BarcodeScanner';
 import FoodSearchScreen from '@/components/meals/FoodSearchScreen';
+import SavedRecipesScreen, { saveAsRecipe } from '@/components/meals/SavedRecipesScreen';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-type Step = 'select-type' | 'select-method' | 'analyzing' | 'review' | 'confirm' | 'barcode' | 'search';
+type Step = 'select-type' | 'select-method' | 'analyzing' | 'review' | 'confirm' | 'barcode' | 'search' | 'recipes';
 
 export default function MealsPage() {
   const { user } = useAuth();
@@ -38,6 +39,7 @@ export default function MealsPage() {
   const [cameraLoading, setCameraLoading] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [savingRecipe, setSavingRecipe] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -432,6 +434,17 @@ export default function MealsPage() {
             </div>
           </button>
 
+          {/* Saved Recipes */}
+          <button onClick={() => setStep('recipes')} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <BookOpen className="h-6 w-6 text-primary" />
+            </div>
+            <div className="text-left flex-1">
+              <p className="font-medium">{language === 'de' ? 'Gespeicherte Rezepte' : 'Saved Recipes'}</p>
+              <p className="text-xs text-muted-foreground">{language === 'de' ? 'Häufige Mahlzeiten schnell erneut tracken' : 'Quickly re-track frequent meals'}</p>
+            </div>
+          </button>
+
           <Button variant="ghost" onClick={handleReset} className="w-full">
             {t('meals.cancel')}
           </Button>
@@ -444,6 +457,21 @@ export default function MealsPage() {
           onDone={(searchItems) => {
             setIsAiResult(false);
             setItems(searchItems);
+            setStep('review');
+          }}
+          onCancel={() => setStep('select-method')}
+        />
+      )}
+
+      {/* Step: Saved Recipes */}
+      {step === 'recipes' && (
+        <SavedRecipesScreen
+          onSelect={(recipeItems, recipeMealType) => {
+            setIsAiResult(false);
+            setItems(recipeItems);
+            if (['breakfast', 'lunch', 'dinner', 'snack'].includes(recipeMealType)) {
+              setMealType(recipeMealType as MealType);
+            }
             setStep('review');
           }}
           onCancel={() => setStep('select-method')}
@@ -516,6 +544,38 @@ export default function MealsPage() {
               </div>
             </div>
           </div>
+
+          {/* Save as Recipe button */}
+          {items.length > 0 && items.some(i => i.food_name) && user && (
+            <Button
+              variant="outline"
+              onClick={async () => {
+                setSavingRecipe(true);
+                const recipeName = items.map(i => i.food_name).filter(Boolean).slice(0, 3).join(', ');
+                const success = await saveAsRecipe({
+                  userId: user.id,
+                  name: recipeName || 'Rezept',
+                  emoji: currentMealType?.emoji || '🍽️',
+                  mealType,
+                  items,
+                });
+                setSavingRecipe(false);
+                if (success) {
+                  hapticFeedback('success');
+                  toast.success(language === 'de' ? 'Als Rezept gespeichert!' : 'Saved as recipe!');
+                } else {
+                  toast.error(language === 'de' ? 'Fehler beim Speichern' : 'Failed to save');
+                }
+              }}
+              disabled={savingRecipe}
+              className="w-full rounded-xl"
+            >
+              <BookmarkPlus className="h-4 w-4 mr-1.5" />
+              {savingRecipe
+                ? (language === 'de' ? 'Wird gespeichert...' : 'Saving...')
+                : (language === 'de' ? 'Als Rezept speichern' : 'Save as Recipe')}
+            </Button>
+          )}
 
           <div className="flex gap-3">
             <Button variant="outline" onClick={handleReset} className="flex-1">
