@@ -79,7 +79,65 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
     }
   }, [item]);
 
-  const scaleByGrams = (base: BaseNutrition, gramsAmount: number) => {
+  useEffect(() => {
+    const loadCustomProducts = async () => {
+      if (!user || !open) {
+        setCustomProducts([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('custom_products')
+        .select('food_name, default_quantity, default_unit, calories, protein_g, fat_g, carbs_g')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(100);
+
+      if (error || !data) {
+        setCustomProducts([]);
+        return;
+      }
+
+      const mapped: FoodEntry[] = data.map((entry) => ({
+        name: entry.food_name,
+        name_en: entry.food_name,
+        quantity: Number(entry.default_quantity) || 100,
+        unit: entry.default_unit || 'g',
+        calories: Number(entry.calories) || 0,
+        protein_g: Number(entry.protein_g) || 0,
+        fat_g: Number(entry.fat_g) || 0,
+        carbs_g: Number(entry.carbs_g) || 0,
+        category: 'custom',
+      }));
+
+      setCustomProducts(mapped);
+    };
+
+    void loadCustomProducts();
+  }, [user, open]);
+
+  const buildSuggestions = (query: string) => {
+    const normalized = query.trim().toLowerCase();
+    const dbMatches = searchFoods(query, language as 'de' | 'en');
+
+    const customMatches = normalized
+      ? customProducts.filter((entry) =>
+          entry.name.toLowerCase().includes(normalized) || entry.name_en.toLowerCase().includes(normalized),
+        )
+      : customProducts;
+
+    const merged = [...customMatches, ...dbMatches];
+    const seen = new Set<string>();
+
+    return merged
+      .filter((entry) => {
+        const key = `${entry.name.toLowerCase()}|${entry.unit.toLowerCase()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, 8);
+  };
     const baseGrams = getGramsEquivalent(base.baseQuantity, base.baseUnit);
     if (baseGrams === 0) return { calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0 };
     const factor = gramsAmount / baseGrams;
