@@ -86,63 +86,111 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Iglo Fischstäbchen', name_en: 'Iglo Fish Fingers', quantity: 4, unit: 'Stück', calories: 220, protein_g: 12, fat_g: 10, carbs_g: 20, category: 'brands' },
   { name: 'McCain Pommes', name_en: 'McCain French Fries', quantity: 150, unit: 'g', calories: 230, protein_g: 3, fat_g: 8, carbs_g: 36, category: 'brands' },
 
-  // Eigenmarken / Store Brands – EDEKA
+  // Eigenmarken / Store Brands – EDEKA (Gut & Günstig, Gut Bio)
   { name: 'Gut & Günstig Vollmilch', name_en: 'Gut & Günstig Whole Milk', quantity: 200, unit: 'ml', calories: 128, protein_g: 7, fat_g: 7, carbs_g: 10, category: 'brands' },
   { name: 'Gut & Günstig Butter', name_en: 'Gut & Günstig Butter', quantity: 10, unit: 'g', calories: 74, protein_g: 0, fat_g: 8, carbs_g: 0, category: 'brands' },
   { name: 'Gut & Günstig Gouda', name_en: 'Gut & Günstig Gouda', quantity: 30, unit: 'g', calories: 105, protein_g: 7, fat_g: 8, carbs_g: 0, category: 'brands' },
   { name: 'Gut & Günstig Toastbrot', name_en: 'Gut & Günstig Toast', quantity: 1, unit: 'Scheibe', calories: 65, protein_g: 2, fat_g: 1, carbs_g: 12, category: 'brands' },
+  { name: 'Gut & Günstig Reis', name_en: 'Gut & Günstig Rice', quantity: 200, unit: 'g', calories: 260, protein_g: 5, fat_g: 1, carbs_g: 57, category: 'brands' },
+  { name: 'Gut & Günstig Spaghetti (gekocht)', name_en: 'Gut & Günstig Spaghetti (cooked)', quantity: 200, unit: 'g', calories: 280, protein_g: 10, fat_g: 2, carbs_g: 55, category: 'brands' },
+  { name: 'Gut & Günstig Hähnchenbrust', name_en: 'Gut & Günstig Chicken Breast', quantity: 150, unit: 'g', calories: 165, protein_g: 31, fat_g: 4, carbs_g: 0, category: 'brands' },
+  { name: 'Gut & Günstig Kochschinken', name_en: 'Gut & Günstig Cooked Ham', quantity: 30, unit: 'g', calories: 35, protein_g: 6, fat_g: 1, carbs_g: 0, category: 'brands' },
+  { name: 'Gut & Günstig Salami', name_en: 'Gut & Günstig Salami', quantity: 30, unit: 'g', calories: 120, protein_g: 7, fat_g: 10, carbs_g: 0, category: 'brands' },
+  { name: 'Gut & Günstig Thunfisch', name_en: 'Gut & Günstig Canned Tuna', quantity: 100, unit: 'g', calories: 110, protein_g: 25, fat_g: 1, carbs_g: 0, category: 'brands' },
+  { name: 'Gut & Günstig Haferflocken', name_en: 'Gut & Günstig Oats', quantity: 50, unit: 'g', calories: 190, protein_g: 7, fat_g: 3, carbs_g: 33, category: 'brands' },
+  { name: 'Gut & Günstig Chips', name_en: 'Gut & Günstig Chips', quantity: 30, unit: 'g', calories: 160, protein_g: 2, fat_g: 10, carbs_g: 15, category: 'brands' },
   { name: 'Gut Bio Hafermilch', name_en: 'Gut Bio Oat Milk', quantity: 200, unit: 'ml', calories: 92, protein_g: 1, fat_g: 3, carbs_g: 14, category: 'brands' },
   { name: 'Gut Bio Joghurt Natur', name_en: 'Gut Bio Plain Yogurt', quantity: 150, unit: 'g', calories: 92, protein_g: 5, fat_g: 5, carbs_g: 7, category: 'brands' },
 
-  // Eigenmarken / Store Brands – REWE
+  // Eigenmarken / Store Brands – REWE (Ja!, REWE Bio, Beste Wahl)
   { name: 'Ja! Magerquark', name_en: 'Ja! Low-fat Quark', quantity: 250, unit: 'g', calories: 167, protein_g: 30, fat_g: 0, carbs_g: 10, category: 'brands' },
   { name: 'Ja! Vollmilch', name_en: 'Ja! Whole Milk', quantity: 200, unit: 'ml', calories: 128, protein_g: 7, fat_g: 7, carbs_g: 10, category: 'brands' },
   { name: 'Ja! Gouda', name_en: 'Ja! Gouda', quantity: 30, unit: 'g', calories: 105, protein_g: 7, fat_g: 8, carbs_g: 0, category: 'brands' },
   { name: 'Ja! Butter', name_en: 'Ja! Butter', quantity: 10, unit: 'g', calories: 74, protein_g: 0, fat_g: 8, carbs_g: 0, category: 'brands' },
   { name: 'Ja! Naturjoghurt', name_en: 'Ja! Plain Yogurt', quantity: 150, unit: 'g', calories: 92, protein_g: 5, fat_g: 5, carbs_g: 7, category: 'brands' },
+  { name: 'Ja! Reis', name_en: 'Ja! Rice', quantity: 200, unit: 'g', calories: 260, protein_g: 5, fat_g: 1, carbs_g: 57, category: 'brands' },
+  { name: 'Ja! Spaghetti (gekocht)', name_en: 'Ja! Spaghetti (cooked)', quantity: 200, unit: 'g', calories: 280, protein_g: 10, fat_g: 2, carbs_g: 55, category: 'brands' },
+  { name: 'Ja! Kochschinken', name_en: 'Ja! Cooked Ham', quantity: 30, unit: 'g', calories: 35, protein_g: 6, fat_g: 1, carbs_g: 0, category: 'brands' },
+  { name: 'Ja! Salami', name_en: 'Ja! Salami', quantity: 30, unit: 'g', calories: 120, protein_g: 7, fat_g: 10, carbs_g: 0, category: 'brands' },
+  { name: 'Ja! Thunfisch', name_en: 'Ja! Canned Tuna', quantity: 100, unit: 'g', calories: 110, protein_g: 25, fat_g: 1, carbs_g: 0, category: 'brands' },
+  { name: 'Ja! Chips', name_en: 'Ja! Chips', quantity: 30, unit: 'g', calories: 160, protein_g: 2, fat_g: 10, carbs_g: 15, category: 'brands' },
   { name: 'REWE Bio Haferflocken', name_en: 'REWE Bio Oats', quantity: 50, unit: 'g', calories: 190, protein_g: 7, fat_g: 3, carbs_g: 33, category: 'brands' },
   { name: 'REWE Beste Wahl Hähnchenbrust', name_en: 'REWE Beste Wahl Chicken Breast', quantity: 150, unit: 'g', calories: 165, protein_g: 31, fat_g: 4, carbs_g: 0, category: 'brands' },
+  { name: 'REWE Beste Wahl Lachs', name_en: 'REWE Beste Wahl Salmon', quantity: 150, unit: 'g', calories: 310, protein_g: 30, fat_g: 20, carbs_g: 0, category: 'brands' },
 
-  // Eigenmarken / Store Brands – LIDL
+  // Eigenmarken / Store Brands – LIDL (Milbona, Solevita, Combino, Metzgerfrisch)
   { name: 'Milbona Vollmilch', name_en: 'Milbona Whole Milk', quantity: 200, unit: 'ml', calories: 128, protein_g: 7, fat_g: 7, carbs_g: 10, category: 'brands' },
   { name: 'Milbona Magerquark', name_en: 'Milbona Low-fat Quark', quantity: 250, unit: 'g', calories: 167, protein_g: 30, fat_g: 0, carbs_g: 10, category: 'brands' },
   { name: 'Milbona Butter', name_en: 'Milbona Butter', quantity: 10, unit: 'g', calories: 74, protein_g: 0, fat_g: 8, carbs_g: 0, category: 'brands' },
   { name: 'Milbona Gouda', name_en: 'Milbona Gouda', quantity: 30, unit: 'g', calories: 105, protein_g: 7, fat_g: 8, carbs_g: 0, category: 'brands' },
   { name: 'Milbona Griechischer Joghurt', name_en: 'Milbona Greek Yogurt', quantity: 150, unit: 'g', calories: 145, protein_g: 13, fat_g: 8, carbs_g: 5, category: 'brands' },
+  { name: 'Milbona Mozzarella', name_en: 'Milbona Mozzarella', quantity: 30, unit: 'g', calories: 85, protein_g: 6, fat_g: 6, carbs_g: 1, category: 'brands' },
+  { name: 'Combino Spaghetti (gekocht)', name_en: 'Combino Spaghetti (cooked)', quantity: 200, unit: 'g', calories: 280, protein_g: 10, fat_g: 2, carbs_g: 55, category: 'brands' },
+  { name: 'Combino Penne (gekocht)', name_en: 'Combino Penne (cooked)', quantity: 200, unit: 'g', calories: 280, protein_g: 10, fat_g: 2, carbs_g: 55, category: 'brands' },
+  { name: 'Metzgerfrisch Kochschinken', name_en: 'Metzgerfrisch Cooked Ham', quantity: 30, unit: 'g', calories: 35, protein_g: 6, fat_g: 1, carbs_g: 0, category: 'brands' },
+  { name: 'Metzgerfrisch Salami', name_en: 'Metzgerfrisch Salami', quantity: 30, unit: 'g', calories: 120, protein_g: 7, fat_g: 10, carbs_g: 0, category: 'brands' },
+  { name: 'Metzgerfrisch Putenbrust', name_en: 'Metzgerfrisch Turkey Breast', quantity: 30, unit: 'g', calories: 30, protein_g: 6, fat_g: 0.5, carbs_g: 0, category: 'brands' },
   { name: 'Solevita Orangensaft', name_en: 'Solevita Orange Juice', quantity: 200, unit: 'ml', calories: 90, protein_g: 1, fat_g: 0, carbs_g: 21, category: 'brands' },
+  { name: 'Solevita Apfelsaft', name_en: 'Solevita Apple Juice', quantity: 200, unit: 'ml', calories: 92, protein_g: 0, fat_g: 0, carbs_g: 22, category: 'brands' },
 
-  // Eigenmarken / Store Brands – ALDI
+  // Eigenmarken / Store Brands – ALDI (Milfina, K-Classic, Meine Metzgerei)
   { name: 'Milfina Vollmilch', name_en: 'Milfina Whole Milk', quantity: 200, unit: 'ml', calories: 128, protein_g: 7, fat_g: 7, carbs_g: 10, category: 'brands' },
   { name: 'Milfina Magerquark', name_en: 'Milfina Low-fat Quark', quantity: 250, unit: 'g', calories: 167, protein_g: 30, fat_g: 0, carbs_g: 10, category: 'brands' },
   { name: 'Milfina Butter', name_en: 'Milfina Butter', quantity: 10, unit: 'g', calories: 74, protein_g: 0, fat_g: 8, carbs_g: 0, category: 'brands' },
   { name: 'Milfina Joghurt Natur', name_en: 'Milfina Plain Yogurt', quantity: 150, unit: 'g', calories: 92, protein_g: 5, fat_g: 5, carbs_g: 7, category: 'brands' },
+  { name: 'Milfina Gouda', name_en: 'Milfina Gouda', quantity: 30, unit: 'g', calories: 105, protein_g: 7, fat_g: 8, carbs_g: 0, category: 'brands' },
+  { name: 'Meine Metzgerei Kochschinken', name_en: 'Meine Metzgerei Cooked Ham', quantity: 30, unit: 'g', calories: 35, protein_g: 6, fat_g: 1, carbs_g: 0, category: 'brands' },
+  { name: 'Meine Metzgerei Salami', name_en: 'Meine Metzgerei Salami', quantity: 30, unit: 'g', calories: 120, protein_g: 7, fat_g: 10, carbs_g: 0, category: 'brands' },
+  { name: 'Meine Metzgerei Putenbrust', name_en: 'Meine Metzgerei Turkey Breast', quantity: 30, unit: 'g', calories: 30, protein_g: 6, fat_g: 0.5, carbs_g: 0, category: 'brands' },
   { name: 'K-Classic Vollmilch', name_en: 'K-Classic Whole Milk', quantity: 200, unit: 'ml', calories: 128, protein_g: 7, fat_g: 7, carbs_g: 10, category: 'brands' },
   { name: 'K-Classic Magerquark', name_en: 'K-Classic Low-fat Quark', quantity: 250, unit: 'g', calories: 167, protein_g: 30, fat_g: 0, carbs_g: 10, category: 'brands' },
   { name: 'K-Classic Butter', name_en: 'K-Classic Butter', quantity: 10, unit: 'g', calories: 74, protein_g: 0, fat_g: 8, carbs_g: 0, category: 'brands' },
+  { name: 'K-Classic Reis', name_en: 'K-Classic Rice', quantity: 200, unit: 'g', calories: 260, protein_g: 5, fat_g: 1, carbs_g: 57, category: 'brands' },
+  { name: 'K-Classic Spaghetti (gekocht)', name_en: 'K-Classic Spaghetti (cooked)', quantity: 200, unit: 'g', calories: 280, protein_g: 10, fat_g: 2, carbs_g: 55, category: 'brands' },
+  { name: 'K-Classic Chips', name_en: 'K-Classic Chips', quantity: 30, unit: 'g', calories: 160, protein_g: 2, fat_g: 10, carbs_g: 15, category: 'brands' },
 
-  // Eigenmarken / Store Brands – Österreich (SPAR, Billa)
+  // Eigenmarken / Store Brands – Österreich (S-Budget, Clever, SPAR)
   { name: 'S-Budget Vollmilch', name_en: 'S-Budget Whole Milk', quantity: 200, unit: 'ml', calories: 128, protein_g: 7, fat_g: 7, carbs_g: 10, category: 'brands' },
   { name: 'S-Budget Butter', name_en: 'S-Budget Butter', quantity: 10, unit: 'g', calories: 74, protein_g: 0, fat_g: 8, carbs_g: 0, category: 'brands' },
   { name: 'S-Budget Gouda', name_en: 'S-Budget Gouda', quantity: 30, unit: 'g', calories: 105, protein_g: 7, fat_g: 8, carbs_g: 0, category: 'brands' },
   { name: 'S-Budget Joghurt Natur', name_en: 'S-Budget Plain Yogurt', quantity: 150, unit: 'g', calories: 92, protein_g: 5, fat_g: 5, carbs_g: 7, category: 'brands' },
   { name: 'S-Budget Toast', name_en: 'S-Budget Toast', quantity: 1, unit: 'Scheibe', calories: 65, protein_g: 2, fat_g: 1, carbs_g: 12, category: 'brands' },
+  { name: 'S-Budget Reis', name_en: 'S-Budget Rice', quantity: 200, unit: 'g', calories: 260, protein_g: 5, fat_g: 1, carbs_g: 57, category: 'brands' },
+  { name: 'S-Budget Spaghetti (gekocht)', name_en: 'S-Budget Spaghetti (cooked)', quantity: 200, unit: 'g', calories: 280, protein_g: 10, fat_g: 2, carbs_g: 55, category: 'brands' },
+  { name: 'S-Budget Kochschinken', name_en: 'S-Budget Cooked Ham', quantity: 30, unit: 'g', calories: 35, protein_g: 6, fat_g: 1, carbs_g: 0, category: 'brands' },
+  { name: 'S-Budget Salami', name_en: 'S-Budget Salami', quantity: 30, unit: 'g', calories: 120, protein_g: 7, fat_g: 10, carbs_g: 0, category: 'brands' },
+  { name: 'S-Budget Thunfisch', name_en: 'S-Budget Canned Tuna', quantity: 100, unit: 'g', calories: 110, protein_g: 25, fat_g: 1, carbs_g: 0, category: 'brands' },
+  { name: 'S-Budget Chips', name_en: 'S-Budget Chips', quantity: 30, unit: 'g', calories: 160, protein_g: 2, fat_g: 10, carbs_g: 15, category: 'brands' },
   { name: 'SPAR Natur*pur Bio Hafermilch', name_en: 'SPAR Organic Oat Milk', quantity: 200, unit: 'ml', calories: 92, protein_g: 1, fat_g: 3, carbs_g: 14, category: 'brands' },
+  { name: 'SPAR Hähnchenbrust', name_en: 'SPAR Chicken Breast', quantity: 150, unit: 'g', calories: 165, protein_g: 31, fat_g: 4, carbs_g: 0, category: 'brands' },
   { name: 'Clever Vollmilch', name_en: 'Clever Whole Milk', quantity: 200, unit: 'ml', calories: 128, protein_g: 7, fat_g: 7, carbs_g: 10, category: 'brands' },
   { name: 'Clever Butter', name_en: 'Clever Butter', quantity: 10, unit: 'g', calories: 74, protein_g: 0, fat_g: 8, carbs_g: 0, category: 'brands' },
   { name: 'Clever Gouda', name_en: 'Clever Gouda', quantity: 30, unit: 'g', calories: 105, protein_g: 7, fat_g: 8, carbs_g: 0, category: 'brands' },
   { name: 'Clever Toastbrot', name_en: 'Clever Toast', quantity: 1, unit: 'Scheibe', calories: 65, protein_g: 2, fat_g: 1, carbs_g: 12, category: 'brands' },
+  { name: 'Clever Reis', name_en: 'Clever Rice', quantity: 200, unit: 'g', calories: 260, protein_g: 5, fat_g: 1, carbs_g: 57, category: 'brands' },
+  { name: 'Clever Spaghetti (gekocht)', name_en: 'Clever Spaghetti (cooked)', quantity: 200, unit: 'g', calories: 280, protein_g: 10, fat_g: 2, carbs_g: 55, category: 'brands' },
+  { name: 'Clever Kochschinken', name_en: 'Clever Cooked Ham', quantity: 30, unit: 'g', calories: 35, protein_g: 6, fat_g: 1, carbs_g: 0, category: 'brands' },
+  { name: 'Clever Thunfisch', name_en: 'Clever Canned Tuna', quantity: 100, unit: 'g', calories: 110, protein_g: 25, fat_g: 1, carbs_g: 0, category: 'brands' },
 
-  // Eigenmarken / Store Brands – Schweiz (Migros, Coop)
+  // Eigenmarken / Store Brands – Schweiz (M-Budget, Prix Garantie)
   { name: 'M-Budget Vollmilch', name_en: 'M-Budget Whole Milk', quantity: 200, unit: 'ml', calories: 128, protein_g: 7, fat_g: 7, carbs_g: 10, category: 'brands' },
   { name: 'M-Budget Butter', name_en: 'M-Budget Butter', quantity: 10, unit: 'g', calories: 74, protein_g: 0, fat_g: 8, carbs_g: 0, category: 'brands' },
   { name: 'M-Budget Joghurt Natur', name_en: 'M-Budget Plain Yogurt', quantity: 150, unit: 'g', calories: 92, protein_g: 5, fat_g: 5, carbs_g: 7, category: 'brands' },
+  { name: 'M-Budget Reis', name_en: 'M-Budget Rice', quantity: 200, unit: 'g', calories: 260, protein_g: 5, fat_g: 1, carbs_g: 57, category: 'brands' },
+  { name: 'M-Budget Spaghetti (gekocht)', name_en: 'M-Budget Spaghetti (cooked)', quantity: 200, unit: 'g', calories: 280, protein_g: 10, fat_g: 2, carbs_g: 55, category: 'brands' },
+  { name: 'M-Budget Poulet Brust', name_en: 'M-Budget Chicken Breast', quantity: 150, unit: 'g', calories: 165, protein_g: 31, fat_g: 4, carbs_g: 0, category: 'brands' },
   { name: 'Prix Garantie Vollmilch', name_en: 'Prix Garantie Whole Milk', quantity: 200, unit: 'ml', calories: 128, protein_g: 7, fat_g: 7, carbs_g: 10, category: 'brands' },
   { name: 'Prix Garantie Butter', name_en: 'Prix Garantie Butter', quantity: 10, unit: 'g', calories: 74, protein_g: 0, fat_g: 8, carbs_g: 0, category: 'brands' },
+  { name: 'Prix Garantie Reis', name_en: 'Prix Garantie Rice', quantity: 200, unit: 'g', calories: 260, protein_g: 5, fat_g: 1, carbs_g: 57, category: 'brands' },
 
-  // Eigenmarken / Store Brands – Spanien (Mercadona, Lidl ES)
+  // Eigenmarken / Store Brands – Spanien (Hacendado)
   { name: 'Hacendado Leche Entera', name_en: 'Hacendado Whole Milk', quantity: 200, unit: 'ml', calories: 128, protein_g: 7, fat_g: 7, carbs_g: 10, category: 'brands' },
   { name: 'Hacendado Yogur Natural', name_en: 'Hacendado Plain Yogurt', quantity: 150, unit: 'g', calories: 92, protein_g: 5, fat_g: 5, carbs_g: 7, category: 'brands' },
   { name: 'Hacendado Queso Fresco', name_en: 'Hacendado Fresh Cheese', quantity: 30, unit: 'g', calories: 75, protein_g: 2, fat_g: 7, carbs_g: 1, category: 'brands' },
+  { name: 'Hacendado Arroz', name_en: 'Hacendado Rice', quantity: 200, unit: 'g', calories: 260, protein_g: 5, fat_g: 1, carbs_g: 57, category: 'brands' },
+  { name: 'Hacendado Pechuga de Pollo', name_en: 'Hacendado Chicken Breast', quantity: 150, unit: 'g', calories: 165, protein_g: 31, fat_g: 4, carbs_g: 0, category: 'brands' },
+  { name: 'Hacendado Atún', name_en: 'Hacendado Canned Tuna', quantity: 100, unit: 'g', calories: 110, protein_g: 25, fat_g: 1, carbs_g: 0, category: 'brands' },
+  { name: 'Hacendado Jamón Cocido', name_en: 'Hacendado Cooked Ham', quantity: 30, unit: 'g', calories: 35, protein_g: 6, fat_g: 1, carbs_g: 0, category: 'brands' },
 
   // Eier / Eggs
   { name: 'Ei gekocht', name_en: 'Boiled Egg', quantity: 1, unit: 'Stück', calories: 78, protein_g: 6, fat_g: 5, carbs_g: 1, category: 'eggs' },
