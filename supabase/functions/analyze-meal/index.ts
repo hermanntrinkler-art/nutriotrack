@@ -33,14 +33,21 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a nutrition analysis AI. Analyze food images and identify all visible foods with their estimated nutritional values. Be accurate with portion sizes. Respond in ${lang}. Use common food names. Estimate realistically based on visual portion size.`,
+            content: `You are a nutrition analysis AI. Analyze food images and identify all visible foods with their estimated nutritional values. Be accurate with portion sizes. Respond in ${lang}. Use common food names.
+
+IMPORTANT RULES:
+- If you see packaged products, coffee capsules, tea bags, or branded items, identify the PREPARED food/drink they produce (e.g., a Nespresso capsule = "Kaffee" / "Espresso", not "Kapsel").
+- For coffee: estimate as the prepared drink. A standard espresso capsule = ~40ml espresso (~2 kcal). If milk/cream is likely added, mention separately.
+- For drinks: use ml as the unit. For solid food: use g or Stück/piece.
+- Estimate realistically based on visual portion size and typical serving sizes.
+- Always provide realistic nutritional values based on standard food databases.`,
           },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "Analyze this food image. Identify each food item visible, estimate portion sizes, and provide nutritional information (calories, protein, fat, carbs) for each item. Also provide a confidence score (0-1) for each identification.",
+                text: "Analyze this food image. Identify each food item visible. If you see product packaging or capsules, identify the PREPARED food/drink they produce. Estimate portion sizes and provide nutritional information (calories, protein, fat, carbs) for each item. Use ml for drinks and g for solid foods. Provide a confidence score (0-1) for each identification.",
               },
               {
                 type: "image_url",
