@@ -57,7 +57,7 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
     if (profile && !profile.onboarding_completed) {
       return <Navigate to="/onboarding" replace />;
     }
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
