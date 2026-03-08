@@ -1,7 +1,9 @@
 import { useTranslation } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
-import { Check, Crown, Sparkles, X, Zap } from 'lucide-react';
+import { Check, Crown, Sparkles, X, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface PaywallScreenProps {
   onClose: () => void;
@@ -12,6 +14,7 @@ interface PaywallScreenProps {
 export default function PaywallScreen({ onClose, onUpgrade, trigger }: PaywallScreenProps) {
   const { t } = useTranslation();
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly' | 'lifetime'>('yearly');
+  const [isLoading, setIsLoading] = useState(false);
 
   const features = [
     t('paywall.featureUnlimitedScans'),
@@ -28,8 +31,24 @@ export default function PaywallScreen({ onClose, onUpgrade, trigger }: PaywallSc
     { id: 'lifetime' as const, label: t('paywall.lifetime'), price: '79 €', sub: t('paywall.oneTime'), badge: t('paywall.founderDeal') },
   ];
 
-  const handleUpgrade = () => {
-    onUpgrade?.(selectedPlan);
+  const handleUpgrade = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { plan: selectedPlan },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+      onUpgrade?.(selectedPlan);
+    } catch (err: any) {
+      console.error('Checkout error:', err);
+      toast.error('Fehler beim Starten des Checkouts');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -97,8 +116,12 @@ export default function PaywallScreen({ onClose, onUpgrade, trigger }: PaywallSc
         </div>
 
         {/* CTA */}
-        <Button onClick={handleUpgrade} className="w-full h-12 text-base font-bold">
-          <Sparkles className="h-4 w-4 mr-2" />
+        <Button onClick={handleUpgrade} disabled={isLoading} className="w-full h-12 text-base font-bold">
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Sparkles className="h-4 w-4 mr-2" />
+          )}
           {t('paywall.upgradeCta')}
         </Button>
 
