@@ -278,13 +278,15 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
               />
             </div>
 
-            {showSuggestions && suggestions.length > 0 && (
+            {showSuggestions && (suggestions.length > 0 || searchingOnline) && (
               <div
                 ref={suggestionsRef}
-                className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden"
+                className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden max-h-64 overflow-y-auto"
               >
                 {suggestions.map((food, i) => {
                   const name = language === 'de' ? food.name : food.name_en;
+                  const isOnline = food.category === 'openfoodfacts';
+                  const isCustom = food.category === 'custom';
                   return (
                     <button
                       key={i}
@@ -295,9 +297,13 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
                         selectSuggestion(food);
                       }}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-foreground">{name}</span>
-                        <span className="text-xs text-muted-foreground">{food.calories} kcal</span>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-sm font-medium text-foreground truncate flex items-center gap-1.5">
+                          {isOnline && <Globe className="h-3 w-3 text-muted-foreground shrink-0" />}
+                          {isCustom && <span className="text-[10px] bg-primary/10 text-primary px-1 rounded shrink-0">★</span>}
+                          {name}
+                        </span>
+                        <span className="text-xs text-muted-foreground shrink-0">{food.calories} kcal</span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {food.quantity} {food.unit} · P:{food.protein_g}g F:{food.fat_g}g C:{food.carbs_g}g
@@ -305,6 +311,12 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
                     </button>
                   );
                 })}
+                {searchingOnline && (
+                  <div className="px-3 py-2 flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {language === 'de' ? 'Suche online...' : 'Searching online...'}
+                  </div>
+                )}
               </div>
             )}
           </div>
