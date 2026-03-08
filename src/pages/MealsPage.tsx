@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { analyzeFoodImage } from '@/lib/ai-analysis';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, PenLine, ScanBarcode } from 'lucide-react';
+import { Camera, Upload, PenLine, ScanBarcode, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
@@ -16,9 +16,10 @@ import EditableFoodItemsList from '@/components/meals/EditableFoodItemsList';
 import FoodItemEditorModal from '@/components/meals/FoodItemEditorModal';
 import SaveMealConfirmation from '@/components/meals/SaveMealConfirmation';
 import BarcodeScanner from '@/components/meals/BarcodeScanner';
+import FoodSearchScreen from '@/components/meals/FoodSearchScreen';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-type Step = 'select-type' | 'select-method' | 'analyzing' | 'review' | 'confirm' | 'barcode';
+type Step = 'select-type' | 'select-method' | 'analyzing' | 'review' | 'confirm' | 'barcode' | 'search';
 
 export default function MealsPage() {
   const { user } = useAuth();
