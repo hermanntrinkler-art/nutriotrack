@@ -207,6 +207,8 @@ const translations = {
     'auth.createAccount': 'Create Account',
     'auth.subtitle': 'Your smart nutrition companion',
     'auth.checkEmail': 'Please confirm your email address.',
+    'auth.orContinueWith': 'Or continue with',
+    'auth.googleSignIn': 'Sign in with Google',
 
     'onboarding.title': "Let's get started!",
     'onboarding.subtitle': 'A few details so we can calculate your goals.',
