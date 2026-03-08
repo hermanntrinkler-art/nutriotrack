@@ -192,7 +192,6 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
       setShowSuggestions(true);
       triggerOnlineSearch(value);
     }
-    }
   };
 
   const handleUnitChange = (newUnit: string) => {
