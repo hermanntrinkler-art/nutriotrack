@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { analyzeFoodImage } from '@/lib/ai-analysis';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, PenLine, ScanBarcode } from 'lucide-react';
+import { Camera, Upload, PenLine, ScanBarcode, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
@@ -16,9 +16,10 @@ import EditableFoodItemsList from '@/components/meals/EditableFoodItemsList';
 import FoodItemEditorModal from '@/components/meals/FoodItemEditorModal';
 import SaveMealConfirmation from '@/components/meals/SaveMealConfirmation';
 import BarcodeScanner from '@/components/meals/BarcodeScanner';
+import FoodSearchScreen from '@/components/meals/FoodSearchScreen';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-type Step = 'select-type' | 'select-method' | 'analyzing' | 'review' | 'confirm' | 'barcode';
+type Step = 'select-type' | 'select-method' | 'analyzing' | 'review' | 'confirm' | 'barcode' | 'search';
 
 export default function MealsPage() {
   const { user } = useAuth();
@@ -401,6 +402,17 @@ export default function MealsPage() {
             </div>
           </div>
 
+          {/* Food Search - PRIMARY position */}
+          <button onClick={() => setStep('search')} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors border-primary/20">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <Search className="h-6 w-6 text-primary" />
+            </div>
+            <div className="text-left flex-1">
+              <p className="font-medium">{language === 'de' ? 'Lebensmittel suchen' : 'Search Food'}</p>
+              <p className="text-xs text-muted-foreground">{language === 'de' ? 'Durchsuche 600+ Lebensmittel & Online-Datenbank' : 'Search 600+ foods & online database'}</p>
+            </div>
+          </button>
+
           <button onClick={handleManualEntry} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-warning/10 flex items-center justify-center">
               <PenLine className="h-6 w-6 text-warning" />
@@ -424,6 +436,18 @@ export default function MealsPage() {
             {t('meals.cancel')}
           </Button>
         </div>
+      )}
+
+      {/* Step: Food Search */}
+      {step === 'search' && (
+        <FoodSearchScreen
+          onDone={(searchItems) => {
+            setIsAiResult(false);
+            setItems(searchItems);
+            setStep('review');
+          }}
+          onCancel={() => setStep('select-method')}
+        />
       )}
 
       {/* Step: Barcode */}
