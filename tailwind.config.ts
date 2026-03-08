@@ -67,6 +67,7 @@ export default {
         fat: "hsl(var(--fat))",
         carbs: "hsl(var(--carbs))",
         calories: "hsl(var(--calories))",
+        energy: "hsl(var(--energy))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
