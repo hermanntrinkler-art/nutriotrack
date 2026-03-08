@@ -129,7 +129,7 @@ export default function PaywallScreen({ onClose, onUpgrade, trigger }: PaywallSc
           ) : (
             <Sparkles className="h-4 w-4 mr-2" />
           )}
-          {t('paywall.upgradeCta')}
+          {selectedPlan === 'monthly' ? '7 Tage kostenlos testen' : t('paywall.upgradeCta')}
         </Button>
 
         <p className="text-center text-xs text-muted-foreground mt-3">
