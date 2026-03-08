@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import WaterTracker from '@/components/WaterTracker';
 import ReminderBanner from '@/components/ReminderBanner';
+import CalendarHeatmap from '@/components/CalendarHeatmap';
 import { fireConfetti } from '@/lib/confetti';
 import { markTodayHasMeals, initReminders } from '@/components/ReminderSettings';
 
@@ -507,6 +508,10 @@ export default function DashboardPage() {
           </div>
         </div>
       </motion.div>
+
+
+      {/* Calendar Heatmap */}
+      <CalendarHeatmap meals={allMeals} calorieTarget={calorieTarget} />
 
       <motion.div
         className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
