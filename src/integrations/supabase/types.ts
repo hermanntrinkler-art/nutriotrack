@@ -213,6 +213,7 @@ export type Database = {
           carbs_target_g: number | null
           created_at: string
           current_weight_kg: number | null
+          deficit_intensity: number | null
           fat_target_g: number | null
           goal_type: Database["public"]["Enums"]["goal_type"] | null
           goal_weight_kg: number | null
@@ -231,6 +232,7 @@ export type Database = {
           carbs_target_g?: number | null
           created_at?: string
           current_weight_kg?: number | null
+          deficit_intensity?: number | null
           fat_target_g?: number | null
           goal_type?: Database["public"]["Enums"]["goal_type"] | null
           goal_weight_kg?: number | null
@@ -249,6 +251,7 @@ export type Database = {
           carbs_target_g?: number | null
           created_at?: string
           current_weight_kg?: number | null
+          deficit_intensity?: number | null
           fat_target_g?: number | null
           goal_type?: Database["public"]["Enums"]["goal_type"] | null
           goal_weight_kg?: number | null
