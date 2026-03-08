@@ -165,7 +165,7 @@ export default function ProfilePage() {
             {t('paywall.upgradeButton')}
           </Button>
         )}
-      </div>
+      </motion.div>
 
       {/* User info */}
       <div className="nutri-card flex items-center gap-4">
