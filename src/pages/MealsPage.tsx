@@ -387,6 +387,19 @@ export default function MealsPage() {
         </div>
       )}
 
+      {/* Step: Barcode */}
+      {step === 'barcode' && (
+        <BarcodeScanner
+          onResult={(item) => {
+            setIsAiResult(false);
+            setItems([item]);
+            setStep('review');
+            setEditingIndex(0);
+          }}
+          onCancel={handleReset}
+        />
+      )}
+
       {/* Step: Analyzing */}
       {step === 'analyzing' && (
         <AnalyseScreen imagePreview={imagePreview} />
