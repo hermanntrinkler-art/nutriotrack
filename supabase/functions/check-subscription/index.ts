@@ -72,16 +72,16 @@ serve(async (req) => {
 
     if (subscriptions.data.length > 0) {
       const sub = subscriptions.data[0];
-      const priceId = sub.items.data[0].price.id;
+      const priceId = sub.items.data[0]?.price?.id;
       const plan = PRICE_TO_PLAN[priceId] || "pro";
-      const endDate = new Date(sub.current_period_end * 1000).toISOString();
+      const endDate = sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null;
+      const startDate = sub.current_period_start ? new Date(sub.current_period_start * 1000).toISOString() : null;
       logStep("Active subscription", { priceId, plan, endDate });
 
-      await supabaseClient.from("profiles").update({
-        subscription_status: plan,
-        subscription_end_date: endDate,
-        subscription_start_date: new Date(sub.current_period_start * 1000).toISOString(),
-      }).eq("user_id", user.id);
+      const updateData: Record<string, any> = { subscription_status: plan };
+      if (endDate) updateData.subscription_end_date = endDate;
+      if (startDate) updateData.subscription_start_date = startDate;
+      await supabaseClient.from("profiles").update(updateData).eq("user_id", user.id);
 
       return new Response(JSON.stringify({
         subscribed: true,
