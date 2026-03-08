@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      custom_products: {
+        Row: {
+          barcode: string
+          calories: number
+          carbs_g: number
+          created_at: string
+          default_quantity: number
+          default_unit: string
+          fat_g: number
+          food_name: string
+          id: string
+          protein_g: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          barcode: string
+          calories?: number
+          carbs_g?: number
+          created_at?: string
+          default_quantity?: number
+          default_unit?: string
+          fat_g?: number
+          food_name: string
+          id?: string
+          protein_g?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          barcode?: string
+          calories?: number
+          carbs_g?: number
+          created_at?: string
+          default_quantity?: number
+          default_unit?: string
+          fat_g?: number
+          food_name?: string
+          id?: string
+          protein_g?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       meal_entries: {
         Row: {
           ai_analysis_status:
