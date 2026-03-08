@@ -33,7 +33,7 @@ export default function EditMealPage() {
   const loadMeal = async () => {
     if (!id) return;
     const { data: meal } = await supabase.from('meal_entries').select('*').eq('id', id).single();
-    if (!meal) { navigate('/'); return; }
+    if (!meal) { navigate('/dashboard'); return; }
     setMealType((meal as any).meal_type);
 
     const { data: foodItems } = await supabase.from('meal_food_items').select('*').eq('meal_entry_id', id);
