@@ -535,7 +535,9 @@ export function searchFoods(query: string, language: 'de' | 'en'): FoodEntry[] {
   if (!normalizedQuery) return [];
 
   const queryTokens = tokenize(normalizedQuery);
-  const synonymTargets = findSynonymTargets(normalizedQuery);
+  const synonymMatch = findSynonymMatches(normalizedQuery);
+  const synonymTargets = synonymMatch?.targets ?? [];
+  const matchedAlias = synonymMatch?.alias ?? '';
 
   const scored = foodDatabase
     .map((entry) => {
@@ -548,12 +550,14 @@ export function searchFoods(query: string, language: 'de' | 'en'): FoodEntry[] {
       const secondaryTokens = tokenize(secondaryName);
 
       let score = 0;
+      let isSynonymHit = false;
 
       // Check synonym matches
       if (synonymTargets.length > 0) {
         for (const target of synonymTargets) {
           if (primary.includes(target) || secondary.includes(target)) {
             score = Math.max(score, 70);
+            isSynonymHit = true;
             break;
           }
         }
@@ -584,7 +588,11 @@ export function searchFoods(query: string, language: 'de' | 'en'): FoodEntry[] {
         }
       }
 
-      return score > 0 ? { entry, score } : null;
+      if (score > 0) {
+        const resultEntry = isSynonymHit ? { ...entry, matchedAlias } : entry;
+        return { entry: resultEntry, score };
+      }
+      return null;
     })
     .filter((result): result is { entry: FoodEntry; score: number } => result !== null)
     .sort((a, b) => b.score - a.score || a.entry.name.localeCompare(b.entry.name));
