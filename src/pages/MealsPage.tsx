@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { analyzeFoodImage } from '@/lib/ai-analysis';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, PenLine } from 'lucide-react';
+import { Camera, Upload, PenLine, ScanBarcode } from 'lucide-react';
 import { toast } from 'sonner';
 
 import AnalyseScreen from '@/components/meals/AnalyseScreen';
