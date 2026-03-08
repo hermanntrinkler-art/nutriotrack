@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import type { Easing } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
@@ -9,6 +9,7 @@ import { Plus, TrendingDown, TrendingUp, Minus, Flame, Zap, Dumbbell, Droplets, 
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import WaterTracker from '@/components/WaterTracker';
+import { fireConfetti } from '@/lib/confetti';
 
 // --- Animated Macro Ring ---
 function MacroRing({ label, current, target, color, icon: Icon, delay = 0 }: {
@@ -163,6 +164,19 @@ export default function DashboardPage() {
   const calPct = Math.min((todayTotals.calories / calorieTarget) * 100, 100);
   const circumference = 2 * Math.PI * 42;
   const calOffset = circumference - (calPct / 100) * circumference;
+
+  // Confetti when calorie goal reached
+  const confettiFired = useRef(false);
+  useEffect(() => {
+    if (calPct >= 95 && calPct <= 105 && todayTotals.calories > 0 && !confettiFired.current) {
+      confettiFired.current = true;
+      const key = `confetti_cal_${new Date().toISOString().split('T')[0]}`;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        setTimeout(() => fireConfetti(), 800);
+      }
+    }
+  }, [calPct, todayTotals.calories]);
 
   const motivationalMsg = useMemo(() => getMotivationalMessage(calPct, language), [calPct, language]);
 
