@@ -47,7 +47,7 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-primary font-semibold">NutriLens</div>
+        <div className="animate-pulse text-primary font-semibold">Snap2Fit</div>
       </div>
     );
   }
