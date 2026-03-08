@@ -85,7 +85,7 @@ export default function EditMealPage() {
 
     toast.success(t('meals.saved'));
     setSaving(false);
-    navigate('/');
+    navigate('/dashboard');
   };
 
   const handleDelete = async () => {
