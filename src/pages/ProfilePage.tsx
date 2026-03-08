@@ -1,18 +1,120 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
+import { supabase } from '@/integrations/supabase/client';
+import { calculateNutrition } from '@/lib/nutrition';
 import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Globe, Target, Leaf } from 'lucide-react';
+import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull } from 'lucide-react';
+import { toast } from 'sonner';
+
+const DEFICIT_VALUES = [300, 500, 750, 1000, 1250];
+const SURPLUS_VALUES = [200, 300, 450, 600, 800];
+const WEEKLY_LOSS = [0.3, 0.5, 0.75, 1.0, 1.25]; // approximate kg/week
 
 export default function ProfilePage() {
   const { user, profile, signOut } = useAuth();
   const { t, language, setLanguage } = useTranslation();
   const navigate = useNavigate();
 
+  const [goals, setGoals] = useState<any>(null);
+  const [intensity, setIntensity] = useState(2);
+  const [saving, setSaving] = useState(false);
+  const [previewCalories, setPreviewCalories] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('user_goals').select('*').eq('user_id', user.id).single()
+      .then(({ data }) => {
+        if (data) {
+          setGoals(data);
+          setIntensity((data as any).deficit_intensity || 2);
+        }
+      });
+  }, [user]);
+
+  useEffect(() => {
+    if (!goals) return;
+    const result = calculateNutrition({
+      sex: goals.sex || 'male',
+      age: goals.age || 30,
+      height_cm: goals.height_cm || 175,
+      current_weight_kg: goals.current_weight_kg || 80,
+      activity_level: goals.activity_level || 'moderately_active',
+      goal_type: goals.goal_type || 'lose',
+      deficit_intensity: intensity,
+    });
+    setPreviewCalories(result.calorieTarget);
+  }, [goals, intensity]);
+
+  const handleSaveIntensity = async () => {
+    if (!user || !goals) return;
+    setSaving(true);
+
+    const result = calculateNutrition({
+      sex: goals.sex || 'male',
+      age: goals.age || 30,
+      height_cm: goals.height_cm || 175,
+      current_weight_kg: goals.current_weight_kg || 80,
+      activity_level: goals.activity_level || 'moderately_active',
+      goal_type: goals.goal_type || 'lose',
+      deficit_intensity: intensity,
+    });
+
+    await supabase.from('user_goals').update({
+      deficit_intensity: intensity,
+      calorie_target: result.calorieTarget,
+      protein_target_g: result.proteinTarget,
+      fat_target_g: result.fatTarget,
+      carbs_target_g: result.carbsTarget,
+    } as any).eq('user_id', user.id);
+
+    setGoals((prev: any) => ({ ...prev, deficit_intensity: intensity, calorie_target: result.calorieTarget }));
+    toast.success(t('profile.intensitySaved'));
+    setSaving(false);
+  };
+
   const handleLogout = async () => {
     await signOut();
     navigate('/login');
   };
+
+  const goalType = goals?.goal_type;
+  const isLoseOrGain = goalType === 'lose' || goalType === 'gain';
+
+  const getIntensityLabel = (val: number) => {
+    const key = `profile.intensity${val}` as any;
+    return t(key);
+  };
+
+  const getIntensityColor = (val: number) => {
+    if (val <= 2) return 'text-primary';
+    if (val === 3) return 'text-warning';
+    return 'text-destructive';
+  };
+
+  const getIntensityBgColor = (val: number) => {
+    if (val <= 2) return 'bg-primary/10';
+    if (val === 3) return 'bg-warning/10';
+    return 'bg-destructive/10';
+  };
+
+  const getIntensityIcon = (val: number) => {
+    if (val <= 2) return <ShieldCheck className="h-5 w-5 text-primary" />;
+    if (val === 3) return <AlertTriangle className="h-5 w-5 text-warning" />;
+    if (val === 4) return <ShieldAlert className="h-5 w-5 text-destructive" />;
+    return <Skull className="h-5 w-5 text-destructive" />;
+  };
+
+  const getIntensityHint = (val: number) => {
+    if (val <= 2) return t('profile.intensityHealthy');
+    if (val <= 3) return t('profile.intensityWarning');
+    return t('profile.intensityDanger');
+  };
+
+  const deficitValue = goalType === 'lose' ? DEFICIT_VALUES[intensity - 1] : SURPLUS_VALUES[intensity - 1];
+  const weeklyValue = WEEKLY_LOSS[intensity - 1];
 
   return (
     <div className="page-container space-y-4">
@@ -28,6 +130,84 @@ export default function ProfilePage() {
           <p className="text-sm text-muted-foreground">{user?.email}</p>
         </div>
       </div>
+
+      {/* Deficit Intensity Slider */}
+      {isLoseOrGain && goals && (
+        <div className="nutri-card space-y-4">
+          <div className="flex items-center gap-3">
+            {getIntensityIcon(intensity)}
+            <div>
+              <h3 className="font-semibold text-sm">{t('profile.deficitIntensity')}</h3>
+              <p className={`text-xs font-medium ${getIntensityColor(intensity)}`}>
+                {getIntensityLabel(intensity)}
+              </p>
+            </div>
+          </div>
+
+          {/* Slider */}
+          <div className="px-1">
+            <Slider
+              min={1}
+              max={5}
+              step={1}
+              value={[intensity]}
+              onValueChange={(val) => setIntensity(val[0])}
+              className="w-full"
+            />
+            <div className="flex justify-between mt-1.5">
+              {[1, 2, 3, 4, 5].map((val) => (
+                <div key={val} className="flex flex-col items-center">
+                  <span className={`text-[9px] font-medium ${val === intensity ? getIntensityColor(val) : 'text-muted-foreground'}`}>
+                    {getIntensityLabel(val)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Info box */}
+          <div className={`rounded-xl p-3 ${getIntensityBgColor(intensity)} space-y-1.5`}>
+            <p className={`text-sm font-medium ${getIntensityColor(intensity)}`}>
+              {getIntensityHint(intensity)}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {goalType === 'lose'
+                ? t('profile.deficitKcal', { value: deficitValue })
+                : t('profile.surplusKcal', { value: deficitValue })
+              }
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t('profile.weeklyLoss', { value: weeklyValue })}
+            </p>
+            {previewCalories && (
+              <p className="text-sm font-semibold text-foreground">
+                {t('profile.newCalorieTarget', { value: previewCalories })}
+              </p>
+            )}
+          </div>
+
+          {/* Warning for extreme levels */}
+          {intensity >= 4 && (
+            <div className="flex items-start gap-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3">
+              <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-destructive">
+                {language === 'de'
+                  ? 'Ein so hohes Defizit kann zu Muskelabbau, Nährstoffmangel und Jojo-Effekt führen. Sprich vorher mit einem Arzt.'
+                  : 'Such a high deficit can lead to muscle loss, nutrient deficiency and yo-yo effect. Consult a doctor first.'
+                }
+              </p>
+            </div>
+          )}
+
+          <Button
+            onClick={handleSaveIntensity}
+            disabled={saving || intensity === (goals?.deficit_intensity || 2)}
+            className="w-full"
+          >
+            {saving ? t('common.loading') : t('common.save')}
+          </Button>
+        </div>
+      )}
 
       {/* Settings */}
       <div className="space-y-2">
