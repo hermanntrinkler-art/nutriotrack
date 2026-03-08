@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import WaterTracker from '@/components/WaterTracker';
 import ReminderBanner from '@/components/ReminderBanner';
+import CalendarHeatmap from '@/components/CalendarHeatmap';
 import { fireConfetti } from '@/lib/confetti';
 import { markTodayHasMeals, initReminders } from '@/components/ReminderSettings';
 
