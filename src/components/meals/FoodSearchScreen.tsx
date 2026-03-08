@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { searchFoods, type FoodEntry } from '@/lib/food-database';
+import { searchFoods, foodDatabase, type FoodEntry } from '@/lib/food-database';
 import { searchOpenFoodFacts } from '@/lib/openfoodfacts-search';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
