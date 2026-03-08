@@ -151,30 +151,80 @@ function normalizeSearchText(value: string): string {
     .trim();
 }
 
+function levenshteinDistance(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+
+  const matrix = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+
+  for (let i = 0; i <= a.length; i++) matrix[i][0] = i;
+  for (let j = 0; j <= b.length; j++) matrix[0][j] = j;
+
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost,
+      );
+    }
+  }
+
+  return matrix[a.length][b.length];
+}
+
+function tokenize(value: string): string[] {
+  return normalizeSearchText(value)
+    .split(/[^a-z0-9]+/)
+    .filter((token) => token.length >= 2);
+}
+
 export function searchFoods(query: string, language: 'de' | 'en'): FoodEntry[] {
   const normalizedQuery = normalizeSearchText(query);
   if (!normalizedQuery) return [];
 
+  const queryTokens = tokenize(normalizedQuery);
+
   const scored = foodDatabase
     .map((entry) => {
       const primaryName = language === 'de' ? entry.name : entry.name_en;
+      const secondaryName = language === 'de' ? entry.name_en : entry.name;
+
       const primary = normalizeSearchText(primaryName);
-      const secondary = normalizeSearchText(language === 'de' ? entry.name_en : entry.name);
+      const secondary = normalizeSearchText(secondaryName);
+      const primaryTokens = tokenize(primaryName);
+      const secondaryTokens = tokenize(secondaryName);
 
-      if (primary.startsWith(normalizedQuery) || secondary.startsWith(normalizedQuery)) {
-        return { entry, score: 3 };
+      let score = 0;
+
+      if (primary === normalizedQuery || secondary === normalizedQuery) score = Math.max(score, 100);
+      if (primary.startsWith(normalizedQuery) || secondary.startsWith(normalizedQuery)) score = Math.max(score, 80);
+      if (primary.includes(normalizedQuery) || secondary.includes(normalizedQuery)) score = Math.max(score, 60);
+
+      for (const token of queryTokens) {
+        if (token.length < 3) continue;
+
+        if (
+          primaryTokens.some((word) => word.startsWith(token) || word.includes(token)) ||
+          secondaryTokens.some((word) => word.startsWith(token) || word.includes(token))
+        ) {
+          score = Math.max(score, 50);
+          continue;
+        }
+
+        if (token.length >= 5) {
+          const fuzzyMatch = [...primaryTokens, ...secondaryTokens].some((word) => {
+            const maxDistance = token.length >= 8 ? 2 : 1;
+            return levenshteinDistance(word, token) <= maxDistance;
+          });
+
+          if (fuzzyMatch) score = Math.max(score, 40);
+        }
       }
 
-      if (primary.includes(normalizedQuery) || secondary.includes(normalizedQuery)) {
-        return { entry, score: 2 };
-      }
-
-      const words = `${primary} ${secondary}`.split(' ');
-      if (words.some((word) => word.startsWith(normalizedQuery))) {
-        return { entry, score: 1 };
-      }
-
-      return null;
+      return score > 0 ? { entry, score } : null;
     })
     .filter((result): result is { entry: FoodEntry; score: number } => result !== null)
     .sort((a, b) => b.score - a.score || a.entry.name.localeCompare(b.entry.name));
