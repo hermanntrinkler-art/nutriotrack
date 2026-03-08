@@ -119,6 +119,17 @@ const translations = {
     'meals.aiDescription': 'KI analysiert dein Essen',
     'meals.rateLimited': 'Zu viele Anfragen. Bitte warte einen Moment.',
     'meals.paymentRequired': 'AI-Kontingent aufgebraucht.',
+    'meals.scanBarcode': 'Barcode scannen',
+    'meals.barcodeDescription': 'Produkt per Strichcode erkennen',
+    'meals.barcodeFound': 'gefunden!',
+    'meals.barcodeNotFound': 'Produkt nicht gefunden. Versuche es erneut oder gib manuell ein.',
+    'meals.barcodeSearching': 'Produkt wird gesucht…',
+    'meals.barcodeScanHint': 'Halte den Strichcode vor die Kamera',
+    'meals.barcodeManualEntry': 'Code manuell eingeben',
+    'meals.barcodeEnterCode': 'Gib den Barcode (EAN) manuell ein:',
+    'meals.barcodeSearch': 'Suchen',
+    'meals.barcodeScanAgain': 'Erneut scannen',
+    'meals.barcodeCameraError': 'Kamera konnte nicht geöffnet werden.',
 
     // Weight
     'weight.title': 'Gewichtstracking',
