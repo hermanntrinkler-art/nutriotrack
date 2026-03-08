@@ -1,14 +1,17 @@
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Flame, Utensils, Target, Award, Star } from 'lucide-react';
+import { Trophy, Flame, Utensils, Target, Award, Star, Share2, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import type { MealEntry } from '@/lib/types';
 import { fireCenterBurst } from '@/lib/confetti';
+import { generateShareImage, shareImage } from '@/lib/share-image';
+import { toast } from 'sonner';
 
 interface AchievementsBadgesProps {
   totalMeals: number;
   streak: number;
   goalReached: boolean;
+  userName?: string;
 }
 
 interface Achievement {
