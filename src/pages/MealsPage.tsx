@@ -145,6 +145,22 @@ export default function MealsPage() {
     e.currentTarget.value = '';
   };
 
+  const handleOpenFilePicker = () => {
+    const input = fileInputRef.current;
+    if (!input) return;
+
+    const pickerInput = input as HTMLInputElement & { showPicker?: () => void };
+    try {
+      if (pickerInput.showPicker) {
+        pickerInput.showPicker();
+      } else {
+        input.click();
+      }
+    } catch {
+      input.click();
+    }
+  };
+
   useEffect(() => {
     if (!cameraOpen || !videoRef.current || !cameraStreamRef.current) return;
     videoRef.current.srcObject = cameraStreamRef.current;
