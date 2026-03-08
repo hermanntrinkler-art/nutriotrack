@@ -9,6 +9,8 @@ export async function generateShareImage({
   unlockedAchievements,
   totalAchievements,
   language,
+  badgeTitle,
+  badgeShareText,
 }: {
   name: string;
   streak: number;
@@ -16,6 +18,8 @@ export async function generateShareImage({
   unlockedAchievements: number;
   totalAchievements: number;
   language: 'de' | 'en';
+  badgeTitle?: string;
+  badgeShareText?: string;
 }): Promise<Blob> {
   const W = 1080;
   const H = 1080;
@@ -63,140 +67,12 @@ export async function generateShareImage({
   ctx.fillStyle = 'rgba(255,255,255,0.5)';
   ctx.fillText(name, W / 2, 125);
 
-  // Streak section
-  const streakY = 260;
-  
-  // Streak ring
-  const ringX = W / 2;
-  const ringR = 110;
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-  ctx.lineWidth = 12;
-  ctx.beginPath();
-  ctx.arc(ringX, streakY, ringR, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Streak ring colored
-  const streakGrad = ctx.createLinearGradient(ringX - ringR, streakY, ringX + ringR, streakY);
-  streakGrad.addColorStop(0, '#f59e0b');
-  streakGrad.addColorStop(1, '#ef4444');
-  ctx.strokeStyle = streakGrad;
-  ctx.lineWidth = 12;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  const streakAngle = Math.min(streak / 30, 1) * Math.PI * 2;
-  ctx.arc(ringX, streakY, ringR, -Math.PI / 2, -Math.PI / 2 + streakAngle);
-  ctx.stroke();
-
-  // Fire emoji
-  ctx.font = '52px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('🔥', ringX, streakY - 15);
-
-  // Streak number
-  ctx.font = 'bold 64px "Inter", "SF Pro Display", -apple-system, sans-serif';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(String(streak), ringX, streakY + 55);
-
-  // Streak label
-  ctx.font = '600 22px "Inter", "SF Pro Display", -apple-system, sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.5)';
-  ctx.fillText(
-    language === 'de' ? 'Tage Streak' : 'Day Streak',
-    ringX, streakY + 90
-  );
-
-  // Stats cards
-  const statsY = 480;
-  const cardW = 280;
-  const cardH = 140;
-  const cardGap = 40;
-  const cards = [
-    {
-      emoji: '🍽️',
-      value: String(totalMeals),
-      label: language === 'de' ? 'Mahlzeiten' : 'Meals',
-      color: '#3b82f6',
-    },
-    {
-      emoji: '🏆',
-      value: `${unlockedAchievements}/${totalAchievements}`,
-      label: language === 'de' ? 'Achievements' : 'Achievements',
-      color: '#22c55e',
-    },
-  ];
-
-  cards.forEach((card, i) => {
-    const x = W / 2 - cardW - cardGap / 2 + i * (cardW + cardGap);
-    const y = statsY;
-
-    // Card background
-    ctx.fillStyle = 'rgba(255,255,255,0.04)';
-    roundRect(ctx, x, y, cardW, cardH, 20);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-    ctx.lineWidth = 1;
-    roundRect(ctx, x, y, cardW, cardH, 20);
-    ctx.stroke();
-
-    // Emoji
-    ctx.font = '36px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(card.emoji, x + cardW / 2, y + 45);
-
-    // Value
-    ctx.font = 'bold 36px "Inter", "SF Pro Display", -apple-system, sans-serif';
-    ctx.fillStyle = card.color;
-    ctx.fillText(card.value, x + cardW / 2, y + 90);
-
-    // Label
-    ctx.font = '500 18px "Inter", "SF Pro Display", -apple-system, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.fillText(card.label, x + cardW / 2, y + 120);
-  });
-
-  // Motivational quote
-  const quoteY = 720;
-  ctx.font = 'italic 600 28px "Inter", "SF Pro Display", -apple-system, sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.textAlign = 'center';
-  const quote = language === 'de'
-    ? streak >= 7 ? '„Disziplin schlägt Motivation."' : '„Jeder Tag zählt!"'
-    : streak >= 7 ? '"Discipline beats motivation."' : '"Every day counts!"';
-  ctx.fillText(quote, W / 2, quoteY);
-
-  // Achievement dots row
-  const dotsY = 800;
-  const dotR = 14;
-  const dotGap = 42;
-  const dotsStartX = W / 2 - ((totalAchievements - 1) * dotGap) / 2;
-  const achievementEmojis = ['🍽️', '🔥', '🏅', '⭐', '🏆', '🎯'];
-
-  for (let i = 0; i < totalAchievements; i++) {
-    const dx = dotsStartX + i * dotGap;
-    const unlocked = i < unlockedAchievements;
-
-    if (unlocked) {
-      const dotGrad = ctx.createRadialGradient(dx, dotsY, 0, dx, dotsY, dotR + 4);
-      dotGrad.addColorStop(0, '#22c55e40');
-      dotGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = dotGrad;
-      ctx.beginPath();
-      ctx.arc(dx, dotsY, dotR + 6, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    ctx.fillStyle = unlocked ? '#22c55e20' : 'rgba(255,255,255,0.06)';
-    ctx.beginPath();
-    ctx.arc(dx, dotsY, dotR, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.font = `${unlocked ? 18 : 14}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
-    ctx.globalAlpha = unlocked ? 1 : 0.3;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(achievementEmojis[i] || '⭐', dx, dotsY + 1);
-    ctx.globalAlpha = 1;
-    ctx.textBaseline = 'alphabetic';
+  if (badgeTitle && badgeShareText) {
+    // === Single badge share mode ===
+    drawBadgeShareLayout(ctx, W, H, { badgeTitle, badgeShareText, streak, totalMeals, unlockedAchievements, totalAchievements, language });
+  } else {
+    // === General overview mode ===
+    drawOverviewLayout(ctx, W, H, { streak, totalMeals, unlockedAchievements, totalAchievements, language });
   }
 
   // Bottom CTA
@@ -217,6 +93,218 @@ export async function generateShareImage({
   });
 }
 
+function drawBadgeShareLayout(
+  ctx: CanvasRenderingContext2D,
+  W: number,
+  H: number,
+  opts: { badgeTitle: string; badgeShareText: string; streak: number; totalMeals: number; unlockedAchievements: number; totalAchievements: number; language: 'de' | 'en' }
+) {
+  const centerY = 380;
+
+  // Badge unlocked label
+  ctx.font = '600 24px "Inter", "SF Pro Display", -apple-system, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.textAlign = 'center';
+  ctx.fillText(opts.language === 'de' ? 'BADGE FREIGESCHALTET' : 'BADGE UNLOCKED', W / 2, 200);
+
+  // Glow ring
+  const ringR = 100;
+  const glowGrad = ctx.createRadialGradient(W / 2, centerY, ringR - 20, W / 2, centerY, ringR + 30);
+  glowGrad.addColorStop(0, 'rgba(34, 197, 94, 0.15)');
+  glowGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = glowGrad;
+  ctx.beginPath();
+  ctx.arc(W / 2, centerY, ringR + 30, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ring
+  const ringGrad = ctx.createLinearGradient(W / 2 - ringR, centerY, W / 2 + ringR, centerY);
+  ringGrad.addColorStop(0, '#22c55e');
+  ringGrad.addColorStop(1, '#14b8a6');
+  ctx.strokeStyle = ringGrad;
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.arc(W / 2, centerY, ringR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Trophy emoji
+  ctx.font = '72px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🏆', W / 2, centerY + 25);
+
+  // Badge title
+  ctx.font = 'bold 48px "Inter", "SF Pro Display", -apple-system, sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(opts.badgeTitle, W / 2, centerY + ringR + 70);
+
+  // Share text (wrap if needed)
+  ctx.font = 'italic 600 28px "Inter", "SF Pro Display", -apple-system, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  const lines = wrapText(ctx, `"${opts.badgeShareText}"`, W - 160);
+  let textY = centerY + ringR + 130;
+  for (const line of lines) {
+    ctx.fillText(line, W / 2, textY);
+    textY += 38;
+  }
+
+  // Mini stats
+  const statsY = Math.max(textY + 40, 780);
+  const miniStats = [
+    { label: '🔥', value: String(opts.streak) },
+    { label: '🍽️', value: String(opts.totalMeals) },
+    { label: '🏆', value: `${opts.unlockedAchievements}/${opts.totalAchievements}` },
+  ];
+  const statGap = 160;
+  const startX = W / 2 - statGap;
+  miniStats.forEach((s, i) => {
+    const x = startX + i * statGap;
+    ctx.font = '28px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+    ctx.fillText(s.label, x, statsY);
+    ctx.font = 'bold 28px "Inter", "SF Pro Display", -apple-system, sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(s.value, x, statsY + 40);
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  });
+}
+
+function drawOverviewLayout(
+  ctx: CanvasRenderingContext2D,
+  W: number,
+  H: number,
+  opts: { streak: number; totalMeals: number; unlockedAchievements: number; totalAchievements: number; language: 'de' | 'en' }
+) {
+  // Streak section
+  const streakY = 260;
+  const ringX = W / 2;
+  const ringR = 110;
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 12;
+  ctx.beginPath();
+  ctx.arc(ringX, streakY, ringR, 0, Math.PI * 2);
+  ctx.stroke();
+
+  const streakGrad = ctx.createLinearGradient(ringX - ringR, streakY, ringX + ringR, streakY);
+  streakGrad.addColorStop(0, '#f59e0b');
+  streakGrad.addColorStop(1, '#ef4444');
+  ctx.strokeStyle = streakGrad;
+  ctx.lineWidth = 12;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  const streakAngle = Math.min(opts.streak / 30, 1) * Math.PI * 2;
+  ctx.arc(ringX, streakY, ringR, -Math.PI / 2, -Math.PI / 2 + streakAngle);
+  ctx.stroke();
+
+  ctx.font = '52px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🔥', ringX, streakY - 15);
+
+  ctx.font = 'bold 64px "Inter", "SF Pro Display", -apple-system, sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(String(opts.streak), ringX, streakY + 55);
+
+  ctx.font = '600 22px "Inter", "SF Pro Display", -apple-system, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillText(opts.language === 'de' ? 'Tage Streak' : 'Day Streak', ringX, streakY + 90);
+
+  // Stats cards
+  const statsY = 480;
+  const cardW = 280;
+  const cardH = 140;
+  const cardGap = 40;
+  const cards = [
+    { emoji: '🍽️', value: String(opts.totalMeals), label: opts.language === 'de' ? 'Mahlzeiten' : 'Meals', color: '#3b82f6' },
+    { emoji: '🏆', value: `${opts.unlockedAchievements}/${opts.totalAchievements}`, label: 'Achievements', color: '#22c55e' },
+  ];
+
+  cards.forEach((card, i) => {
+    const x = W / 2 - cardW - cardGap / 2 + i * (cardW + cardGap);
+    const y = statsY;
+
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+    roundRect(ctx, x, y, cardW, cardH, 20);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    roundRect(ctx, x, y, cardW, cardH, 20);
+    ctx.stroke();
+
+    ctx.font = '36px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(card.emoji, x + cardW / 2, y + 45);
+
+    ctx.font = 'bold 36px "Inter", "SF Pro Display", -apple-system, sans-serif';
+    ctx.fillStyle = card.color;
+    ctx.fillText(card.value, x + cardW / 2, y + 90);
+
+    ctx.font = '500 18px "Inter", "SF Pro Display", -apple-system, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillText(card.label, x + cardW / 2, y + 120);
+  });
+
+  // Motivational quote
+  const quoteY = 720;
+  ctx.font = 'italic 600 28px "Inter", "SF Pro Display", -apple-system, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.textAlign = 'center';
+  const quote = opts.language === 'de'
+    ? opts.streak >= 7 ? '„Disziplin schlägt Motivation."' : '„Jeder Tag zählt!"'
+    : opts.streak >= 7 ? '"Discipline beats motivation."' : '"Every day counts!"';
+  ctx.fillText(quote, W / 2, quoteY);
+
+  // Achievement dots row
+  const dotsY = 800;
+  const dotR = 14;
+  const dotGap = 42;
+  const dotsStartX = W / 2 - ((opts.totalAchievements - 1) * dotGap) / 2;
+  const achievementEmojis = ['🍽️', '🔥', '🏅', '⭐', '🏆', '🎯'];
+
+  for (let i = 0; i < Math.min(opts.totalAchievements, 12); i++) {
+    const dx = dotsStartX + i * dotGap;
+    const unlocked = i < opts.unlockedAchievements;
+
+    if (unlocked) {
+      const dotGrad = ctx.createRadialGradient(dx, dotsY, 0, dx, dotsY, dotR + 4);
+      dotGrad.addColorStop(0, '#22c55e40');
+      dotGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = dotGrad;
+      ctx.beginPath();
+      ctx.arc(dx, dotsY, dotR + 6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = unlocked ? '#22c55e20' : 'rgba(255,255,255,0.06)';
+    ctx.beginPath();
+    ctx.arc(dx, dotsY, dotR, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.font = `${unlocked ? 18 : 14}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+    ctx.globalAlpha = unlocked ? 1 : 0.3;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(achievementEmojis[i % achievementEmojis.length] || '⭐', dx, dotsY + 1);
+    ctx.globalAlpha = 1;
+    ctx.textBaseline = 'alphabetic';
+  }
+}
+
+function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let currentLine = '';
+
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    if (ctx.measureText(testLine).width > maxWidth && currentLine) {
+      lines.push(currentLine);
+      currentLine = word;
+    } else {
+      currentLine = testLine;
+    }
+  }
+  if (currentLine) lines.push(currentLine);
+  return lines;
+}
+
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -231,16 +319,18 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath();
 }
 
-export async function shareImage(blob: Blob, language: 'de' | 'en') {
+export async function shareImage(blob: Blob, language: 'de' | 'en', customShareText?: string) {
   const file = new File([blob], 'nutriotrack-achievement.png', { type: 'image/png' });
+
+  const defaultText = language === 'de'
+    ? 'Schau dir meine Fortschritte bei NutrioTrack an! 🔥💪'
+    : 'Check out my progress on NutrioTrack! 🔥💪';
 
   if (navigator.share && navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({
         title: 'NutrioTrack',
-        text: language === 'de'
-          ? 'Schau dir meine Fortschritte bei NutrioTrack an! 🔥💪'
-          : 'Check out my progress on NutrioTrack! 🔥💪',
+        text: customShareText || defaultText,
         files: [file],
       });
       return true;
