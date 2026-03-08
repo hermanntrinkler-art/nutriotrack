@@ -231,13 +231,16 @@ export default function OnboardingPage() {
                     key={opt.value}
                     type="button"
                     onClick={() => setActivityLevel(opt.value)}
-                    className={`w-full py-3 px-4 rounded-xl text-sm font-medium transition-colors border text-left ${
+                    className={`w-full py-3 px-4 rounded-xl text-left transition-colors border ${
                       activityLevel === opt.value
                         ? 'bg-primary text-primary-foreground border-primary'
                         : 'bg-card border-border text-foreground hover:bg-accent'
                     }`}
                   >
-                    {opt.label}
+                    <span className="text-sm font-medium">{opt.label}</span>
+                    <span className={`block text-xs mt-0.5 ${activityLevel === opt.value ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                      {opt.desc}
+                    </span>
                   </button>
                 ))}
               </div>
