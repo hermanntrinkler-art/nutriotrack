@@ -67,9 +67,12 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
   });
   const [customProducts, setCustomProducts] = useState<FoodEntry[]>([]);
   const [suggestions, setSuggestions] = useState<FoodEntry[]>([]);
+  const [onlineResults, setOnlineResults] = useState<FoodEntry[]>([]);
+  const [searchingOnline, setSearchingOnline] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [baseNutrition, setBaseNutrition] = useState<BaseNutrition | null>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const onlineSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const unitOptions = language === 'de' ? UNIT_OPTIONS_DE : UNIT_OPTIONS_EN;
 
