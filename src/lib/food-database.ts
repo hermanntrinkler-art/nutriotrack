@@ -169,75 +169,202 @@ export const foodDatabase: FoodEntry[] = [
 // Synonym / slang map: keys are normalized aliases, values are normalized canonical names
 // When a user types a brand name or slang term, it also matches the generic food entry
 const SYNONYMS: Record<string, string[]> = {
-  // Frischkäse / Cream Cheese brands
-  'philadelphia': ['frischkaese', 'cream cheese'],
+  // === Österreichisch / Austrian ===
+  'paradeiser': ['tomaten', 'tomatoes'],
+  'paradeis': ['tomaten', 'tomatoes'],
+  'erdaepfel': ['kartoffeln (gekocht)', 'boiled potatoes'],
+  'erdapfel': ['kartoffeln (gekocht)', 'boiled potatoes'],
+  'obers': ['sahne', 'cream', 'kaffee mit sahne', 'coffee with cream'],
+  'schlagobers': ['sahne', 'cream'],
+  'topfen': ['magerquark', 'low-fat quark'],
+  'palatschinken': ['wrap', 'crepe'],
+  'faschiertes': ['hackfleisch (gemischt)', 'mixed ground meat'],
+  'weckerl': ['broetchen', 'roll'],
+  'semmel': ['broetchen', 'roll'],
+  'kaisersemmel': ['broetchen', 'roll'],
+  'kipferl': ['croissant'],
+  'marille': ['aprikose', 'apricot'],
+  'ribisel': ['johannisbeere', 'currant'],
+  'zwetschke': ['pflaume', 'plum'],
+  'fisolen': ['bohnen', 'green beans'],
+  'karfiol': ['blumenkohl', 'cauliflower'],
+  'kukuruz': ['mais', 'corn'],
+  'schwammerl': ['pilze', 'mushrooms'],
+  'hendl': ['haehnchenbrust', 'chicken breast'],
+  'backhendl': ['schnitzel'],
+  'leberkaesebroetchen': ['fleischkaese', 'leberkäse'],
+  'leberkaese': ['fleischkaese', 'leberkäse'],
+  'fleischlaberl': ['frikadelle', 'meatball'],
+  'nockerl': ['nudeln (gekocht)', 'cooked pasta'],
+  'knodel': ['knoedel', 'dumpling'],
+  'knoedel': ['kartoffeln (gekocht)', 'boiled potatoes'],
+  'powidl': ['marmelade', 'jam'],
+  'punschkrapfen': ['kuchen', 'cake'],
+  'sachertorte': ['kuchen', 'cake'],
+  'strudel': ['kuchen', 'cake'],
+  'germknoedel': ['kuchen', 'cake'],
+
+  // === Schweizerdeutsch / Swiss German ===
+  'poulet': ['haehnchenbrust', 'chicken breast'],
+  'rueebli': ['karotten', 'carrots'],
+  'ruebli': ['karotten', 'carrots'],
+  'nuesslisalat': ['gemischter salat', 'mixed salad'],
+  'zopf': ['weissbrot', 'white bread'],
+  'weggli': ['broetchen', 'roll'],
+  'mutschli': ['broetchen', 'roll'],
+  'cervelat': ['bratwurst'],
+  'schuebling': ['bratwurst'],
+  'raclette': ['kaese (gouda)', 'gouda cheese'],
+  'rosti': ['kartoffeln (gekocht)', 'boiled potatoes'],
+  'roesti': ['kartoffeln (gekocht)', 'boiled potatoes'],
+  'birchermuesli': ['muesli'],
+  'birchermüesli': ['muesli'],
+  'rivella': ['cola'],
+  'kaegi': ['keks', 'cookie'],
+  'toblerone': ['schokolade (milch)', 'milk chocolate'],
+  'ovomaltine': ['proteinshake', 'protein shake'],
+  'rahm': ['sahne', 'cream', 'kaffee mit sahne'],
+  'anke': ['butter'],
+  'ziger': ['frischkaese', 'cream cheese'],
+  'fondue': ['kaese (gouda)', 'gouda cheese'],
+  'alpkaese': ['kaese (gouda)', 'gouda cheese'],
+  'emmentaler': ['kaese (emmentaler)', 'emmental cheese'],
+  'gruyere': ['kaese (gouda)', 'gouda cheese'],
+  'appenzeller': ['kaese (gouda)', 'gouda cheese'],
+
+  // === Frischkäse / Cream Cheese brands ===
+  'philadelphia': ['frischkaese', 'cream cheese', 'philadelphia'],
   'buko': ['frischkaese', 'cream cheese'],
   'exquisa': ['frischkaese', 'cream cheese'],
   'almette': ['frischkaese', 'cream cheese'],
-  // Nutella / chocolate spread
-  'nutella': ['nutella'], // already in DB by name
+
+  // === Schokolade & Süßes ===
+  'nutella': ['nutella'],
   'nuss nougat creme': ['nutella'],
-  // Joghurt brands
+  'schoki': ['schokolade (milch)', 'milk chocolate'],
+  'schoko': ['schokolade (milch)', 'milk chocolate'],
+  'gummibaerchen': ['haribo goldbaeren', 'haribo gummy bears'],
+
+  // === Joghurt & Milch brands ===
   'activia': ['joghurt natur', 'plain yogurt'],
   'alpro': ['joghurt natur', 'plain yogurt'],
-  'muesli': ['muesli', 'muesli'],
-  // Quark
-  'quark': ['magerquark', 'low-fat quark'],
-  // Skyr brands
   'arla': ['skyr'],
   'milbona': ['skyr', 'joghurt natur', 'milch'],
-  // Käse brands
-  'leerdammer': ['kaese (gouda)', 'gouda cheese'],
+  'quark': ['magerquark', 'low-fat quark'],
+
+  // === Käse brands ===
+  'leerdammer': ['kaese (gouda)', 'gouda cheese', 'leerdammer'],
   'babybel': ['kaese (gouda)', 'gouda cheese'],
-  // Wurst / Aufschnitt
+  'tilsiter': ['kaese (gouda)', 'gouda cheese'],
+  'edamer': ['kaese (gouda)', 'gouda cheese'],
+  'cheddar': ['kaese (gouda)', 'gouda cheese'],
+  'parmesan': ['kaese (gouda)', 'gouda cheese'],
+  'feta': ['kaese (gouda)', 'gouda cheese'],
+  'camembert': ['kaese (gouda)', 'gouda cheese'],
+  'brie': ['kaese (gouda)', 'gouda cheese'],
+
+  // === Wurst / Aufschnitt ===
   'fleischwurst': ['salami'],
   'mortadella': ['salami'],
   'putenbrust': ['schinken', 'ham'],
   'truthahn': ['schinken', 'ham'],
-  // Brot
+  'lyoner': ['salami'],
+  'leberwurst': ['salami'],
+  'extrawurst': ['schinken', 'ham'],
+
+  // === Brot ===
   'toastbrot': ['toast'],
-  'semmel': ['broetchen', 'roll'],
-  'weckerl': ['broetchen', 'roll'],
   'schrippe': ['broetchen', 'roll'],
-  // Getränke
+  'stulle': ['vollkornbrot', 'whole grain bread'],
+  'baguette': ['weissbrot', 'white bread'],
+  'ciabatta': ['weissbrot', 'white bread'],
+  'laugenstange': ['broetchen', 'roll'],
+  'laugenbrezel': ['broetchen', 'roll'],
+  'brezel': ['broetchen', 'roll'],
+
+  // === Getränke ===
   'cola zero': ['cola'],
   'pepsi': ['cola'],
   'fanta': ['orangensaft', 'orange juice'],
   'eistee': ['tee', 'tea'],
   'ice tea': ['tee', 'tea'],
-  // Fleisch
+  'spezi': ['cola'],
+  'almdudler': ['cola'],
+  'schorle': ['apfelsaft', 'apple juice'],
+  'apfelschorle': ['apfelsaft', 'apple juice'],
+  'limo': ['cola'],
+  'limonade': ['cola'],
+  'kakao': ['milch', 'milk'],
+  'heisse schokolade': ['milch', 'milk'],
+
+  // === Fleisch ===
   'haehnchen': ['haehnchenbrust', 'chicken breast'],
   'chicken': ['haehnchenbrust', 'chicken breast'],
   'huhn': ['haehnchenbrust', 'chicken breast'],
-  'poulet': ['haehnchenbrust', 'chicken breast'],
   'rind': ['rindfleisch', 'beef'],
   'steak': ['rindfleisch', 'beef'],
   'hackfleisch': ['hackfleisch (gemischt)', 'mixed ground meat'],
-  'faschiertes': ['hackfleisch (gemischt)', 'mixed ground meat'],
   'gehacktes': ['hackfleisch (gemischt)', 'mixed ground meat'],
-  // Fisch
+  'bulette': ['frikadelle', 'meatball'],
+  'pflanzerl': ['frikadelle', 'meatball'],
+
+  // === Fisch ===
   'thunfisch': ['thunfisch (dose)', 'canned tuna'],
   'tuna': ['thunfisch (dose)', 'canned tuna'],
-  // Beilagen
+  'fischstaebchen': ['iglo fischstaebchen', 'iglo fish fingers'],
+
+  // === Beilagen ===
   'spaghetti': ['nudeln (gekocht)', 'cooked pasta'],
   'penne': ['nudeln (gekocht)', 'cooked pasta'],
   'pasta': ['nudeln (gekocht)', 'cooked pasta'],
   'kartoffel': ['kartoffeln (gekocht)', 'boiled potatoes'],
-  'erdaepfel': ['kartoffeln (gekocht)', 'boiled potatoes'],
   'fritten': ['pommes frites', 'french fries'],
   'pommes': ['pommes frites', 'french fries'],
-  // Obst
+  'bratkartoffeln': ['kartoffeln (gekocht)', 'boiled potatoes'],
+  'puree': ['kartoffeln (gekocht)', 'boiled potatoes'],
+  'kartoffelpueree': ['kartoffeln (gekocht)', 'boiled potatoes'],
+  'couscous': ['reis (gekocht)', 'cooked rice'],
+  'bulgur': ['reis (gekocht)', 'cooked rice'],
+
+  // === Gemüse ===
+  'tomate': ['tomaten', 'tomatoes'],
+  'karotten': ['karotten', 'carrots'],
+  'moehren': ['karotten', 'carrots'],
+  'zucchini': ['gurke', 'cucumber'],
+  'aubergine': ['paprika', 'bell pepper'],
+  'zwiebel': ['tomaten', 'tomatoes'],
+  'knoblauch': ['tomaten', 'tomatoes'],
+  'champignons': ['spinat', 'spinach'],
+  'pilze': ['spinat', 'spinach'],
+
+  // === Obst ===
   'birne': ['apfel', 'apple'],
-  // Snacks
-  'schoki': ['schokolade (milch)', 'milk chocolate'],
-  'schoko': ['schokolade (milch)', 'milk chocolate'],
-  // Eier
+  'mandarine': ['orange'],
+  'clementine': ['orange'],
+  'kiwi': ['apfel', 'apple'],
+  'mango': ['banane', 'banana'],
+  'ananas': ['banane', 'banana'],
+  'himbeeren': ['erdbeeren', 'strawberries'],
+  'brombeeren': ['blaubeeren', 'blueberries'],
+
+  // === Eier ===
   'ei': ['ei gekocht', 'boiled egg'],
   'eier': ['ei gekocht', 'boiled egg'],
   'ruehrei': ['ruehrei (2 eier)', 'scrambled eggs (2)'],
-  // Fertiggerichte
+
+  // === Fertiggerichte ===
   'kebab': ['doener kebab'],
   'doener': ['doener kebab'],
+  'gyros': ['doener kebab'],
+  'currywurst': ['bratwurst'],
+  'cordon bleu': ['schnitzel'],
+  'wiener schnitzel': ['schnitzel'],
+
+  // === Müsli / Cereal ===
+  'porridge': ['haferflocken', 'oats'],
+  'overnight oats': ['haferflocken', 'oats'],
+  'cornflakes': ['muesli'],
+  'muesli': ['muesli'],
 };
 
 function normalizeSearchText(value: string): string {
