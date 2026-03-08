@@ -15,7 +15,7 @@ import SaveMealConfirmation from '@/components/meals/SaveMealConfirmation';
 import BarcodeScanner from '@/components/meals/BarcodeScanner';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-type Step = 'select-type' | 'select-method' | 'analyzing' | 'review' | 'confirm';
+type Step = 'select-type' | 'select-method' | 'analyzing' | 'review' | 'confirm' | 'barcode';
 
 export default function MealsPage() {
   const { user } = useAuth();
