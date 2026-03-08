@@ -137,6 +137,13 @@ export default function DashboardPage() {
           carbs: today_meals.reduce((s, m) => s + Number(m.total_carbs_g), 0),
         });
       });
+
+    // Mark today as having meals for reminder system
+    if ((data || []).some(m => (m as any).entry_date === today)) {
+      markTodayHasMeals();
+    }
+    // Init reminder scheduler
+    initReminders();
   }, [user]);
 
   const streak = useMemo(() => calculateStreak(allMeals), [allMeals]);
