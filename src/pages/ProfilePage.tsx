@@ -42,6 +42,8 @@ export default function ProfilePage() {
   const [intensity, setIntensity] = useState(2);
   const [saving, setSaving] = useState(false);
   const [previewCalories, setPreviewCalories] = useState<number | null>(null);
+  const [allMeals, setAllMeals] = useState<MealEntry[]>([]);
+  const [weightEntries, setWeightEntries] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
