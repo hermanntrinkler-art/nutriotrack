@@ -201,8 +201,12 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
         badgeShareText: badge.shareText,
         badgeImageUrl: badge.badgeImage,
       });
-      const shared = await shareImage(blob, language as 'de' | 'en', badge.shareText);
-      if (!shared) toast.success(de ? 'Bild heruntergeladen!' : 'Image downloaded!');
+
+      const openedFacebook = await shareImageToFacebook(blob, badge.shareText);
+      if (!openedFacebook) {
+        const shared = await shareImage(blob, language as 'de' | 'en', badge.shareText);
+        if (!shared) toast.error(de ? 'Facebook konnte nicht geöffnet werden' : 'Could not open Facebook');
+      }
     } catch {
       toast.error(de ? 'Teilen fehlgeschlagen' : 'Sharing failed');
     } finally {
