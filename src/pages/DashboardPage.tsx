@@ -159,6 +159,40 @@ export default function DashboardPage() {
     };
   }, [allMeals]);
 
+  // Yesterday comparison
+  const yesterdayTotals = useMemo(() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = yesterday.toISOString().split('T')[0];
+    const yMeals = allMeals.filter(m => m.entry_date === yStr);
+    return {
+      calories: yMeals.reduce((s, m) => s + Number(m.total_calories), 0),
+      protein: yMeals.reduce((s, m) => s + Number(m.total_protein_g), 0),
+      fat: yMeals.reduce((s, m) => s + Number(m.total_fat_g), 0),
+      carbs: yMeals.reduce((s, m) => s + Number(m.total_carbs_g), 0),
+    };
+  }, [allMeals]);
+
+  // 7-day macro trend data
+  const last7DaysData = useMemo(() => {
+    const today = new Date();
+    const days: { label: string; calories: number; protein: number; fat: number; carbs: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const dayMeals = allMeals.filter(m => m.entry_date === dateStr);
+      days.push({
+        label: d.toLocaleDateString(undefined, { weekday: 'narrow' }),
+        calories: dayMeals.reduce((s, m) => s + Number(m.total_calories), 0),
+        protein: dayMeals.reduce((s, m) => s + Number(m.total_protein_g), 0),
+        fat: dayMeals.reduce((s, m) => s + Number(m.total_fat_g), 0),
+        carbs: dayMeals.reduce((s, m) => s + Number(m.total_carbs_g), 0),
+      });
+    }
+    return days;
+  }, [allMeals]);
+
   const calorieTarget = goals?.calorie_target || 2000;
   const remaining = calorieTarget - todayTotals.calories;
   const calPct = Math.min((todayTotals.calories / calorieTarget) * 100, 100);
@@ -335,7 +369,50 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* Macros */}
+      {/* Yesterday Comparison */}
+      <motion.div
+        className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
+        variants={fadeUp}
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <CalendarDays className="h-4 w-4 text-primary" />
+          <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">
+            {language === 'de' ? 'Vergleich zu gestern' : 'vs. Yesterday'}
+          </h3>
+        </div>
+        {yesterdayTotals.calories > 0 ? (
+          <div className="grid grid-cols-4 gap-2">
+            {([
+              { label: t('dashboard.kcal'), today: todayTotals.calories, yesterday: yesterdayTotals.calories, color: 'text-primary' },
+              { label: t('dashboard.protein'), today: todayTotals.protein, yesterday: yesterdayTotals.protein, color: 'text-protein' },
+              { label: t('dashboard.fat'), today: todayTotals.fat, yesterday: yesterdayTotals.fat, color: 'text-fat' },
+              { label: t('dashboard.carbs'), today: todayTotals.carbs, yesterday: yesterdayTotals.carbs, color: 'text-carbs' },
+            ] as const).map(({ label, today, yesterday, color }) => {
+              const diff = today - yesterday;
+              const diffPct = yesterday > 0 ? Math.round((diff / yesterday) * 100) : 0;
+              return (
+                <div key={label} className="text-center p-2 rounded-xl bg-muted/50">
+                  <p className={`text-base font-black tabular-nums ${color}`}>
+                    {Math.round(today)}{label !== t('dashboard.kcal') ? 'g' : ''}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground font-medium">{label}</p>
+                  <div className="flex items-center justify-center gap-0.5 mt-1">
+                    {diff > 0 ? <TrendingUp className="h-3 w-3 text-energy" /> : diff < 0 ? <TrendingDown className="h-3 w-3 text-primary" /> : <Minus className="h-3 w-3 text-muted-foreground" />}
+                    <span className={`text-[10px] font-bold tabular-nums ${diff > 0 ? 'text-energy' : diff < 0 ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {diff > 0 ? '+' : ''}{diffPct}%
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-3">
+            {language === 'de' ? 'Keine Daten von gestern' : 'No data from yesterday'}
+          </p>
+        )}
+      </motion.div>
+
       <motion.div
         className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
         variants={fadeUp}
@@ -373,7 +450,57 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* Weekly Report */}
+      {/* 7-Day Macro Sparklines */}
+      <motion.div
+        className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
+        variants={fadeUp}
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <BarChart3 className="h-4 w-4 text-primary" />
+          <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">
+            {language === 'de' ? '7-Tage Trend' : '7-Day Trend'}
+          </h3>
+        </div>
+        <div className="space-y-3">
+          {([
+            { key: 'calories' as const, label: t('dashboard.kcal'), color: 'hsl(var(--primary))' },
+            { key: 'protein' as const, label: t('dashboard.protein'), color: 'hsl(var(--protein))' },
+            { key: 'fat' as const, label: t('dashboard.fat'), color: 'hsl(var(--fat))' },
+            { key: 'carbs' as const, label: t('dashboard.carbs'), color: 'hsl(var(--carbs))' },
+          ]).map(({ key, label, color }) => {
+            const values = last7DaysData.map(d => d[key]);
+            const max = Math.max(...values, 1);
+            return (
+              <div key={key} className="flex items-center gap-3">
+                <span className="text-[10px] font-bold text-muted-foreground w-12 text-right">{label}</span>
+                <div className="flex-1 flex items-end gap-0.5 h-6">
+                  {values.map((v, i) => (
+                    <motion.div
+                      key={i}
+                      className="flex-1 rounded-sm"
+                      style={{ backgroundColor: color, opacity: i === 6 ? 1 : 0.5 }}
+                      initial={{ height: 0 }}
+                      animate={{ height: `${Math.max((v / max) * 100, 4)}%` }}
+                      transition={{ duration: 0.6, delay: i * 0.05 }}
+                    />
+                  ))}
+                </div>
+                <span className="text-[10px] font-bold tabular-nums text-foreground w-10">
+                  {Math.round(values[6])}{key !== 'calories' ? 'g' : ''}
+                </span>
+              </div>
+            );
+          })}
+          <div className="flex justify-between px-12 mt-1">
+            {last7DaysData.map((d, i) => (
+              <span key={i} className={`text-[8px] font-medium flex-1 text-center ${i === 6 ? 'text-foreground' : 'text-muted-foreground'}`}>
+                {d.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
       <motion.div
         className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
         variants={fadeUp}
