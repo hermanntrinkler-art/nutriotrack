@@ -302,7 +302,7 @@ export default function ProfilePage() {
           <Target className="h-5 w-5 text-muted-foreground" />
           <span className="font-medium text-sm">{t('profile.editGoals')}</span>
         </button>
-      </div>
+      </motion.div>
 
       {/* Logout */}
       <Button variant="outline" onClick={handleLogout} className="w-full">
