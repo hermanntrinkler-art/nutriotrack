@@ -463,6 +463,9 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
+      {/* Micronutrient Estimates */}
+      <MicronutrientCard />
+
       {/* 7-Day Macro Sparklines */}
       <motion.div
         className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
