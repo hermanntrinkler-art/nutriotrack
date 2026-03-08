@@ -273,6 +273,9 @@ export default function DashboardPage() {
         </motion.div>
       </motion.div>
 
+      {/* Weekly Summary Report (Sundays) */}
+      <WeeklySummaryReport meals={allMeals} goals={goals} />
+
       {/* Streak Counter */}
       <motion.div
         className="flex items-center gap-3 rounded-2xl p-3.5 border border-energy/30"
