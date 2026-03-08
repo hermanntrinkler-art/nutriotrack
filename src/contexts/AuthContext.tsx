@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/types';
-import { lovable } from '@/integrations/lovable/index';
 
 interface AuthContextType {
   user: User | null;
@@ -40,51 +39,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
-    const initializeAuth = async () => {
-      const params = new URLSearchParams(window.location.search);
-      if (params.has('__lovable_token')) {
-        const result = await lovable.auth.signInWithOAuth('google', {
-          redirect_uri: window.location.origin,
-        });
-
-        if (!result.error) {
-          window.history.replaceState({}, document.title, `${window.location.origin}${window.location.pathname}${window.location.hash}`);
-        }
-      }
-
-      const { data: { session } } = await supabase.auth.getSession();
+    const applySession = (nextSession: Session | null) => {
       if (!isMounted) return;
 
-      setSession(session);
-      setUser(session?.user ?? null);
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
 
-      if (session?.user) {
-        await fetchProfile(session.user.id);
+      if (nextSession?.user) {
+        void fetchProfile(nextSession.user.id);
       } else {
         setProfile(null);
       }
+    };
 
-      if (isMounted) {
-        setLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, nextSession) => {
+        applySession(nextSession);
+        if (isMounted) setLoading(false);
       }
+    );
+
+    const initializeAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!isMounted) return;
+
+      applySession(session);
+      setLoading(false);
     };
 
     void initializeAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (!isMounted) return;
-
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          void fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
-        }
-      }
-    );
 
     return () => {
       isMounted = false;
