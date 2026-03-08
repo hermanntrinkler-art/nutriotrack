@@ -211,6 +211,6 @@ export default function HistoryPage() {
           }}
         />
       )}
-    </div>
+    </motion.div>
   );
 }
