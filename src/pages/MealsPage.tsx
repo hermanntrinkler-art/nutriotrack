@@ -402,6 +402,17 @@ export default function MealsPage() {
             </div>
           </div>
 
+          {/* Food Search - PRIMARY position */}
+          <button onClick={() => setStep('search')} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors border-primary/20">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <Search className="h-6 w-6 text-primary" />
+            </div>
+            <div className="text-left flex-1">
+              <p className="font-medium">{language === 'de' ? 'Lebensmittel suchen' : 'Search Food'}</p>
+              <p className="text-xs text-muted-foreground">{language === 'de' ? 'Durchsuche 600+ Lebensmittel & Online-Datenbank' : 'Search 600+ foods & online database'}</p>
+            </div>
+          </button>
+
           <button onClick={handleManualEntry} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-warning/10 flex items-center justify-center">
               <PenLine className="h-6 w-6 text-warning" />
