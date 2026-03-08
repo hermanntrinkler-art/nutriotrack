@@ -140,6 +140,17 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Activity Level Info */}
+      {goals && (
+        <div className="nutri-card flex items-center gap-3">
+          <Activity className="h-5 w-5 text-primary flex-shrink-0" />
+          <div>
+            <p className="font-semibold text-sm">{currentActivity.label}</p>
+            <p className="text-xs text-muted-foreground">{currentActivity.desc}</p>
+          </div>
+        </div>
+      )}
+
       {/* Deficit Intensity Slider */}
       {isLoseOrGain && goals && (
         <div className="nutri-card space-y-4">
