@@ -5,16 +5,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { analyzeFoodImage } from '@/lib/ai-analysis';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, PenLine } from 'lucide-react';
+import { Camera, Upload, PenLine, ScanBarcode } from 'lucide-react';
 import { toast } from 'sonner';
 
 import AnalyseScreen from '@/components/meals/AnalyseScreen';
 import EditableFoodItemsList from '@/components/meals/EditableFoodItemsList';
 import FoodItemEditorModal from '@/components/meals/FoodItemEditorModal';
 import SaveMealConfirmation from '@/components/meals/SaveMealConfirmation';
+import BarcodeScanner from '@/components/meals/BarcodeScanner';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-type Step = 'select-type' | 'select-method' | 'analyzing' | 'review' | 'confirm';
+type Step = 'select-type' | 'select-method' | 'analyzing' | 'review' | 'confirm' | 'barcode';
 
 export default function MealsPage() {
   const { user } = useAuth();
@@ -370,10 +371,33 @@ export default function MealsPage() {
             </div>
           </button>
 
+          <button onClick={() => setStep('barcode')} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
+            <div className="w-12 h-12 rounded-2xl bg-accent/30 flex items-center justify-center">
+              <ScanBarcode className="h-6 w-6 text-foreground" />
+            </div>
+            <div className="text-left">
+              <p className="font-medium">{t('meals.scanBarcode')}</p>
+              <p className="text-xs text-muted-foreground">{t('meals.barcodeDescription')}</p>
+            </div>
+          </button>
+
           <Button variant="ghost" onClick={handleReset} className="w-full">
             {t('meals.cancel')}
           </Button>
         </div>
+      )}
+
+      {/* Step: Barcode */}
+      {step === 'barcode' && (
+        <BarcodeScanner
+          onResult={(item) => {
+            setIsAiResult(false);
+            setItems([item]);
+            setStep('review');
+            setEditingIndex(0);
+          }}
+          onCancel={handleReset}
+        />
       )}
 
       {/* Step: Analyzing */}
