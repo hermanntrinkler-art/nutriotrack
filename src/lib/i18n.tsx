@@ -455,6 +455,22 @@ const translations = {
     'profile.onlyForLoseGain': 'Only available for lose/gain goals.',
     'profile.weeklyLoss': '~{value} kg/week',
     'profile.account': 'Account',
+    'profile.theme': 'Theme',
+    'profile.themeLight': 'Light',
+    'profile.themeDark': 'Dark',
+    'profile.themeSystem': 'System',
+
+    // Streak
+    'dashboard.streak': 'Day Streak',
+    'dashboard.streakEmpty': 'Log your first meal today!',
+    'dashboard.streakRecord': 'Record: {value} days',
+
+    // Weekly Report
+    'dashboard.weeklyReport': 'Weekly Report',
+    'dashboard.avgCalories': 'Avg Calories',
+    'dashboard.avgProtein': 'Avg Protein',
+    'dashboard.daysTracked': 'Days Tracked',
+    'dashboard.weekTrend': 'Trend',
 
     'hint.caloriesRemaining': 'You can still eat {value} kcal today.',
     'hint.proteinMissing': 'You still need {value} g of protein.',
