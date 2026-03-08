@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Share2, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { fireCenterBurst } from '@/lib/confetti';
-import { generateShareImage, shareImage } from '@/lib/share-image';
+import { generateShareImage, shareImage, shareImageToFacebook } from '@/lib/share-image';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
@@ -201,8 +201,12 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
         badgeShareText: badge.shareText,
         badgeImageUrl: badge.badgeImage,
       });
-      const shared = await shareImage(blob, language as 'de' | 'en', badge.shareText);
-      if (!shared) toast.success(de ? 'Bild heruntergeladen!' : 'Image downloaded!');
+
+      const openedFacebook = await shareImageToFacebook(blob, badge.shareText);
+      if (!openedFacebook) {
+        const shared = await shareImage(blob, language as 'de' | 'en', badge.shareText);
+        if (!shared) toast.error(de ? 'Facebook konnte nicht geöffnet werden' : 'Could not open Facebook');
+      }
     } catch {
       toast.error(de ? 'Teilen fehlgeschlagen' : 'Sharing failed');
     } finally {
