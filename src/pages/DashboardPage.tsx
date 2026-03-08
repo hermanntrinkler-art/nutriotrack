@@ -4,19 +4,40 @@ import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserGoals, MealEntry } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Plus, TrendingDown, TrendingUp, Minus } from 'lucide-react';
+import { Plus, TrendingDown, TrendingUp, Minus, Flame, Zap, Dumbbell, Droplets } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-function MacroBar({ label, current, target, color }: { label: string; current: number; target: number; color: string }) {
+function MacroRing({ label, current, target, color, icon: Icon }: {
+  label: string; current: number; target: number; color: string; icon: React.ElementType;
+}) {
   const pct = target > 0 ? Math.min((current / target) * 100, 100) : 0;
+  const circumference = 2 * Math.PI * 28;
+  const offset = circumference - (pct / 100) * circumference;
+
   return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-xs">
-        <span className="font-medium text-foreground">{label}</span>
-        <span className="text-muted-foreground">{Math.round(current)} / {target} g</span>
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="relative w-[72px] h-[72px]">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="28" fill="none" strokeWidth="5" className="stroke-muted" />
+          <circle
+            cx="32" cy="32" r="28"
+            fill="none"
+            strokeWidth="5"
+            strokeLinecap="round"
+            stroke={color}
+            className="transition-all duration-700"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Icon className="h-4 w-4" style={{ color }} />
+        </div>
       </div>
-      <div className="h-2.5 bg-muted rounded-full overflow-hidden">
-        <div className={`macro-bar ${color}`} style={{ width: `${pct}%` }} />
+      <div className="text-center">
+        <p className="text-sm font-bold text-foreground">{Math.round(current)}g</p>
+        <p className="text-[10px] text-muted-foreground font-medium">{label}</p>
+        <p className="text-[10px] text-muted-foreground">/ {target}g</p>
       </div>
     </div>
   );
@@ -64,7 +85,16 @@ export default function DashboardPage() {
     return map[type] || type;
   };
 
-  // Generate hints
+  const mealTypeIcon = (type: string) => {
+    const map: Record<string, string> = {
+      breakfast: '🌅',
+      lunch: '☀️',
+      dinner: '🌙',
+      snack: '⚡',
+    };
+    return map[type] || '🍽️';
+  };
+
   const hints: string[] = [];
   if (remaining > 0) {
     hints.push(t('hint.caloriesRemaining', { value: Math.round(remaining) }));
@@ -83,12 +113,18 @@ export default function DashboardPage() {
   const displayName = profile?.name || profile?.email?.split('@')[0] || '';
 
   return (
-    <div className="page-container space-y-4">
+    <div className="page-container space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold">{t('dashboard.hello')}, {displayName} 👋</h1>
-          <p className="text-sm text-muted-foreground">{t('dashboard.today')}</p>
+          <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{t('dashboard.today')}</p>
+          <h1 className="text-2xl font-extrabold tracking-tight">
+            {t('dashboard.hello')}, <span className="gradient-text">{displayName}</span> 💪
+          </h1>
+        </div>
+        <div className="sport-badge">
+          <Flame className="h-3.5 w-3.5" />
+          {t('dashboard.goal')}
         </div>
       </div>
 
@@ -96,66 +132,103 @@ export default function DashboardPage() {
       <div className="nutri-card-highlight">
         <div className="flex items-center gap-6">
           {/* Circular progress */}
-          <div className="relative w-28 h-28 flex-shrink-0">
+          <div className="relative w-32 h-32 flex-shrink-0">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="42" fill="none" strokeWidth="10" className="stroke-muted" />
+              <circle cx="50" cy="50" r="42" fill="none" strokeWidth="8" className="stroke-muted" />
               <circle
                 cx="50" cy="50" r="42"
                 fill="none"
-                strokeWidth="10"
+                strokeWidth="8"
                 strokeLinecap="round"
-                className="stroke-primary transition-all duration-700"
-                strokeDasharray={`${calPct * 2.64} ${264 - calPct * 2.64}`}
+                className="transition-all duration-1000"
+                style={{
+                  stroke: 'url(#calGradient)',
+                  strokeDasharray: `${calPct * 2.64} ${264 - calPct * 2.64}`,
+                }}
               />
+              <defs>
+                <linearGradient id="calGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="hsl(153, 58%, 45%)" />
+                  <stop offset="50%" stopColor="hsl(168, 70%, 38%)" />
+                  <stop offset="100%" stopColor="hsl(32, 95%, 55%)" />
+                </linearGradient>
+              </defs>
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-xl font-bold text-foreground">{Math.round(remaining)}</span>
-              <span className="text-[10px] text-muted-foreground">{t('dashboard.kcal')}</span>
-              <span className="text-[10px] text-muted-foreground">{t('dashboard.remaining')}</span>
+              <Flame className="h-4 w-4 text-primary mb-0.5" />
+              <span className="text-2xl font-black text-foreground tracking-tight">{Math.round(remaining)}</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('dashboard.kcal')}</span>
             </div>
           </div>
 
           {/* Stats */}
-          <div className="flex-1 space-y-2">
+          <div className="flex-1 space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{t('dashboard.eaten')}</span>
-              <span className="font-semibold">{Math.round(todayTotals.calories)} {t('dashboard.kcal')}</span>
+              <span className="text-muted-foreground font-medium">{t('dashboard.eaten')}</span>
+              <span className="font-bold tabular-nums">{Math.round(todayTotals.calories)} <span className="text-muted-foreground font-normal text-xs">{t('dashboard.kcal')}</span></span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{t('dashboard.goal')}</span>
-              <span className="font-semibold">{calorieTarget} {t('dashboard.kcal')}</span>
+              <span className="text-muted-foreground font-medium">{t('dashboard.goal')}</span>
+              <span className="font-bold tabular-nums">{calorieTarget} <span className="text-muted-foreground font-normal text-xs">{t('dashboard.kcal')}</span></span>
             </div>
-            <div className="h-px bg-border my-1" />
-            <div className="flex items-center gap-1 text-sm">
+            <div className="h-px bg-border" />
+            <div className="flex items-center gap-1.5 text-sm">
               {remaining > 0 ? (
-                <TrendingDown className="h-3.5 w-3.5 text-primary" />
+                <TrendingDown className="h-4 w-4 text-primary" />
               ) : remaining < 0 ? (
-                <TrendingUp className="h-3.5 w-3.5 text-destructive" />
+                <TrendingUp className="h-4 w-4 text-destructive" />
               ) : (
-                <Minus className="h-3.5 w-3.5 text-muted-foreground" />
+                <Minus className="h-4 w-4 text-muted-foreground" />
               )}
-              <span className={remaining >= 0 ? 'text-primary font-medium' : 'text-destructive font-medium'}>
-                {Math.abs(Math.round(remaining))} {t('dashboard.kcal')} {t('dashboard.remaining')}
+              <span className={`font-bold ${remaining >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                {Math.abs(Math.round(remaining))} {t('dashboard.kcal')}
               </span>
+              <span className="text-muted-foreground text-xs">{t('dashboard.remaining')}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Macros */}
-      <div className="nutri-card space-y-3">
-        <h3 className="font-semibold text-sm">{t('dashboard.protein')} / {t('dashboard.fat')} / {t('dashboard.carbs')}</h3>
-        <MacroBar label={t('dashboard.protein')} current={todayTotals.protein} target={goals?.protein_target_g || 150} color="bg-protein" />
-        <MacroBar label={t('dashboard.fat')} current={todayTotals.fat} target={goals?.fat_target_g || 65} color="bg-fat" />
-        <MacroBar label={t('dashboard.carbs')} current={todayTotals.carbs} target={goals?.carbs_target_g || 250} color="bg-carbs" />
+      {/* Macros as rings */}
+      <div className="nutri-card">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">{t('dashboard.protein')} / {t('dashboard.fat')} / {t('dashboard.carbs')}</h3>
+        </div>
+        <div className="flex justify-around">
+          <MacroRing
+            label={t('dashboard.protein')}
+            current={todayTotals.protein}
+            target={goals?.protein_target_g || 150}
+            color="hsl(210, 80%, 55%)"
+            icon={Dumbbell}
+          />
+          <MacroRing
+            label={t('dashboard.fat')}
+            current={todayTotals.fat}
+            target={goals?.fat_target_g || 65}
+            color="hsl(38, 92%, 55%)"
+            icon={Droplets}
+          />
+          <MacroRing
+            label={t('dashboard.carbs')}
+            current={todayTotals.carbs}
+            target={goals?.carbs_target_g || 250}
+            color="hsl(153, 58%, 45%)"
+            icon={Zap}
+          />
+        </div>
       </div>
 
       {/* Hints */}
       {hints.length > 0 && (
-        <div className="nutri-card bg-accent/50 space-y-2">
-          <h3 className="font-semibold text-sm text-accent-foreground">{t('dashboard.hints')}</h3>
+        <div className="glass-card space-y-2" style={{
+          background: 'linear-gradient(135deg, hsl(153 58% 45% / 0.06), hsl(168 70% 38% / 0.06))',
+        }}>
+          <h3 className="font-bold text-sm text-primary flex items-center gap-1.5">
+            <Zap className="h-3.5 w-3.5" /> {t('dashboard.hints')}
+          </h3>
           {hints.map((hint, i) => (
-            <p key={i} className="text-sm text-accent-foreground/80">💡 {hint}</p>
+            <p key={i} className="text-sm text-foreground/80">💡 {hint}</p>
           ))}
         </div>
       )}
@@ -163,15 +236,18 @@ export default function DashboardPage() {
       {/* Recent meals */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold">{t('dashboard.recentMeals')}</h3>
-          <button onClick={() => navigate('/meals')} className="text-primary text-sm font-medium flex items-center gap-1">
+          <h3 className="font-bold uppercase tracking-wider text-sm text-muted-foreground">{t('dashboard.recentMeals')}</h3>
+          <button onClick={() => navigate('/meals')} className="text-primary text-sm font-bold flex items-center gap-1 hover:opacity-80 transition-opacity">
             <Plus className="h-4 w-4" /> {t('dashboard.addMeal')}
           </button>
         </div>
         {todayMeals.length === 0 ? (
-          <div className="nutri-card text-center py-8">
-            <p className="text-muted-foreground text-sm">{t('dashboard.noMeals')}</p>
-            <Button variant="outline" className="mt-3" onClick={() => navigate('/meals')}>
+          <div className="nutri-card text-center py-10">
+            <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-primary/10 to-accent flex items-center justify-center">
+              <Flame className="h-7 w-7 text-primary" />
+            </div>
+            <p className="text-muted-foreground text-sm font-medium">{t('dashboard.noMeals')}</p>
+            <Button className="mt-4 font-bold" onClick={() => navigate('/meals')}>
               <Plus className="h-4 w-4 mr-1" /> {t('dashboard.addMeal')}
             </Button>
           </div>
@@ -180,17 +256,21 @@ export default function DashboardPage() {
             <div
               key={meal.id}
               onClick={() => navigate(`/meals/${meal.id}/edit`)}
-              className="nutri-card flex items-center gap-3 cursor-pointer hover:border-primary/30 transition-colors"
+              className="nutri-card flex items-center gap-3 cursor-pointer hover:shadow-md hover:border-primary/30 transition-all active:scale-[0.98]"
             >
-              <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-lg">
-                {meal.meal_type === 'breakfast' ? '🌅' : meal.meal_type === 'lunch' ? '☀️' : meal.meal_type === 'dinner' ? '🌙' : '🍎'}
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/10 to-accent flex items-center justify-center text-lg">
+                {mealTypeIcon(meal.meal_type)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">{mealTypeLabel(meal.meal_type)}</p>
-                <p className="text-xs text-muted-foreground">{Math.round(Number(meal.total_calories))} {t('dashboard.kcal')}</p>
+                <p className="font-bold text-sm">{mealTypeLabel(meal.meal_type)}</p>
+                <p className="text-xs text-muted-foreground font-medium">{Math.round(Number(meal.total_calories))} {t('dashboard.kcal')}</p>
               </div>
-              <div className="text-right text-xs text-muted-foreground">
-                <p>{Math.round(Number(meal.total_protein_g))}P / {Math.round(Number(meal.total_fat_g))}F / {Math.round(Number(meal.total_carbs_g))}C</p>
+              <div className="text-right">
+                <div className="flex gap-2 text-[11px] font-semibold">
+                  <span className="text-protein">{Math.round(Number(meal.total_protein_g))}P</span>
+                  <span className="text-fat">{Math.round(Number(meal.total_fat_g))}F</span>
+                  <span className="text-carbs">{Math.round(Number(meal.total_carbs_g))}C</span>
+                </div>
               </div>
             </div>
           ))

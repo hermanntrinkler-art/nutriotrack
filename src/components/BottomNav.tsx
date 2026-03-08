@@ -16,22 +16,24 @@ export default function BottomNav() {
   const { t } = useTranslation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border bottom-nav-safe">
-      <div className="max-w-lg mx-auto flex items-center justify-around py-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/90 backdrop-blur-lg border-t border-border/50 bottom-nav-safe">
+      <div className="max-w-lg mx-auto flex items-center justify-around py-1.5">
         {tabs.map(({ key, icon: Icon, path }) => {
           const isActive = location.pathname === path;
           return (
             <button
               key={path}
               onClick={() => navigate(path)}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-[56px] ${
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all min-w-[56px] ${
                 isActive
                   ? 'text-primary'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <Icon className={`h-5 w-5 ${isActive ? 'stroke-[2.5]' : ''}`} />
-              <span className="text-[10px] font-medium">{t(key)}</span>
+              <div className={`p-1 rounded-lg transition-all ${isActive ? 'bg-primary/10' : ''}`}>
+                <Icon className={`h-5 w-5 ${isActive ? 'stroke-[2.5]' : ''}`} />
+              </div>
+              <span className={`text-[10px] ${isActive ? 'font-bold' : 'font-medium'}`}>{t(key)}</span>
             </button>
           );
         })}

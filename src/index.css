@@ -2,41 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 @layer base {
   :root {
-    --background: 150 20% 98%;
-    --foreground: 210 25% 12%;
+    --background: 220 14% 96%;
+    --foreground: 220 20% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 210 25% 12%;
+    --card-foreground: 220 20% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 25% 12%;
+    --popover-foreground: 220 20% 10%;
 
-    --primary: 165 60% 40%;
+    --primary: 153 58% 45%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 150 25% 94%;
-    --secondary-foreground: 210 25% 12%;
+    --secondary: 220 14% 92%;
+    --secondary-foreground: 220 20% 10%;
 
-    --muted: 150 15% 93%;
-    --muted-foreground: 210 10% 50%;
+    --muted: 220 10% 93%;
+    --muted-foreground: 220 10% 46%;
 
-    --accent: 165 50% 92%;
-    --accent-foreground: 165 60% 30%;
+    --accent: 153 40% 90%;
+    --accent-foreground: 153 58% 30%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 150 15% 90%;
-    --input: 150 15% 88%;
-    --ring: 165 60% 40%;
+    --border: 220 12% 90%;
+    --input: 220 12% 88%;
+    --ring: 153 58% 45%;
 
     --radius: 1rem;
 
-    --success: 145 60% 42%;
+    --success: 153 58% 45%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 55%;
     --warning-foreground: 38 92% 15%;
@@ -45,8 +45,12 @@
 
     --protein: 210 80% 55%;
     --fat: 38 92% 55%;
-    --carbs: 165 60% 40%;
+    --carbs: 153 58% 45%;
     --calories: 0 72% 55%;
+
+    --energy: 32 95% 55%;
+    --gradient-start: 153 58% 45%;
+    --gradient-end: 168 70% 38%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -59,33 +63,33 @@
   }
 
   .dark {
-    --background: 210 25% 8%;
-    --foreground: 150 10% 95%;
+    --background: 220 16% 7%;
+    --foreground: 220 10% 95%;
 
-    --card: 210 20% 12%;
-    --card-foreground: 150 10% 95%;
+    --card: 220 14% 11%;
+    --card-foreground: 220 10% 95%;
 
-    --popover: 210 20% 12%;
-    --popover-foreground: 150 10% 95%;
+    --popover: 220 14% 11%;
+    --popover-foreground: 220 10% 95%;
 
-    --primary: 165 60% 45%;
+    --primary: 153 58% 48%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 15% 18%;
-    --secondary-foreground: 150 10% 95%;
+    --secondary: 220 14% 16%;
+    --secondary-foreground: 220 10% 95%;
 
-    --muted: 210 15% 18%;
-    --muted-foreground: 150 10% 60%;
+    --muted: 220 14% 16%;
+    --muted-foreground: 220 10% 55%;
 
-    --accent: 165 30% 18%;
-    --accent-foreground: 165 60% 65%;
+    --accent: 153 30% 16%;
+    --accent-foreground: 153 58% 65%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 210 15% 20%;
-    --input: 210 15% 20%;
-    --ring: 165 60% 45%;
+    --border: 220 14% 18%;
+    --input: 220 14% 18%;
+    --ring: 153 58% 48%;
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
@@ -115,15 +119,25 @@
 
 @layer components {
   .nutri-card {
-    @apply bg-card rounded-2xl shadow-sm border border-border p-4;
+    @apply bg-card rounded-2xl shadow-sm border border-border p-4 transition-all duration-200;
   }
 
   .nutri-card-highlight {
-    @apply bg-card rounded-2xl shadow-md border border-primary/20 p-4;
+    @apply bg-card rounded-2xl shadow-lg border border-primary/20 p-5 relative overflow-hidden;
+  }
+
+  .nutri-card-highlight::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--gradient-end)), hsl(var(--energy)));
   }
 
   .macro-bar {
-    @apply h-2.5 rounded-full transition-all duration-500 ease-out;
+    @apply h-3 rounded-full transition-all duration-700 ease-out;
   }
 
   .bottom-nav-safe {
@@ -132,5 +146,22 @@
 
   .page-container {
     @apply px-4 pb-24 pt-4 max-w-lg mx-auto min-h-screen;
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--gradient-end)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .sport-badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.12), hsl(var(--gradient-end) / 0.12));
+    color: hsl(var(--primary));
+  }
+
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-4;
   }
 }
