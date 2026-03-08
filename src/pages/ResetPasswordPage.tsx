@@ -29,7 +29,7 @@ export default function ResetPasswordPage() {
     if (error) {
       setError(error.message);
     } else {
-      navigate('/');
+      navigate('/dashboard');
     }
     setLoading(false);
   };

@@ -33,7 +33,7 @@ export default function EditMealPage() {
   const loadMeal = async () => {
     if (!id) return;
     const { data: meal } = await supabase.from('meal_entries').select('*').eq('id', id).single();
-    if (!meal) { navigate('/'); return; }
+    if (!meal) { navigate('/dashboard'); return; }
     setMealType((meal as any).meal_type);
 
     const { data: foodItems } = await supabase.from('meal_food_items').select('*').eq('meal_entry_id', id);
@@ -85,7 +85,7 @@ export default function EditMealPage() {
 
     toast.success(t('meals.saved'));
     setSaving(false);
-    navigate('/');
+    navigate('/dashboard');
   };
 
   const handleDelete = async () => {
@@ -95,7 +95,7 @@ export default function EditMealPage() {
     await supabase.from('meal_entries').delete().eq('id', id);
     toast.success(t('common.delete'));
     setDeleting(false);
-    navigate('/');
+    navigate('/dashboard');
   };
 
   const mealTypeLabel = (type: string) => {
@@ -118,7 +118,7 @@ export default function EditMealPage() {
     <div className="page-container space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/')} className="p-1.5 rounded-lg hover:bg-accent transition-colors">
+        <button onClick={() => navigate('/dashboard')} className="p-1.5 rounded-lg hover:bg-accent transition-colors">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2 flex-1">
@@ -171,7 +171,7 @@ export default function EditMealPage() {
       </div>
 
       <div className="flex gap-3">
-        <Button variant="outline" onClick={() => navigate('/')} className="flex-1">
+        <Button variant="outline" onClick={() => navigate('/dashboard')} className="flex-1">
           {t('common.cancel')}
         </Button>
         <Button onClick={handleSave} className="flex-1" disabled={saving || items.length === 0 || items.some(i => !i.food_name)}>
