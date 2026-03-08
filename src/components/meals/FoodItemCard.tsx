@@ -1,0 +1,91 @@
+import type { AnalyzedFoodItem } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
+import { Pencil, Trash2, Shield, ShieldAlert } from 'lucide-react';
+
+interface FoodItemCardProps {
+  item: AnalyzedFoodItem;
+  index: number;
+  isAiResult: boolean;
+  onEdit: () => void;
+  onRemove: () => void;
+}
+
+function confidenceColor(score: number): string {
+  if (score >= 0.85) return 'text-primary';
+  if (score >= 0.65) return 'text-warning';
+  return 'text-destructive';
+}
+
+function confidenceLabel(score: number, t: (key: any) => string): string {
+  if (score >= 0.85) return t('meals.confidenceHigh');
+  if (score >= 0.65) return t('meals.confidenceMedium');
+  return t('meals.confidenceLow');
+}
+
+export default function FoodItemCard({ item, index, isAiResult, onEdit, onRemove }: FoodItemCardProps) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="nutri-card animate-fade-in">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex-1 min-w-0">
+          <h4 className="font-semibold text-sm truncate">{item.food_name || t('meals.foodName')}</h4>
+          <p className="text-xs text-muted-foreground">
+            {item.quantity} {item.unit}
+          </p>
+        </div>
+        <div className="flex items-center gap-1 ml-2">
+          <button
+            onClick={onEdit}
+            className="p-1.5 rounded-lg hover:bg-accent transition-colors"
+            aria-label={t('common.edit')}
+          >
+            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+          <button
+            onClick={onRemove}
+            className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors"
+            aria-label={t('common.delete')}
+          >
+            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+          </button>
+        </div>
+      </div>
+
+      {/* Macros row */}
+      <div className="grid grid-cols-4 gap-2 text-center">
+        <div className="py-1.5 rounded-lg bg-muted">
+          <p className="text-xs font-bold text-foreground">{Math.round(item.calories)}</p>
+          <p className="text-[10px] text-muted-foreground">{t('dashboard.kcal')}</p>
+        </div>
+        <div className="py-1.5 rounded-lg bg-muted">
+          <p className="text-xs font-bold text-protein">{Math.round(item.protein_g)}g</p>
+          <p className="text-[10px] text-muted-foreground">P</p>
+        </div>
+        <div className="py-1.5 rounded-lg bg-muted">
+          <p className="text-xs font-bold text-fat">{Math.round(item.fat_g)}g</p>
+          <p className="text-[10px] text-muted-foreground">F</p>
+        </div>
+        <div className="py-1.5 rounded-lg bg-muted">
+          <p className="text-xs font-bold text-carbs">{Math.round(item.carbs_g)}g</p>
+          <p className="text-[10px] text-muted-foreground">C</p>
+        </div>
+      </div>
+
+      {/* Confidence badge */}
+      {isAiResult && (
+        <div className="mt-2 flex items-center gap-1.5">
+          {item.confidence_score >= 0.85 ? (
+            <Shield className={`h-3 w-3 ${confidenceColor(item.confidence_score)}`} />
+          ) : (
+            <ShieldAlert className={`h-3 w-3 ${confidenceColor(item.confidence_score)}`} />
+          )}
+          <span className={`text-[10px] font-medium ${confidenceColor(item.confidence_score)}`}>
+            {confidenceLabel(item.confidence_score, t)} ({Math.round(item.confidence_score * 100)}%)
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
