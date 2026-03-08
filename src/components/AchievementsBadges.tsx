@@ -86,6 +86,15 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached }: 
 
   const unlockedCount = achievements.filter(a => a.unlocked).length;
 
+  // Fire confetti when a new achievement is unlocked
+  const prevUnlocked = useRef<number | null>(null);
+  useEffect(() => {
+    if (prevUnlocked.current !== null && unlockedCount > prevUnlocked.current) {
+      fireCenterBurst();
+    }
+    prevUnlocked.current = unlockedCount;
+  }, [unlockedCount]);
+
   return (
     <motion.div className="nutri-card space-y-3" variants={fadeUp}>
       <div className="flex items-center justify-between">

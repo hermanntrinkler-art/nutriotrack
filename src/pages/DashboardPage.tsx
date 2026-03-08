@@ -165,6 +165,19 @@ export default function DashboardPage() {
   const circumference = 2 * Math.PI * 42;
   const calOffset = circumference - (calPct / 100) * circumference;
 
+  // Confetti when calorie goal reached
+  const confettiFired = useRef(false);
+  useEffect(() => {
+    if (calPct >= 95 && calPct <= 105 && todayTotals.calories > 0 && !confettiFired.current) {
+      confettiFired.current = true;
+      const key = `confetti_cal_${new Date().toISOString().split('T')[0]}`;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        setTimeout(() => fireConfetti(), 800);
+      }
+    }
+  }, [calPct, todayTotals.calories]);
+
   const motivationalMsg = useMemo(() => getMotivationalMessage(calPct, language), [calPct, language]);
 
   const mealTypeLabel = (type: string) => {
