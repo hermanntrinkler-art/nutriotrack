@@ -15,28 +15,50 @@ interface BarcodeScannerProps {
   onCancel: () => void;
 }
 
-async function lookupOpenFoodFacts(code: string): Promise<AnalyzedFoodItem | null> {
+interface OFFResult {
+  item: AnalyzedFoodItem | null;
+  productName?: string;
+  hasNutrition: boolean;
+}
+
+async function lookupOpenFoodFacts(code: string): Promise<OFFResult> {
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json`);
-    if (!res.ok) return null;
+    if (!res.ok) return { item: null, hasNutrition: false };
     const data = await res.json();
-    if (data.status !== 1 || !data.product) return null;
-
+    
+    // Some products don't have a status field, check for product object directly
     const p = data.product;
+    if (!p) return { item: null, hasNutrition: false };
+
     const n = p.nutriments || {};
+    const calories = Math.round(n['energy-kcal_100g'] || 0);
+    const protein_g = Math.round((n.proteins_100g || 0) * 10) / 10;
+    const fat_g = Math.round((n.fat_100g || 0) * 10) / 10;
+    const carbs_g = Math.round((n.carbohydrates_100g || 0) * 10) / 10;
+    const productName = p.product_name || p.product_name_de || p.product_name_en || '';
+    const hasNutrition = calories > 0 || protein_g > 0 || fat_g > 0 || carbs_g > 0;
+
+    if (!hasNutrition) {
+      // Product exists but no nutrition data → let user fill in manually
+      return { item: null, productName: productName || undefined, hasNutrition: false };
+    }
 
     return {
-      food_name: p.product_name || code,
-      quantity: 100,
-      unit: 'g',
-      calories: Math.round(n['energy-kcal_100g'] || 0),
-      protein_g: Math.round((n.proteins_100g || 0) * 10) / 10,
-      fat_g: Math.round((n.fat_100g || 0) * 10) / 10,
-      carbs_g: Math.round((n.carbohydrates_100g || 0) * 10) / 10,
-      confidence_score: 0.95,
+      item: {
+        food_name: productName || code,
+        quantity: 100,
+        unit: 'g',
+        calories,
+        protein_g,
+        fat_g,
+        carbs_g,
+        confidence_score: 0.95,
+      },
+      hasNutrition: true,
     };
   } catch {
-    return null;
+    return { item: null, hasNutrition: false };
   }
 }
 
