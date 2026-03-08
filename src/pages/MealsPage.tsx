@@ -545,6 +545,38 @@ export default function MealsPage() {
             </div>
           </div>
 
+          {/* Save as Recipe button */}
+          {items.length > 0 && items.some(i => i.food_name) && user && (
+            <Button
+              variant="outline"
+              onClick={async () => {
+                setSavingRecipe(true);
+                const recipeName = items.map(i => i.food_name).filter(Boolean).slice(0, 3).join(', ');
+                const success = await saveAsRecipe({
+                  userId: user.id,
+                  name: recipeName || 'Rezept',
+                  emoji: currentMealType?.emoji || '🍽️',
+                  mealType,
+                  items,
+                });
+                setSavingRecipe(false);
+                if (success) {
+                  hapticFeedback('success');
+                  toast.success(language === 'de' ? 'Als Rezept gespeichert!' : 'Saved as recipe!');
+                } else {
+                  toast.error(language === 'de' ? 'Fehler beim Speichern' : 'Failed to save');
+                }
+              }}
+              disabled={savingRecipe}
+              className="w-full rounded-xl"
+            >
+              <BookmarkPlus className="h-4 w-4 mr-1.5" />
+              {savingRecipe
+                ? (language === 'de' ? 'Wird gespeichert...' : 'Saving...')
+                : (language === 'de' ? 'Als Rezept speichern' : 'Save as Recipe')}
+            </Button>
+          )}
+
           <div className="flex gap-3">
             <Button variant="outline" onClick={handleReset} className="flex-1">
               {t('meals.cancel')}
