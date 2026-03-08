@@ -369,7 +369,50 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* Macros */}
+      {/* Yesterday Comparison */}
+      <motion.div
+        className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
+        variants={fadeUp}
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <CalendarDays className="h-4 w-4 text-primary" />
+          <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">
+            {language === 'de' ? 'Vergleich zu gestern' : 'vs. Yesterday'}
+          </h3>
+        </div>
+        {yesterdayTotals.calories > 0 ? (
+          <div className="grid grid-cols-4 gap-2">
+            {([
+              { label: t('dashboard.kcal'), today: todayTotals.calories, yesterday: yesterdayTotals.calories, color: 'text-primary' },
+              { label: t('dashboard.protein'), today: todayTotals.protein, yesterday: yesterdayTotals.protein, color: 'text-protein' },
+              { label: t('dashboard.fat'), today: todayTotals.fat, yesterday: yesterdayTotals.fat, color: 'text-fat' },
+              { label: t('dashboard.carbs'), today: todayTotals.carbs, yesterday: yesterdayTotals.carbs, color: 'text-carbs' },
+            ] as const).map(({ label, today, yesterday, color }) => {
+              const diff = today - yesterday;
+              const diffPct = yesterday > 0 ? Math.round((diff / yesterday) * 100) : 0;
+              return (
+                <div key={label} className="text-center p-2 rounded-xl bg-muted/50">
+                  <p className={`text-base font-black tabular-nums ${color}`}>
+                    {Math.round(today)}{label !== t('dashboard.kcal') ? 'g' : ''}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground font-medium">{label}</p>
+                  <div className="flex items-center justify-center gap-0.5 mt-1">
+                    {diff > 0 ? <TrendingUp className="h-3 w-3 text-energy" /> : diff < 0 ? <TrendingDown className="h-3 w-3 text-primary" /> : <Minus className="h-3 w-3 text-muted-foreground" />}
+                    <span className={`text-[10px] font-bold tabular-nums ${diff > 0 ? 'text-energy' : diff < 0 ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {diff > 0 ? '+' : ''}{diffPct}%
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-3">
+            {language === 'de' ? 'Keine Daten von gestern' : 'No data from yesterday'}
+          </p>
+        )}
+      </motion.div>
+
       <motion.div
         className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
         variants={fadeUp}
