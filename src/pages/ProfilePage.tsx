@@ -435,3 +435,17 @@ export default function ProfilePage() {
     </motion.div>
   );
 }
+
+function AdminLink() {
+  const { isAdmin, loading } = useAdmin();
+  const navigate = useNavigate();
+
+  if (loading || !isAdmin) return null;
+
+  return (
+    <button onClick={() => navigate('/admin')} className="nutri-card w-full flex items-center gap-3 hover:border-primary/30 transition-colors">
+      <Shield className="h-5 w-5 text-primary" />
+      <span className="font-medium text-sm">Admin Dashboard</span>
+    </button>
+  );
+}
