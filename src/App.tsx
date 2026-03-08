@@ -19,6 +19,7 @@ import EditMealPage from "@/pages/EditMealPage";
 import HistoryPage from "@/pages/HistoryPage";
 import WeightPage from "@/pages/WeightPage";
 import ProfilePage from "@/pages/ProfilePage";
+import AdminPage from "@/pages/AdminPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
