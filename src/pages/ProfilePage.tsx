@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull, Activity, Crown, Sun, Moon, Monitor } from 'lucide-react';
+import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull, Activity, Crown, Sun, Moon, Monitor, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
