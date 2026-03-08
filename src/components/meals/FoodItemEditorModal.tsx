@@ -60,9 +60,11 @@ function getGramsEquivalent(quantity: number, unit: string): number {
 
 export default function FoodItemEditorModal({ item, open, onClose, onSave }: FoodItemEditorModalProps) {
   const { t, language } = useTranslation();
+  const { user } = useAuth();
   const [form, setForm] = useState<AnalyzedFoodItem>({
     food_name: '', quantity: 100, unit: 'g', calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0, confidence_score: 1,
   });
+  const [customProducts, setCustomProducts] = useState<FoodEntry[]>([]);
   const [suggestions, setSuggestions] = useState<FoodEntry[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [baseNutrition, setBaseNutrition] = useState<BaseNutrition | null>(null);
