@@ -111,7 +111,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
   const handleFoodNameChange = (value: string) => {
     setCustomForm(f => ({ ...f, food_name: value }));
     const lang = (document.documentElement.lang === 'en' ? 'en' : 'de') as 'de' | 'en';
-    setFoodSuggestions(value.length >= 1 ? searchFoods(value, lang) : []);
+    setFoodSuggestions(searchFoods(value, lang));
   };
 
   const selectFoodSuggestion = (entry: FoodEntry) => {
