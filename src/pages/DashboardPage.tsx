@@ -177,7 +177,11 @@ export default function DashboardPage() {
           </div>
         ) : (
           todayMeals.slice(0, 5).map(meal => (
-            <div key={meal.id} className="nutri-card flex items-center gap-3">
+            <div
+              key={meal.id}
+              onClick={() => navigate(`/meals/${meal.id}/edit`)}
+              className="nutri-card flex items-center gap-3 cursor-pointer hover:border-primary/30 transition-colors"
+            >
               <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-lg">
                 {meal.meal_type === 'breakfast' ? '🌅' : meal.meal_type === 'lunch' ? '☀️' : meal.meal_type === 'dinner' ? '🌙' : '🍎'}
               </div>
