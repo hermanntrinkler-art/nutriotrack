@@ -127,6 +127,8 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     });
     setFoodSuggestions([]);
   };
+
+  const handleCode = async (code: string) => {
     if (processedRef.current) return;
     processedRef.current = true;
     setLoading(true);
