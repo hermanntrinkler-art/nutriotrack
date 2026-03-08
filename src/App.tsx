@@ -20,6 +20,7 @@ import HistoryPage from "@/pages/HistoryPage";
 import WeightPage from "@/pages/WeightPage";
 import ProfilePage from "@/pages/ProfilePage";
 import AdminPage from "@/pages/AdminPage";
+import ShareBadgePage from "@/pages/ShareBadgePage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
