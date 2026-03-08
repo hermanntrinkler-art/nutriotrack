@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
@@ -13,6 +13,8 @@ import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
 import { motion } from 'framer-motion';
 import { hapticFeedback } from '@/lib/haptics';
+import AchievementsBadges from '@/components/AchievementsBadges';
+import type { MealEntry } from '@/lib/types';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
