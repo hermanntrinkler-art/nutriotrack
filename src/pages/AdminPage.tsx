@@ -25,10 +25,14 @@ import badgeMeal500 from '@/assets/badges/meal-500.png';
 import badgeWeight1 from '@/assets/badges/weight-1.png';
 import badgeWeight5 from '@/assets/badges/weight-5.png';
 import badgeWeight10 from '@/assets/badges/weight-10.png';
+import badgeWeight15 from '@/assets/badges/weight-15.png';
+import badgeWeight20 from '@/assets/badges/weight-20.png';
+import badgeWeight25 from '@/assets/badges/weight-25.png';
 import badgeGoalReached from '@/assets/badges/goal-reached.png';
 import badgeWeek1 from '@/assets/badges/week-1.png';
 import badgeMonth1 from '@/assets/badges/month-1.png';
 import badgeQuarter from '@/assets/badges/quarter.png';
+import badgeMonth6 from '@/assets/badges/month-6.png';
 
 const BADGE_DEFINITIONS = [
   { id: 'streak_3', title: '3-Day Streak', fallback: badgeStreak3 },
