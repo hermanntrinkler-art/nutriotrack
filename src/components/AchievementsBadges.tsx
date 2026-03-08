@@ -190,19 +190,28 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
   const handleShareBadge = async (badge: Achievement) => {
     setSharingBadgeId(badge.id);
     try {
-      const blob = await generateShareImage({
-        name: userName,
-        streak,
-        totalMeals,
-        unlockedAchievements: unlockedCount,
-        totalAchievements: achievements.length,
-        language: language as 'de' | 'en',
-        badgeTitle: badge.title,
-        badgeShareText: badge.shareText,
-        badgeImageUrl: badge.badgeImage,
-      });
-      const shared = await shareImage(blob, language as 'de' | 'en', badge.shareText);
-      if (!shared) toast.success(de ? 'Bild heruntergeladen!' : 'Image downloaded!');
+      // Try link sharing first (better for social media OG previews)
+      const result = await shareBadgeLink(badge.id, language as 'de' | 'en', badge.shareText);
+      if (result === 'copied') {
+        toast.success(de ? 'Link kopiert! 📋' : 'Link copied! 📋');
+      } else if (result === true) {
+        // Shared successfully via native share
+      } else {
+        // Fallback to image sharing
+        const blob = await generateShareImage({
+          name: userName,
+          streak,
+          totalMeals,
+          unlockedAchievements: unlockedCount,
+          totalAchievements: achievements.length,
+          language: language as 'de' | 'en',
+          badgeTitle: badge.title,
+          badgeShareText: badge.shareText,
+          badgeImageUrl: badge.badgeImage,
+        });
+        const shared = await shareImage(blob, language as 'de' | 'en', badge.shareText);
+        if (!shared) toast.success(de ? 'Bild heruntergeladen!' : 'Image downloaded!');
+      }
     } catch {
       toast.error(de ? 'Teilen fehlgeschlagen' : 'Sharing failed');
     } finally {
