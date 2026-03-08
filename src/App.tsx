@@ -91,6 +91,7 @@ function AppRoutes() {
       <Route path="/weight" element={<ProtectedRoute><AppLayout><WeightPage /></AppLayout></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><AppLayout><ProfilePage /></AppLayout></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+      <Route path="/share/:badgeId" element={<ShareBadgePage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
