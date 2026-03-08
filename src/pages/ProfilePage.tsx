@@ -113,6 +113,36 @@ export default function ProfilePage() {
   const goalType = goals?.goal_type;
   const isLoseOrGain = goalType === 'lose' || goalType === 'gain';
 
+  // Computed values for AchievementsBadges
+  const streakValue = useMemo(() => {
+    const uniqueDays = new Set(allMeals.map(m => m.entry_date));
+    const today = new Date();
+    let s = 0;
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const ds = d.toISOString().split('T')[0];
+      if (uniqueDays.has(ds)) { s++; } else { if (i === 0) continue; break; }
+    }
+    return s;
+  }, [allMeals]);
+
+  const goalReachedValue = useMemo(() => {
+    if (!goals?.goal_weight_kg || weightEntries.length === 0) return false;
+    const last = Number(weightEntries[weightEntries.length - 1]?.weight_kg);
+    return goals.goal_type === 'lose' ? last <= Number(goals.goal_weight_kg) : last >= Number(goals.goal_weight_kg);
+  }, [goals, weightEntries]);
+
+  const weightLostKgValue = useMemo(() => {
+    if (!goals?.start_weight_kg || weightEntries.length === 0) return 0;
+    const last = Number(weightEntries[weightEntries.length - 1]?.weight_kg);
+    return Math.max(0, Math.abs(Number(goals.start_weight_kg) - last));
+  }, [goals, weightEntries]);
+
+  const daysTrackedValue = useMemo(() => {
+    return new Set(allMeals.map(m => m.entry_date)).size;
+  }, [allMeals]);
+
   const activityDescMap: Record<string, { label: string; desc: string }> = {
     sedentary: { label: t('onboarding.sedentary'), desc: t('onboarding.sedentaryDesc') },
     lightly_active: { label: t('onboarding.lightlyActive'), desc: t('onboarding.lightlyActiveDesc') },
