@@ -209,42 +209,37 @@ export default function ProfilePage() {
         </motion.div>
       )}
 
-      {/* Achievements */}
+      {/* Achievements & Milestones Tab */}
       <motion.div variants={fadeUp}>
-        <AchievementsBadges
-          userName={profile?.name || user?.email?.split('@')[0] || ''}
-          totalMeals={allMeals.length}
-          streak={(() => {
-            const uniqueDays = new Set(allMeals.map(m => m.entry_date));
-            const today = new Date();
-            let s = 0;
-            for (let i = 0; i < 365; i++) {
-              const d = new Date(today);
-              d.setDate(d.getDate() - i);
-              const ds = d.toISOString().split('T')[0];
-              if (uniqueDays.has(ds)) { s++; } else { if (i === 0) continue; break; }
-            }
-            return s;
-          })()}
-          goalReached={
-            goals?.goal_weight_kg && weightEntries.length > 0
-              ? (goals.goal_type === 'lose'
-                ? Number(weightEntries[weightEntries.length - 1]?.weight_kg) <= Number(goals.goal_weight_kg)
-                : Number(weightEntries[weightEntries.length - 1]?.weight_kg) >= Number(goals.goal_weight_kg))
-              : false
-          }
-        />
-      </motion.div>
-
-      {/* Milestone Timeline */}
-      <motion.div variants={fadeUp}>
-        <MilestoneTimeline
-          meals={allMeals}
-          weightEntries={weightEntries}
-          goalWeightKg={goals?.goal_weight_kg || null}
-          goalType={goals?.goal_type || null}
-          startWeightKg={goals?.start_weight_kg || null}
-        />
+        <Tabs defaultValue="badges">
+          <TabsList className="w-full grid grid-cols-2 mb-3">
+            <TabsTrigger value="badges" className="text-xs font-bold">
+              🏆 {language === 'de' ? 'Badges & Level' : 'Badges & Level'}
+            </TabsTrigger>
+            <TabsTrigger value="timeline" className="text-xs font-bold">
+              📅 {language === 'de' ? 'Timeline' : 'Timeline'}
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="badges">
+            <AchievementsBadges
+              userName={profile?.name || user?.email?.split('@')[0] || ''}
+              totalMeals={allMeals.length}
+              streak={streakValue}
+              goalReached={goalReachedValue}
+              weightLostKg={weightLostKgValue}
+              daysTracked={daysTrackedValue}
+            />
+          </TabsContent>
+          <TabsContent value="timeline">
+            <MilestoneTimeline
+              meals={allMeals}
+              weightEntries={weightEntries}
+              goalWeightKg={goals?.goal_weight_kg || null}
+              goalType={goals?.goal_type || null}
+              startWeightKg={goals?.start_weight_kg || null}
+            />
+          </TabsContent>
+        </Tabs>
       </motion.div>
 
       {/* Deficit Intensity Slider */}
