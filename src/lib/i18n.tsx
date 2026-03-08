@@ -276,6 +276,7 @@ const translations = {
     'auth.checkEmail': 'Please confirm your email address.',
     'auth.orContinueWith': 'Or continue with',
     'auth.googleSignIn': 'Sign in with Google',
+    'auth.rememberMe': 'Remember me',
 
     'onboarding.title': "Let's get started!",
     'onboarding.subtitle': 'A few details so we can calculate your goals.',
