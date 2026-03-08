@@ -136,14 +136,9 @@ export default function DashboardPage() {
           fat: today_meals.reduce((s, m) => s + Number(m.total_fat_g), 0),
           carbs: today_meals.reduce((s, m) => s + Number(m.total_carbs_g), 0),
         });
+        if (today_meals.length > 0) markTodayHasMeals();
+        initReminders();
       });
-
-    // Mark today as having meals for reminder system
-    if ((data || []).some(m => (m as any).entry_date === today)) {
-      markTodayHasMeals();
-    }
-    // Init reminder scheduler
-    initReminders();
   }, [user]);
 
   const streak = useMemo(() => calculateStreak(allMeals), [allMeals]);
