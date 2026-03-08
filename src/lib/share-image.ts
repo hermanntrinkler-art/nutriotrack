@@ -130,10 +130,21 @@ function drawBadgeShareLayout(
   ctx.arc(W / 2, centerY, ringR, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Trophy emoji
-  ctx.font = '72px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('🏆', W / 2, centerY + 25);
+  // Badge image or trophy emoji
+  if (opts.badgeImg) {
+    const imgSize = 160;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(W / 2, centerY, imgSize / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(opts.badgeImg, W / 2 - imgSize / 2, centerY - imgSize / 2, imgSize, imgSize);
+    ctx.restore();
+  } else {
+    ctx.font = '72px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🏆', W / 2, centerY + 25);
+  }
 
   // Badge title
   ctx.font = 'bold 48px "Inter", "SF Pro Display", -apple-system, sans-serif';
