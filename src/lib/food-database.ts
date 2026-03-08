@@ -271,6 +271,7 @@ export function searchFoods(query: string, language: 'de' | 'en'): FoodEntry[] {
   if (!normalizedQuery) return [];
 
   const queryTokens = tokenize(normalizedQuery);
+  const synonymTargets = findSynonymTargets(normalizedQuery);
 
   const scored = foodDatabase
     .map((entry) => {
@@ -283,6 +284,16 @@ export function searchFoods(query: string, language: 'de' | 'en'): FoodEntry[] {
       const secondaryTokens = tokenize(secondaryName);
 
       let score = 0;
+
+      // Check synonym matches
+      if (synonymTargets.length > 0) {
+        for (const target of synonymTargets) {
+          if (primary.includes(target) || secondary.includes(target)) {
+            score = Math.max(score, 70);
+            break;
+          }
+        }
+      }
 
       if (primary === normalizedQuery || secondary === normalizedQuery) score = Math.max(score, 100);
       if (primary.startsWith(normalizedQuery) || secondary.startsWith(normalizedQuery)) score = Math.max(score, 80);
