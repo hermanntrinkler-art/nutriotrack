@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,8 +19,6 @@ type Step = 'select-type' | 'select-method' | 'analyzing' | 'review' | 'confirm'
 export default function MealsPage() {
   const { user } = useAuth();
   const { t, language } = useTranslation();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<Step>('select-type');
   const [mealType, setMealType] = useState<MealType>('lunch');
@@ -68,20 +66,16 @@ export default function MealsPage() {
     }
   };
 
-  const handleTakePhoto = () => {
-    cameraInputRef.current?.click();
-  };
-
   const handleCameraSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleImageUpload(file);
-    // Reset so same file can be selected again
-    if (cameraInputRef.current) cameraInputRef.current.value = '';
+    e.currentTarget.value = '';
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleImageUpload(file);
+    e.currentTarget.value = '';
   };
 
   const handleManualEntry = () => {
@@ -215,7 +209,7 @@ export default function MealsPage() {
             <span className="font-medium">{currentMealType?.label}</span>
           </div>
 
-          <label htmlFor="camera-input" className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors cursor-pointer">
+          <div className="relative nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
               <Camera className="h-6 w-6 text-primary" />
             </div>
@@ -223,9 +217,17 @@ export default function MealsPage() {
               <p className="font-medium">{t('meals.takePhoto')}</p>
               <p className="text-xs text-muted-foreground">{t('meals.aiDescription')}</p>
             </div>
-          </label>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="absolute inset-0 z-10 opacity-0 cursor-pointer"
+              onChange={handleCameraSelect}
+              aria-label={t('meals.takePhoto')}
+            />
+          </div>
 
-          <label htmlFor="file-input" className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors cursor-pointer">
+          <div className="relative nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-info/10 flex items-center justify-center">
               <Upload className="h-6 w-6 text-info" />
             </div>
@@ -233,7 +235,14 @@ export default function MealsPage() {
               <p className="font-medium">{t('meals.uploadImage')}</p>
               <p className="text-xs text-muted-foreground">{t('meals.aiDescription')}</p>
             </div>
-          </label>
+            <input
+              type="file"
+              accept="image/*"
+              className="absolute inset-0 z-10 opacity-0 cursor-pointer"
+              onChange={handleFileSelect}
+              aria-label={t('meals.uploadImage')}
+            />
+          </div>
 
           <button onClick={handleManualEntry} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-warning/10 flex items-center justify-center">
@@ -336,9 +345,6 @@ export default function MealsPage() {
         onSave={handleSaveEditedItem}
       />
 
-      {/* Persistent file inputs - must be outside conditional blocks */}
-      <input id="file-input" ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
-      <input id="camera-input" ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleCameraSelect} />
     </div>
   );
 }
