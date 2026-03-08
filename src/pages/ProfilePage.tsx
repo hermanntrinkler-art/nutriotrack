@@ -409,6 +409,9 @@ export default function ProfilePage() {
           <Target className="h-5 w-5 text-muted-foreground" />
           <span className="font-medium text-sm">{t('profile.editGoals')}</span>
         </button>
+
+        {/* Admin Link */}
+        <AdminLink />
       </motion.div>
 
       {/* Logout */}
