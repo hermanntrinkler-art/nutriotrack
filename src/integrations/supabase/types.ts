@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      badge_images: {
+        Row: {
+          badge_id: string
+          created_at: string
+          id: string
+          image_url: string
+          updated_at: string
+        }
+        Insert: {
+          badge_id: string
+          created_at?: string
+          id?: string
+          image_url: string
+          updated_at?: string
+        }
+        Update: {
+          badge_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       custom_products: {
         Row: {
           barcode: string

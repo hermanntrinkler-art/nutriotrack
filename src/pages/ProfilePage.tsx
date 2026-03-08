@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull, Activity, Crown, Sun, Moon, Monitor } from 'lucide-react';
+import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull, Activity, Crown, Sun, Moon, Monitor, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
@@ -17,6 +17,7 @@ import { hapticFeedback } from '@/lib/haptics';
 import AchievementsBadges from '@/components/AchievementsBadges';
 import ReminderSettings from '@/components/ReminderSettings';
 import MilestoneTimeline from '@/components/MilestoneTimeline';
+import { useAdmin } from '@/hooks/useAdmin';
 import type { MealEntry } from '@/lib/types';
 
 const fadeUp = {
@@ -408,6 +409,9 @@ export default function ProfilePage() {
           <Target className="h-5 w-5 text-muted-foreground" />
           <span className="font-medium text-sm">{t('profile.editGoals')}</span>
         </button>
+
+        {/* Admin Link */}
+        <AdminLink />
       </motion.div>
 
       {/* Logout */}
@@ -429,5 +433,19 @@ export default function ProfilePage() {
         />
       )}
     </motion.div>
+  );
+}
+
+function AdminLink() {
+  const { isAdmin, loading } = useAdmin();
+  const navigate = useNavigate();
+
+  if (loading || !isAdmin) return null;
+
+  return (
+    <button onClick={() => navigate('/admin')} className="nutri-card w-full flex items-center gap-3 hover:border-primary/30 transition-colors">
+      <Shield className="h-5 w-5 text-primary" />
+      <span className="font-medium text-sm">Admin Dashboard</span>
+    </button>
   );
 }
