@@ -160,8 +160,8 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
       // Merge with current local suggestions
       const local = buildSuggestions(query, results);
       setSuggestions(local);
-      setShowSuggestions(local.length > 0);
-    }, 500);
+      setShowSuggestions(true);
+    }, 800);
   }, [language, buildSuggestions]);
 
   const scaleByGrams = (base: BaseNutrition, gramsAmount: number) => {
