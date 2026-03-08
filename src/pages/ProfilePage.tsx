@@ -186,7 +186,7 @@ export default function ProfilePage() {
             <p className="font-semibold text-sm">{currentActivity.label}</p>
             <p className="text-xs text-muted-foreground">{currentActivity.desc}</p>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Deficit Intensity Slider */}
