@@ -463,6 +463,21 @@ export default function MealsPage() {
         />
       )}
 
+      {/* Step: Saved Recipes */}
+      {step === 'recipes' && (
+        <SavedRecipesScreen
+          onSelect={(recipeItems, recipeMealType) => {
+            setIsAiResult(false);
+            setItems(recipeItems);
+            if (['breakfast', 'lunch', 'dinner', 'snack'].includes(recipeMealType)) {
+              setMealType(recipeMealType as MealType);
+            }
+            setStep('review');
+          }}
+          onCancel={() => setStep('select-method')}
+        />
+      )}
+
       {/* Step: Barcode */}
       {step === 'barcode' && (
         <BarcodeScanner
