@@ -249,6 +249,8 @@ export default function MealsPage() {
   };
 
   const handleReset = () => {
+    stopCamera();
+    setCameraError(null);
     setStep('select-type');
     setItems([]);
     setImageFile(null);
