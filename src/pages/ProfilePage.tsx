@@ -176,7 +176,7 @@ export default function ProfilePage() {
           <p className="font-semibold">{profile?.name || user?.email?.split('@')[0]}</p>
           <p className="text-sm text-muted-foreground">{user?.email}</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Activity Level Info */}
       {goals && (
