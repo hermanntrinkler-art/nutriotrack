@@ -129,6 +129,9 @@ export default function AdminPage() {
 
 function BadgeManager() {
   const [badgeImages, setBadgeImages] = useState<Record<string, string>>({});
+  const [badgeShareTexts, setBadgeShareTexts] = useState<Record<string, string>>({});
+  const [editingText, setEditingText] = useState<string | null>(null);
+  const [textDraft, setTextDraft] = useState('');
   const [uploading, setUploading] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -139,12 +142,17 @@ function BadgeManager() {
   const loadBadgeImages = async () => {
     const { data } = await supabase
       .from('badge_images')
-      .select('badge_id, image_url');
+      .select('badge_id, image_url, share_text');
     
     if (data) {
-      const map: Record<string, string> = {};
-      (data as BadgeImageRecord[]).forEach(r => { map[r.badge_id] = r.image_url; });
-      setBadgeImages(map);
+      const imgMap: Record<string, string> = {};
+      const txtMap: Record<string, string> = {};
+      (data as Array<{ badge_id: string; image_url: string; share_text: string | null }>).forEach(r => {
+        imgMap[r.badge_id] = r.image_url;
+        if (r.share_text) txtMap[r.badge_id] = r.share_text;
+      });
+      setBadgeImages(imgMap);
+      setBadgeShareTexts(txtMap);
     }
     setLoading(false);
   };
@@ -155,21 +163,18 @@ function BadgeManager() {
       const ext = file.name.split('.').pop();
       const path = `${badgeId}.${ext}`;
 
-      // Upload to storage
       const { error: uploadError } = await supabase.storage
         .from('badge-images')
         .upload(path, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: urlData } = supabase.storage
         .from('badge-images')
         .getPublicUrl(path);
 
       const imageUrl = urlData.publicUrl + '?t=' + Date.now();
 
-      // Upsert into badge_images table
       const { error: dbError } = await supabase
         .from('badge_images')
         .upsert({ badge_id: badgeId, image_url: imageUrl }, { onConflict: 'badge_id' });
@@ -188,21 +193,38 @@ function BadgeManager() {
   const handleDelete = async (badgeId: string) => {
     try {
       await supabase.from('badge_images').delete().eq('badge_id', badgeId);
-      
-      // Try to delete from storage too
       const extensions = ['png', 'jpg', 'jpeg', 'webp'];
       for (const ext of extensions) {
         await supabase.storage.from('badge-images').remove([`${badgeId}.${ext}`]);
       }
-
-      setBadgeImages(prev => {
-        const next = { ...prev };
-        delete next[badgeId];
-        return next;
-      });
+      setBadgeImages(prev => { const next = { ...prev }; delete next[badgeId]; return next; });
+      setBadgeShareTexts(prev => { const next = { ...prev }; delete next[badgeId]; return next; });
       toast.success('Badge zurückgesetzt auf Standard');
     } catch {
       toast.error('Fehler beim Zurücksetzen');
+    }
+  };
+
+  const handleSaveShareText = async (badgeId: string) => {
+    try {
+      // Check if record exists
+      const existingImage = badgeImages[badgeId];
+      if (existingImage) {
+        await supabase
+          .from('badge_images')
+          .update({ share_text: textDraft || null })
+          .eq('badge_id', badgeId);
+      } else {
+        // Create record with a placeholder image URL
+        await supabase
+          .from('badge_images')
+          .upsert({ badge_id: badgeId, image_url: '', share_text: textDraft || null }, { onConflict: 'badge_id' });
+      }
+      setBadgeShareTexts(prev => textDraft ? { ...prev, [badgeId]: textDraft } : (() => { const n = { ...prev }; delete n[badgeId]; return n; })());
+      setEditingText(null);
+      toast.success('Share-Text gespeichert!');
+    } catch {
+      toast.error('Fehler beim Speichern');
     }
   };
 
@@ -213,12 +235,14 @@ function BadgeManager() {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground mb-4">
-        Klicke auf ein Badge, um ein eigenes Bild hochzuladen. Das Bild wird für alle Nutzer angezeigt.
+        Klicke auf ein Badge, um ein eigenes Bild hochzuladen. Bearbeite den Share-Text, der beim Teilen auf Social Media erscheint.
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {BADGE_DEFINITIONS.map(badge => {
           const customUrl = badgeImages[badge.id];
+          const customText = badgeShareTexts[badge.id];
           const isUploading = uploading === badge.id;
+          const isEditingThis = editingText === badge.id;
 
           return (
             <div
@@ -226,17 +250,46 @@ function BadgeManager() {
               className="relative border border-border rounded-xl p-3 flex flex-col items-center gap-2 bg-card"
             >
               <div className="w-16 h-16 rounded-full overflow-hidden bg-muted flex items-center justify-center">
-                <img
-                  src={customUrl || badge.fallback}
-                  alt={badge.title}
-                  className="w-full h-full object-cover"
-                />
+                <img src={customUrl || badge.fallback} alt={badge.title} className="w-full h-full object-cover" />
               </div>
               <span className="text-[11px] font-bold text-center leading-tight">{badge.title}</span>
-              {customUrl && (
-                <span className="text-[9px] text-primary font-medium">Custom</span>
-              )}
+              {customUrl && <span className="text-[9px] text-primary font-medium">Custom</span>}
+              {customText && <span className="text-[9px] text-muted-foreground">✏️ Custom Text</span>}
               
+              {/* Edit share text */}
+              {isEditingThis ? (
+                <div className="w-full space-y-1">
+                  <textarea
+                    value={textDraft}
+                    onChange={e => setTextDraft(e.target.value)}
+                    className="w-full text-[10px] p-1.5 rounded-md border border-border bg-background resize-none"
+                    rows={2}
+                    placeholder="Share-Text..."
+                  />
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => handleSaveShareText(badge.id)}
+                      className="flex-1 text-[9px] font-bold px-2 py-1 rounded-md bg-primary/10 text-primary hover:bg-primary/20"
+                    >
+                      Speichern
+                    </button>
+                    <button
+                      onClick={() => setEditingText(null)}
+                      className="text-[9px] font-bold px-2 py-1 rounded-md bg-muted text-muted-foreground hover:bg-muted/80"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => { setEditingText(badge.id); setTextDraft(customText || ''); }}
+                  className="text-[9px] font-bold text-muted-foreground hover:text-primary transition-colors"
+                >
+                  ✏️ Share-Text
+                </button>
+              )}
+
               <div className="flex gap-1.5">
                 <label className="cursor-pointer">
                   <input
