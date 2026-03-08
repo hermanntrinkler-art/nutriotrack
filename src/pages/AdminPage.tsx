@@ -50,10 +50,14 @@ const BADGE_DEFINITIONS = [
   { id: 'weight_1', title: '1 kg Milestone', fallback: badgeWeight1 },
   { id: 'weight_5', title: '5 kg Milestone', fallback: badgeWeight5 },
   { id: 'weight_10', title: '10 kg Milestone', fallback: badgeWeight10 },
+  { id: 'weight_15', title: '15 kg Milestone', fallback: badgeWeight15 },
+  { id: 'weight_20', title: '20 kg Milestone', fallback: badgeWeight20 },
+  { id: 'weight_25', title: '25 kg Milestone', fallback: badgeWeight25 },
   { id: 'goal_reached', title: 'Goal Reached!', fallback: badgeGoalReached },
   { id: 'week_1', title: 'First Week', fallback: badgeWeek1 },
   { id: 'month_1', title: 'First Month', fallback: badgeMonth1 },
   { id: 'quarter', title: '3 Months', fallback: badgeQuarter },
+  { id: 'month_6', title: '6 Months', fallback: badgeMonth6 },
 ];
 
 interface UserStats {
