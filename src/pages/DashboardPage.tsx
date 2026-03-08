@@ -296,6 +296,9 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
+      {/* Reminder Banner */}
+      <ReminderBanner hasMealsToday={todayMeals.length > 0} />
+
       {/* Motivational Message */}
       <motion.div
         className="rounded-2xl p-3.5 border border-primary/20 bg-primary/5"
