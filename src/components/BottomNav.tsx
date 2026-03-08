@@ -3,7 +3,7 @@ import { LayoutDashboard, Utensils, Clock, Scale, User } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 
 const tabs = [
-  { key: 'nav.dashboard' as const, icon: LayoutDashboard, path: '/' },
+  { key: 'nav.dashboard' as const, icon: LayoutDashboard, path: '/dashboard' },
   { key: 'nav.meals' as const, icon: Utensils, path: '/meals' },
   { key: 'nav.history' as const, icon: Clock, path: '/history' },
   { key: 'nav.weight' as const, icon: Scale, path: '/weight' },
