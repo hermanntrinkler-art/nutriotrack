@@ -132,14 +132,17 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     }
 
     // 2. Check Open Food Facts
-    const item = await lookupOpenFoodFacts(code);
-    if (item) {
-      toast.success(`${item.food_name} ${t('meals.barcodeFound')}`);
-      onResult(item);
+    const offResult = await lookupOpenFoodFacts(code);
+    if (offResult.item) {
+      toast.success(`${offResult.item.food_name} ${t('meals.barcodeFound')}`);
+      onResult(offResult.item);
       return;
     }
 
-    // 3. Not found → offer manual creation
+    // 3. Not found or no nutrition → offer manual creation, pre-fill name if available
+    if (offResult.productName) {
+      setCustomForm(f => ({ ...f, food_name: offResult.productName! }));
+    }
     setNotFound(code);
     setLoading(false);
   };
