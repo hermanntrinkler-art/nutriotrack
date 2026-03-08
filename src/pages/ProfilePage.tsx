@@ -264,7 +264,7 @@ export default function ProfilePage() {
           >
             {saving ? t('common.loading') : t('common.save')}
           </Button>
-        </div>
+        </motion.div>
       )}
 
       {/* Settings */}
