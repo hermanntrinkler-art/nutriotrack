@@ -322,6 +322,6 @@ export default function ProfilePage() {
           }}
         />
       )}
-    </div>
+    </motion.div>
   );
 }
