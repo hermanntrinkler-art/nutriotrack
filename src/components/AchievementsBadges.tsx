@@ -190,25 +190,12 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
   const handleShareBadge = async (badge: Achievement) => {
     setSharingBadgeId(badge.id);
     try {
-      await shareImageToFacebook(badge.id, language as 'de' | 'en', badge.shareText);
-    } catch {
-      try {
-        const blob = await generateShareImage({
-          name: userName,
-          streak,
-          totalMeals,
-          unlockedAchievements: unlockedCount,
-          totalAchievements: achievements.length,
-          language: language as 'de' | 'en',
-          badgeTitle: badge.title,
-          badgeShareText: badge.shareText,
-          badgeImageUrl: badge.badgeImage,
-        });
-        const shared = await shareImage(blob, language as 'de' | 'en', badge.shareText);
-        if (!shared) toast.error(de ? 'Facebook konnte nicht geöffnet werden' : 'Could not open Facebook');
-      } catch {
-        toast.error(de ? 'Teilen fehlgeschlagen' : 'Sharing failed');
+      const openedFacebook = await shareImageToFacebook(badge.id, language as 'de' | 'en', badge.shareText);
+      if (!openedFacebook) {
+        toast.error(de ? 'Popup blockiert – bitte Popups erlauben und erneut tippen.' : 'Popup blocked — allow popups and try again.');
       }
+    } catch {
+      toast.error(de ? 'Teilen fehlgeschlagen' : 'Sharing failed');
     } finally {
       setSharingBadgeId(null);
     }
