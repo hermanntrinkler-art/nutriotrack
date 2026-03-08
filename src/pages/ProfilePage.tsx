@@ -15,6 +15,7 @@ import { motion } from 'framer-motion';
 import { hapticFeedback } from '@/lib/haptics';
 import AchievementsBadges from '@/components/AchievementsBadges';
 import ReminderSettings from '@/components/ReminderSettings';
+import MilestoneTimeline from '@/components/MilestoneTimeline';
 import type { MealEntry } from '@/lib/types';
 
 const fadeUp = {
@@ -232,6 +233,17 @@ export default function ProfilePage() {
                 : Number(weightEntries[weightEntries.length - 1]?.weight_kg) >= Number(goals.goal_weight_kg))
               : false
           }
+        />
+      </motion.div>
+
+      {/* Milestone Timeline */}
+      <motion.div variants={fadeUp}>
+        <MilestoneTimeline
+          meals={allMeals}
+          weightEntries={weightEntries}
+          goalWeightKg={goals?.goal_weight_kg || null}
+          goalType={goals?.goal_type || null}
+          startWeightKg={goals?.start_weight_kg || null}
         />
       </motion.div>
 
