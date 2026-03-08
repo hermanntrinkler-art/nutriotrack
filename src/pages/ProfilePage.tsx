@@ -268,7 +268,7 @@ export default function ProfilePage() {
       )}
 
       {/* Settings */}
-      <div className="space-y-2">
+      <motion.div className="space-y-2" variants={fadeUp}>
         <h3 className="font-semibold text-sm px-1">{t('profile.settings')}</h3>
 
         {/* Language */}
