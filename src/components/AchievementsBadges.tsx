@@ -1,27 +1,43 @@
 import { useMemo, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Trophy, Flame, Utensils, Target, Award, Star, Share2, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Trophy, Flame, Utensils, Target, Award, Star, Share2, Loader2, Zap, Crown, Heart, Dumbbell, Salad, Scale, Clock, Sparkles } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
-import type { MealEntry } from '@/lib/types';
 import { fireCenterBurst } from '@/lib/confetti';
 import { generateShareImage, shareImage } from '@/lib/share-image';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface AchievementsBadgesProps {
   totalMeals: number;
   streak: number;
   goalReached: boolean;
   userName?: string;
+  weightLostKg?: number;
+  daysTracked?: number;
 }
 
 interface Achievement {
   id: string;
   icon: React.ElementType;
-  titleKey: string;
-  descKey: string;
+  title: string;
+  desc: string;
   unlocked: boolean;
   color: string;
+  xp: number;
+  category: 'streak' | 'meals' | 'weight' | 'special';
 }
+
+// Level thresholds
+const LEVELS = [
+  { level: 1, xpNeeded: 0, title: { de: 'Anfänger', en: 'Beginner' }, emoji: '🌱' },
+  { level: 2, xpNeeded: 50, title: { de: 'Einsteiger', en: 'Starter' }, emoji: '🌿' },
+  { level: 3, xpNeeded: 150, title: { de: 'Entdecker', en: 'Explorer' }, emoji: '🍀' },
+  { level: 4, xpNeeded: 300, title: { de: 'Fortgeschritten', en: 'Advanced' }, emoji: '⚡' },
+  { level: 5, xpNeeded: 500, title: { de: 'Profi', en: 'Pro' }, emoji: '🔥' },
+  { level: 6, xpNeeded: 800, title: { de: 'Experte', en: 'Expert' }, emoji: '💎' },
+  { level: 7, xpNeeded: 1200, title: { de: 'Meister', en: 'Master' }, emoji: '👑' },
+  { level: 8, xpNeeded: 1800, title: { de: 'Legende', en: 'Legend' }, emoji: '🏆' },
+];
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -30,67 +46,70 @@ const fadeUp = {
 
 const stagger = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+  show: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
 };
 
-export default function AchievementsBadges({ totalMeals, streak, goalReached, userName = '' }: AchievementsBadgesProps) {
-  const { t, language } = useTranslation();
+export default function AchievementsBadges({ totalMeals, streak, goalReached, userName = '', weightLostKg = 0, daysTracked = 0 }: AchievementsBadgesProps) {
+  const { language } = useTranslation();
+  const de = language === 'de';
   const [sharing, setSharing] = useState(false);
+  const [selectedBadge, setSelectedBadge] = useState<Achievement | null>(null);
 
   const achievements: Achievement[] = useMemo(() => [
-    {
-      id: 'first_meal',
-      icon: Utensils,
-      titleKey: 'achievement.firstMeal',
-      descKey: 'achievement.firstMealDesc',
-      unlocked: totalMeals >= 1,
-      color: 'hsl(var(--primary))',
-    },
-    {
-      id: 'streak_7',
-      icon: Flame,
-      titleKey: 'achievement.streak7',
-      descKey: 'achievement.streak7Desc',
-      unlocked: streak >= 7,
-      color: 'hsl(var(--energy))',
-    },
-    {
-      id: 'streak_30',
-      icon: Award,
-      titleKey: 'achievement.streak30',
-      descKey: 'achievement.streak30Desc',
-      unlocked: streak >= 30,
-      color: 'hsl(var(--fat))',
-    },
-    {
-      id: 'meals_50',
-      icon: Star,
-      titleKey: 'achievement.meals50',
-      descKey: 'achievement.meals50Desc',
-      unlocked: totalMeals >= 50,
-      color: 'hsl(var(--protein))',
-    },
-    {
-      id: 'meals_100',
-      icon: Trophy,
-      titleKey: 'achievement.meals100',
-      descKey: 'achievement.meals100Desc',
-      unlocked: totalMeals >= 100,
-      color: 'hsl(var(--carbs))',
-    },
-    {
-      id: 'weight_goal',
-      icon: Target,
-      titleKey: 'achievement.weightGoal',
-      descKey: 'achievement.weightGoalDesc',
-      unlocked: goalReached,
-      color: 'hsl(var(--success))',
-    },
-  ], [totalMeals, streak, goalReached]);
+    // Streak badges
+    { id: 'streak_3', icon: Flame, title: de ? '3-Tage-Streak' : '3-Day Streak', desc: de ? '3 Tage am Stück geloggt' : 'Logged 3 days in a row', unlocked: streak >= 3, color: 'hsl(var(--energy))', xp: 15, category: 'streak' },
+    { id: 'streak_7', icon: Flame, title: de ? '7-Tage-Streak' : '7-Day Streak', desc: de ? 'Eine ganze Woche durchgehalten!' : 'A full week of tracking!', unlocked: streak >= 7, color: 'hsl(var(--energy))', xp: 30, category: 'streak' },
+    { id: 'streak_14', icon: Zap, title: de ? '14-Tage-Streak' : '14-Day Streak', desc: de ? '2 Wochen am Stück – stark!' : '2 weeks straight – strong!', unlocked: streak >= 14, color: 'hsl(var(--energy))', xp: 60, category: 'streak' },
+    { id: 'streak_30', icon: Award, title: de ? '30-Tage-Streak' : '30-Day Streak', desc: de ? 'Ein ganzer Monat! Wahnsinn!' : 'A full month! Amazing!', unlocked: streak >= 30, color: 'hsl(var(--fat))', xp: 120, category: 'streak' },
+    { id: 'streak_60', icon: Dumbbell, title: de ? '60-Tage-Streak' : '60-Day Streak', desc: de ? 'Disziplin pur!' : 'Pure discipline!', unlocked: streak >= 60, color: 'hsl(var(--protein))', xp: 200, category: 'streak' },
+    { id: 'streak_100', icon: Crown, title: de ? '100-Tage-Streak' : '100-Day Streak', desc: de ? 'Unstoppbar! 100 Tage!' : 'Unstoppable! 100 days!', unlocked: streak >= 100, color: 'hsl(var(--primary))', xp: 350, category: 'streak' },
+    
+    // Meal badges
+    { id: 'meal_1', icon: Utensils, title: de ? 'Erste Mahlzeit' : 'First Meal', desc: de ? 'Deine Reise beginnt!' : 'Your journey begins!', unlocked: totalMeals >= 1, color: 'hsl(var(--primary))', xp: 10, category: 'meals' },
+    { id: 'meal_10', icon: Salad, title: de ? '10 Mahlzeiten' : '10 Meals', desc: de ? 'Du bleibst dran!' : 'You\'re keeping at it!', unlocked: totalMeals >= 10, color: 'hsl(var(--carbs))', xp: 25, category: 'meals' },
+    { id: 'meal_25', icon: Star, title: de ? '25 Mahlzeiten' : '25 Meals', desc: de ? 'Silber-Status erreicht' : 'Silver status reached', unlocked: totalMeals >= 25, color: 'hsl(var(--protein))', xp: 50, category: 'meals' },
+    { id: 'meal_50', icon: Star, title: de ? '50 Mahlzeiten' : '50 Meals', desc: de ? 'Gold-Status erreicht' : 'Gold status reached', unlocked: totalMeals >= 50, color: 'hsl(var(--fat))', xp: 80, category: 'meals' },
+    { id: 'meal_100', icon: Trophy, title: de ? '100 Mahlzeiten' : '100 Meals', desc: de ? 'Platin! Echte Hingabe!' : 'Platinum! True dedication!', unlocked: totalMeals >= 100, color: 'hsl(var(--energy))', xp: 150, category: 'meals' },
+    { id: 'meal_500', icon: Crown, title: de ? '500 Mahlzeiten' : '500 Meals', desc: de ? 'Diamant-Status! Legendär!' : 'Diamond status! Legendary!', unlocked: totalMeals >= 500, color: 'hsl(var(--primary))', xp: 400, category: 'meals' },
+
+    // Weight badges
+    { id: 'weight_1', icon: Scale, title: de ? '1 kg Meilenstein' : '1 kg Milestone', desc: de ? 'Erster Kilo geschafft!' : 'First kg done!', unlocked: weightLostKg >= 1, color: 'hsl(var(--primary))', xp: 30, category: 'weight' },
+    { id: 'weight_5', icon: Scale, title: de ? '5 kg Meilenstein' : '5 kg Milestone', desc: de ? '5 kg – toller Fortschritt!' : '5 kg – great progress!', unlocked: weightLostKg >= 5, color: 'hsl(var(--carbs))', xp: 80, category: 'weight' },
+    { id: 'weight_10', icon: Target, title: de ? '10 kg Meilenstein' : '10 kg Milestone', desc: de ? '10 kg! Beeindruckend!' : '10 kg! Impressive!', unlocked: weightLostKg >= 10, color: 'hsl(var(--protein))', xp: 200, category: 'weight' },
+    { id: 'goal_reached', icon: Target, title: de ? 'Ziel erreicht!' : 'Goal Reached!', desc: de ? 'Zielgewicht erreicht – Respekt!' : 'Goal weight reached – respect!', unlocked: goalReached, color: 'hsl(var(--success, var(--primary)))', xp: 500, category: 'weight' },
+
+    // Special badges
+    { id: 'week_1', icon: Clock, title: de ? 'Erste Woche' : 'First Week', desc: de ? '7 Tage dabei!' : '7 days in!', unlocked: daysTracked >= 7, color: 'hsl(var(--info))', xp: 20, category: 'special' },
+    { id: 'month_1', icon: Heart, title: de ? 'Erster Monat' : 'First Month', desc: de ? '30 Tage dabei – Gewohnheit!' : '30 days in – it\'s a habit!', unlocked: daysTracked >= 30, color: 'hsl(var(--destructive))', xp: 100, category: 'special' },
+    { id: 'quarter', icon: Sparkles, title: de ? '3 Monate' : '3 Months', desc: de ? 'Vierteljahr! Lifestyle!' : 'Quarter year! Lifestyle!', unlocked: daysTracked >= 90, color: 'hsl(var(--primary))', xp: 250, category: 'special' },
+  ], [totalMeals, streak, goalReached, weightLostKg, daysTracked, de]);
+
+  // XP & Level calculation
+  const totalXP = useMemo(() => achievements.filter(a => a.unlocked).reduce((sum, a) => sum + a.xp, 0), [achievements]);
+  
+  const currentLevel = useMemo(() => {
+    let lvl = LEVELS[0];
+    for (const l of LEVELS) {
+      if (totalXP >= l.xpNeeded) lvl = l;
+    }
+    return lvl;
+  }, [totalXP]);
+
+  const nextLevel = useMemo(() => {
+    const idx = LEVELS.findIndex(l => l.level === currentLevel.level);
+    return idx < LEVELS.length - 1 ? LEVELS[idx + 1] : null;
+  }, [currentLevel]);
+
+  const xpProgress = useMemo(() => {
+    if (!nextLevel) return 100;
+    const xpInLevel = totalXP - currentLevel.xpNeeded;
+    const xpForLevel = nextLevel.xpNeeded - currentLevel.xpNeeded;
+    return Math.min(100, Math.round((xpInLevel / xpForLevel) * 100));
+  }, [totalXP, currentLevel, nextLevel]);
 
   const unlockedCount = achievements.filter(a => a.unlocked).length;
 
-  // Fire confetti when a new achievement is unlocked
+  // Confetti on new unlock
   const prevUnlocked = useRef<number | null>(null);
   useEffect(() => {
     if (prevUnlocked.current !== null && unlockedCount > prevUnlocked.current) {
@@ -111,71 +130,168 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
         language: language as 'de' | 'en',
       });
       const shared = await shareImage(blob, language as 'de' | 'en');
-      if (!shared) {
-        toast.success(language === 'de' ? 'Bild heruntergeladen!' : 'Image downloaded!');
-      }
+      if (!shared) toast.success(de ? 'Bild heruntergeladen!' : 'Image downloaded!');
     } catch {
-      toast.error(language === 'de' ? 'Teilen fehlgeschlagen' : 'Sharing failed');
+      toast.error(de ? 'Teilen fehlgeschlagen' : 'Sharing failed');
     } finally {
       setSharing(false);
     }
   };
 
-  return (
-    <motion.div className="nutri-card space-y-3" variants={fadeUp}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-energy" />
-          <h3 className="font-semibold text-sm">{t('profile.achievements')}</h3>
-        </div>
-        <div className="flex items-center gap-2">
-          <motion.button
-            onClick={handleShare}
-            disabled={sharing}
-            whileTap={{ scale: 0.9 }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-colors disabled:opacity-50"
-          >
-            {sharing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Share2 className="h-3 w-3" />}
-            {language === 'de' ? 'Teilen' : 'Share'}
-          </motion.button>
-          <span className="text-xs font-bold text-muted-foreground">{unlockedCount}/{achievements.length}</span>
-        </div>
-      </div>
+  const categories = [
+    { key: 'all', label: de ? 'Alle' : 'All' },
+    { key: 'streak', label: de ? 'Streaks' : 'Streaks' },
+    { key: 'meals', label: de ? 'Mahlzeiten' : 'Meals' },
+    { key: 'weight', label: de ? 'Gewicht' : 'Weight' },
+    { key: 'special', label: de ? 'Spezial' : 'Special' },
+  ];
 
-      <motion.div
-        className="grid grid-cols-3 gap-2"
-        variants={stagger}
-        initial="hidden"
-        animate="show"
-      >
-        {achievements.map((a) => (
-          <motion.div
+  const renderBadges = (filter: string) => {
+    const filtered = filter === 'all' ? achievements : achievements.filter(a => a.category === filter);
+    return (
+      <motion.div className="grid grid-cols-3 gap-2" variants={stagger} initial="hidden" animate="show">
+        {filtered.map((a) => (
+          <motion.button
             key={a.id}
-            className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
+            onClick={() => setSelectedBadge(selectedBadge?.id === a.id ? null : a)}
+            className={`relative flex flex-col items-center gap-1 p-3 rounded-xl border transition-all text-center ${
               a.unlocked
-                ? 'border-primary/20 bg-primary/5'
-                : 'border-border bg-muted/30 opacity-40'
+                ? 'border-primary/20 bg-primary/5 hover:border-primary/40'
+                : 'border-border bg-muted/30 opacity-40 grayscale'
             }`}
             variants={fadeUp}
             whileHover={a.unlocked ? { scale: 1.05 } : {}}
+            whileTap={{ scale: 0.95 }}
           >
+            {a.unlocked && (
+              <span className="absolute -top-1.5 -right-1.5 text-[8px] font-black bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
+                +{a.xp}XP
+              </span>
+            )}
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{
-                background: a.unlocked ? `${a.color}20` : undefined,
-              }}
+              style={{ background: a.unlocked ? `${a.color}20` : undefined }}
             >
-              <a.icon
-                className="h-5 w-5"
-                style={{ color: a.unlocked ? a.color : 'hsl(var(--muted-foreground))' }}
-              />
+              <a.icon className="h-5 w-5" style={{ color: a.unlocked ? a.color : 'hsl(var(--muted-foreground))' }} />
             </div>
-            <span className="text-[10px] font-bold text-center leading-tight">
-              {t(a.titleKey as any)}
-            </span>
-          </motion.div>
+            <span className="text-[10px] font-bold leading-tight">{a.title}</span>
+          </motion.button>
         ))}
       </motion.div>
+    );
+  };
+
+  return (
+    <motion.div className="space-y-4" variants={fadeUp}>
+      {/* Level Card */}
+      <div className="nutri-card space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-2xl">
+              {currentLevel.emoji}
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium">Level {currentLevel.level}</p>
+              <p className="font-bold text-base">{de ? currentLevel.title.de : currentLevel.title.en}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-lg font-black text-primary">{totalXP} XP</p>
+            <p className="text-[10px] text-muted-foreground">
+              {nextLevel ? `${nextLevel.xpNeeded - totalXP} XP ${de ? 'bis' : 'to'} Lvl ${nextLevel.level}` : (de ? 'Max Level!' : 'Max Level!')}
+            </p>
+          </div>
+        </div>
+        
+        {/* XP Progress Bar */}
+        <div className="space-y-1">
+          <div className="h-3 rounded-full bg-muted overflow-hidden">
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70"
+              initial={{ width: 0 }}
+              animate={{ width: `${xpProgress}%` }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+            />
+          </div>
+          {nextLevel && (
+            <div className="flex justify-between text-[9px] text-muted-foreground font-medium">
+              <span>{currentLevel.emoji} {de ? currentLevel.title.de : currentLevel.title.en}</span>
+              <span>{nextLevel.emoji} {de ? nextLevel.title.de : nextLevel.title.en}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Badges Card */}
+      <div className="nutri-card space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-energy" />
+            <h3 className="font-semibold text-sm">{de ? 'Badges' : 'Badges'}</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <motion.button
+              onClick={handleShare}
+              disabled={sharing}
+              whileTap={{ scale: 0.9 }}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-colors disabled:opacity-50"
+            >
+              {sharing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Share2 className="h-3 w-3" />}
+              {de ? 'Teilen' : 'Share'}
+            </motion.button>
+            <span className="text-xs font-bold text-muted-foreground">{unlockedCount}/{achievements.length}</span>
+          </div>
+        </div>
+
+        <Tabs defaultValue="all">
+          <TabsList className="w-full h-8 bg-muted/50 p-0.5 grid grid-cols-5">
+            {categories.map(c => (
+              <TabsTrigger key={c.key} value={c.key} className="text-[10px] font-bold px-1 py-1 data-[state=active]:bg-card">
+                {c.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {categories.map(c => (
+            <TabsContent key={c.key} value={c.key} className="mt-3">
+              {renderBadges(c.key)}
+            </TabsContent>
+          ))}
+        </Tabs>
+      </div>
+
+      {/* Selected Badge Detail */}
+      <AnimatePresence>
+        {selectedBadge && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="nutri-card overflow-hidden"
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{ background: selectedBadge.unlocked ? `${selectedBadge.color}20` : 'hsl(var(--muted))' }}
+              >
+                <selectedBadge.icon
+                  className="h-6 w-6"
+                  style={{ color: selectedBadge.unlocked ? selectedBadge.color : 'hsl(var(--muted-foreground))' }}
+                />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-sm">{selectedBadge.title}</p>
+                <p className="text-xs text-muted-foreground">{selectedBadge.desc}</p>
+              </div>
+              <div className="text-right">
+                <span className="text-xs font-black text-primary">+{selectedBadge.xp} XP</span>
+                <p className="text-[10px] text-muted-foreground">
+                  {selectedBadge.unlocked ? (de ? '✅ Freigeschaltet' : '✅ Unlocked') : (de ? '🔒 Gesperrt' : '🔒 Locked')}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
