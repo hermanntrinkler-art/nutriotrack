@@ -262,10 +262,24 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
     };
   };
 
+  const resolveBaseNutrition = (): BaseNutrition => {
+    if (baseNutrition) return baseNutrition;
+    return {
+      baseQuantity: Number(form.quantity) || 0,
+      baseUnit: form.unit || 'g',
+      calories: Number(form.calories) || 0,
+      protein_g: Number(form.protein_g) || 0,
+      fat_g: Number(form.fat_g) || 0,
+      carbs_g: Number(form.carbs_g) || 0,
+    };
+  };
+
   const update = (field: keyof AnalyzedFoodItem, value: string | number) => {
-    if (field === 'quantity' && baseNutrition && typeof value === 'number') {
+    if (field === 'quantity' && typeof value === 'number') {
+      const base = resolveBaseNutrition();
+      if (!baseNutrition) setBaseNutrition(base);
       const grams = getGramsEquivalent(value, form.unit, form.food_name);
-      const scaled = scaleByGrams(baseNutrition, grams);
+      const scaled = scaleByGrams(base, grams);
       setForm(prev => ({ ...prev, quantity: value, ...scaled }));
       return;
     }
@@ -281,10 +295,8 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
   };
 
   const handleUnitChange = (newUnit: string) => {
-    if (!baseNutrition) {
-      setForm(prev => ({ ...prev, unit: newUnit }));
-      return;
-    }
+    const base = resolveBaseNutrition();
+    if (!baseNutrition) setBaseNutrition(base);
 
     const currentGrams = getGramsEquivalent(form.quantity, form.unit, form.food_name);
     let newQuantity: number;
@@ -294,8 +306,9 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
       if (pw > 0) {
         newQuantity = Math.round((currentGrams / pw) * 10) / 10;
       } else {
-        // Unknown piece weight – default to 1 piece, keep nutrition
-        newQuantity = 1;
+        // Unknown piece weight: keep quantity and nutrition unchanged
+        setForm(prev => ({ ...prev, unit: newUnit }));
+        return;
       }
     } else {
       const newFactor = UNIT_TO_GRAMS[newUnit];
@@ -307,7 +320,7 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
     }
 
     const newGrams = getGramsEquivalent(newQuantity, newUnit, form.food_name);
-    const scaled = scaleByGrams(baseNutrition, newGrams);
+    const scaled = scaleByGrams(base, newGrams);
     setForm(prev => ({ ...prev, unit: newUnit, quantity: newQuantity, ...scaled }));
   };
 
