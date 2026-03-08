@@ -9,6 +9,7 @@ import { Camera, Upload, PenLine, ScanBarcode } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
+import { hapticFeedback } from '@/lib/haptics';
 
 import AnalyseScreen from '@/components/meals/AnalyseScreen';
 import EditableFoodItemsList from '@/components/meals/EditableFoodItemsList';
