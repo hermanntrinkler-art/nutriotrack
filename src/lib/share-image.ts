@@ -11,6 +11,7 @@ export async function generateShareImage({
   language,
   badgeTitle,
   badgeShareText,
+  badgeImageUrl,
 }: {
   name: string;
   streak: number;
@@ -20,6 +21,7 @@ export async function generateShareImage({
   language: 'de' | 'en';
   badgeTitle?: string;
   badgeShareText?: string;
+  badgeImageUrl?: string;
 }): Promise<Blob> {
   const W = 1080;
   const H = 1080;
