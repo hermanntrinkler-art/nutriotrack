@@ -100,7 +100,7 @@ function drawBadgeShareLayout(
   ctx: CanvasRenderingContext2D,
   W: number,
   H: number,
-  opts: { badgeTitle: string; badgeShareText: string; streak: number; totalMeals: number; unlockedAchievements: number; totalAchievements: number; language: 'de' | 'en' }
+  opts: { badgeTitle: string; badgeShareText: string; streak: number; totalMeals: number; unlockedAchievements: number; totalAchievements: number; language: 'de' | 'en'; badgeImg: HTMLImageElement | null }
 ) {
   const centerY = 380;
 
