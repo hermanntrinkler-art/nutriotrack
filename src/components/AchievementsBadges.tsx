@@ -79,6 +79,23 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
   const [sharingBadgeId, setSharingBadgeId] = useState<string | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<Achievement | null>(null);
 
+  const [customBadgeImages, setCustomBadgeImages] = useState<Record<string, string>>({});
+
+  // Load custom badge images from DB
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase.from('badge_images').select('badge_id, image_url');
+      if (data) {
+        const map: Record<string, string> = {};
+        (data as Array<{ badge_id: string; image_url: string }>).forEach(r => { map[r.badge_id] = r.image_url; });
+        setCustomBadgeImages(map);
+      }
+    };
+    load();
+  }, []);
+
+  const getBadgeImage = (id: string, fallback: string) => customBadgeImages[id] || fallback;
+
   const achievements: Achievement[] = useMemo(() => [
     // Streak badges
     { id: 'streak_3', badgeImage: badgeStreak3, title: '3-Day Streak', desc: de ? '3 Tage am Stück geloggt' : 'Logged 3 days in a row', shareText: de ? '3 Tage am Stück getrackt – der Anfang einer Gewohnheit! 🔥' : '3 days tracked in a row – building a habit! 🔥', unlocked: streak >= 3, color: 'hsl(var(--energy))', xp: 15, category: 'streak' },
