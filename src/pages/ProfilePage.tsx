@@ -207,6 +207,32 @@ export default function ProfilePage() {
         </motion.div>
       )}
 
+      {/* Achievements */}
+      <motion.div variants={fadeUp}>
+        <AchievementsBadges
+          totalMeals={allMeals.length}
+          streak={(() => {
+            const uniqueDays = new Set(allMeals.map(m => m.entry_date));
+            const today = new Date();
+            let s = 0;
+            for (let i = 0; i < 365; i++) {
+              const d = new Date(today);
+              d.setDate(d.getDate() - i);
+              const ds = d.toISOString().split('T')[0];
+              if (uniqueDays.has(ds)) { s++; } else { if (i === 0) continue; break; }
+            }
+            return s;
+          })()}
+          goalReached={
+            goals?.goal_weight_kg && weightEntries.length > 0
+              ? (goals.goal_type === 'lose'
+                ? Number(weightEntries[weightEntries.length - 1]?.weight_kg) <= Number(goals.goal_weight_kg)
+                : Number(weightEntries[weightEntries.length - 1]?.weight_kg) >= Number(goals.goal_weight_kg))
+              : false
+          }
+        />
+      </motion.div>
+
       {/* Deficit Intensity Slider */}
       {isLoseOrGain && goals && (
         <motion.div className="nutri-card space-y-4" variants={fadeUp}>
