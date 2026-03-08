@@ -335,6 +335,11 @@ const translations = {
     'meals.barcodeSearch': 'Search',
     'meals.barcodeScanAgain': 'Scan again',
     'meals.barcodeCameraError': 'Could not open camera.',
+    'meals.barcodeNotFoundTitle': 'Product not found',
+    'meals.customProductHint': 'Enter the nutrition info (from the packaging). The product will be saved to your personal database.',
+    'meals.nutritionPer100': 'Nutrition per 100g/ml',
+    'meals.saveProduct': 'Save & use',
+    'meals.customProductSaved': 'Product saved!',
 
     'weight.title': 'Weight Tracking',
     'weight.current': 'Current',
