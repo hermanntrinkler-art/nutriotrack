@@ -326,7 +326,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
             )}
             {foodSuggestions.length === 0 && !customForm.food_name.trim() && (
               <div className="space-y-1.5">
-                <p className="text-xs text-muted-foreground">{t('meals.quickSelect') || 'Schnellauswahl:'}</p>
+                <p className="text-xs text-muted-foreground">Schnellauswahl:</p>
                 <div className="flex flex-wrap gap-1.5">
                   {(() => {
                     const lang = (document.documentElement.lang === 'en' ? 'en' : 'de') as 'de' | 'en';
