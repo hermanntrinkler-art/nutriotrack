@@ -180,7 +180,7 @@ export default function ProfilePage() {
 
       {/* Activity Level Info */}
       {goals && (
-        <div className="nutri-card flex items-center gap-3">
+        <motion.div className="nutri-card flex items-center gap-3" variants={fadeUp}>
           <Activity className="h-5 w-5 text-primary flex-shrink-0" />
           <div>
             <p className="font-semibold text-sm">{currentActivity.label}</p>
