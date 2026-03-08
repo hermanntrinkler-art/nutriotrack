@@ -96,8 +96,13 @@ export default function HistoryPage() {
   const monthLabel = monthDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 
   return (
-    <div className="page-container space-y-4">
-      <h1 className="text-xl font-bold">{t('history.title')}</h1>
+    <motion.div
+      className="page-container space-y-4"
+      variants={container}
+      initial="hidden"
+      animate="show"
+    >
+      <motion.h1 className="text-xl font-bold" variants={fadeUp}>{t('history.title')}</motion.h1>
 
       <Tabs defaultValue="daily" className="w-full">
         <TabsList className="w-full">
