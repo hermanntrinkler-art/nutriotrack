@@ -10,6 +10,17 @@ import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, S
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
+import { motion } from 'framer-motion';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' as const } },
+};
+
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+};
 
 const DEFICIT_VALUES = [300, 500, 750, 1000, 1250];
 const SURPLUS_VALUES = [200, 300, 450, 600, 800];
