@@ -1,0 +1,1 @@
+ALTER TABLE public.user_goals ADD COLUMN IF NOT EXISTS deficit_intensity integer DEFAULT 2;
