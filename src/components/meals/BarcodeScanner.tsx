@@ -91,7 +91,13 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     setScanning(false);
     setNotFound(null);
 
-    try { await scannerRef.current?.stop(); } catch {}
+    try { 
+      const s = scannerRef.current;
+      if (s) {
+        const state = s.getState();
+        if (state === 2 || state === 3) await s.stop();
+      }
+    } catch {}
 
     // 1. Check personal DB first
     if (user) {
@@ -163,8 +169,13 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
 
     const scannerId = 'barcode-scanner-region';
     let html5Qrcode: Html5Qrcode | null = null;
+    let mounted = true;
 
     const startScanner = async () => {
+      // Wait for DOM element to be ready
+      const el = document.getElementById(scannerId);
+      if (!el || !mounted) return;
+
       try {
         html5Qrcode = new Html5Qrcode(scannerId);
         scannerRef.current = html5Qrcode;
@@ -177,19 +188,31 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
         );
       } catch (err) {
         console.error('Barcode scanner error:', err);
-        toast.error(t('meals.barcodeCameraError'));
-        setShowManual(true);
-        setScanning(false);
+        if (mounted) {
+          toast.error(t('meals.barcodeCameraError'));
+          setShowManual(true);
+          setScanning(false);
+        }
       }
     };
 
-    const timer = setTimeout(startScanner, 100);
+    const timer = setTimeout(startScanner, 300);
     return () => {
+      mounted = false;
       clearTimeout(timer);
       if (html5Qrcode) {
-        html5Qrcode.stop().catch(() => {});
-        html5Qrcode.clear();
+        try {
+          const state = html5Qrcode.getState();
+          if (state === 2 || state === 3) { // SCANNING or PAUSED
+            html5Qrcode.stop().then(() => html5Qrcode?.clear()).catch(() => {});
+          } else {
+            html5Qrcode.clear();
+          }
+        } catch {
+          // ignore
+        }
       }
+      scannerRef.current = null;
     };
   }, [scanning, showManual, notFound]);
 
@@ -352,8 +375,14 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
           {!showManual ? (
             <Button
               variant="outline"
-              onClick={() => {
-                scannerRef.current?.stop().catch(() => {});
+              onClick={async () => {
+                try {
+                  const s = scannerRef.current;
+                  if (s) {
+                    const state = s.getState();
+                    if (state === 2 || state === 3) await s.stop();
+                  }
+                } catch {}
                 setScanning(false);
                 setShowManual(true);
               }}
