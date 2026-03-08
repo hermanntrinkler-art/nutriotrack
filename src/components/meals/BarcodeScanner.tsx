@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, ScanBarcode, Keyboard, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import type { AnalyzedFoodItem } from '@/lib/types';
+import { searchFoods, type FoodEntry } from '@/lib/food-database';
 
 interface BarcodeScannerProps {
   onResult: (item: AnalyzedFoodItem) => void;
@@ -105,6 +106,27 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const processedRef = useRef(false);
+  const [foodSuggestions, setFoodSuggestions] = useState<FoodEntry[]>([]);
+
+  const handleFoodNameChange = (value: string) => {
+    setCustomForm(f => ({ ...f, food_name: value }));
+    const lang = (document.documentElement.lang === 'en' ? 'en' : 'de') as 'de' | 'en';
+    setFoodSuggestions(value.length >= 1 ? searchFoods(value, lang) : []);
+  };
+
+  const selectFoodSuggestion = (entry: FoodEntry) => {
+    const lang = (document.documentElement.lang === 'en' ? 'en' : 'de') as 'de' | 'en';
+    setCustomForm({
+      food_name: lang === 'de' ? entry.name : entry.name_en,
+      calories: String(entry.calories),
+      protein_g: String(entry.protein_g),
+      fat_g: String(entry.fat_g),
+      carbs_g: String(entry.carbs_g),
+      quantity: String(entry.quantity),
+      unit: entry.unit,
+    });
+    setFoodSuggestions([]);
+  };
 
   const handleCode = async (code: string) => {
     if (processedRef.current) return;
@@ -271,13 +293,33 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
         <p className="text-sm text-muted-foreground">{t('meals.customProductHint')}</p>
 
         <div className="space-y-3">
-          <div>
+          <div className="relative">
             <Label>{t('meals.foodName')}</Label>
             <Input
               value={customForm.food_name}
-              onChange={(e) => setCustomForm(f => ({ ...f, food_name: e.target.value }))}
-              placeholder="z.B. Hafermilch"
+              onChange={(e) => handleFoodNameChange(e.target.value)}
+              placeholder="z.B. Prosecco, Hafermilch"
+              autoComplete="off"
             />
+            {foodSuggestions.length > 0 && (
+              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                {foodSuggestions.map((entry, i) => {
+                  const lang = (document.documentElement.lang === 'en' ? 'en' : 'de') as 'de' | 'en';
+                  const displayName = lang === 'de' ? entry.name : entry.name_en;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-accent/50 transition-colors flex justify-between items-center"
+                      onClick={() => selectFoodSuggestion(entry)}
+                    >
+                      <span className="font-medium">{displayName}</span>
+                      <span className="text-xs text-muted-foreground">{entry.calories} kcal / {entry.quantity}{entry.unit}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
