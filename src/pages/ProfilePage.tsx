@@ -17,6 +17,7 @@ import { hapticFeedback } from '@/lib/haptics';
 import AchievementsBadges from '@/components/AchievementsBadges';
 import ReminderSettings from '@/components/ReminderSettings';
 import MilestoneTimeline from '@/components/MilestoneTimeline';
+import { useAdmin } from '@/hooks/useAdmin';
 import type { MealEntry } from '@/lib/types';
 
 const fadeUp = {
