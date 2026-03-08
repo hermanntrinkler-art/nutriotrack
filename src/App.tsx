@@ -20,6 +20,7 @@ import HistoryPage from "@/pages/HistoryPage";
 import WeightPage from "@/pages/WeightPage";
 import ProfilePage from "@/pages/ProfilePage";
 import AdminPage from "@/pages/AdminPage";
+import ShareBadgePage from "@/pages/ShareBadgePage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -90,6 +91,7 @@ function AppRoutes() {
       <Route path="/weight" element={<ProtectedRoute><AppLayout><WeightPage /></AppLayout></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><AppLayout><ProfilePage /></AppLayout></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+      <Route path="/share/:badgeId" element={<ShareBadgePage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

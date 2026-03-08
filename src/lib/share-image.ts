@@ -372,3 +372,32 @@ export async function shareImage(blob: Blob, language: 'de' | 'en', customShareT
   URL.revokeObjectURL(url);
   return false;
 }
+
+/**
+ * Share a badge via link (for social media OG preview).
+ * Falls back to image sharing if link sharing is not supported.
+ */
+export async function shareBadgeLink(badgeId: string, language: 'de' | 'en', shareText: string) {
+  const shareUrl = `${window.location.origin}/share/${badgeId}`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'NutrioTrack 🏆',
+        text: shareText,
+        url: shareUrl,
+      });
+      return true;
+    } catch {
+      // User cancelled
+    }
+  }
+
+  // Fallback: copy link
+  try {
+    await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+    return 'copied';
+  } catch {
+    return false;
+  }
+}
