@@ -95,7 +95,7 @@ export default function EditMealPage() {
     await supabase.from('meal_entries').delete().eq('id', id);
     toast.success(t('common.delete'));
     setDeleting(false);
-    navigate('/');
+    navigate('/dashboard');
   };
 
   const mealTypeLabel = (type: string) => {
