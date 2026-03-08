@@ -168,7 +168,7 @@ export default function ProfilePage() {
       </motion.div>
 
       {/* User info */}
-      <div className="nutri-card flex items-center gap-4">
+      <motion.div className="nutri-card flex items-center gap-4" variants={fadeUp}>
         <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
           <Leaf className="h-7 w-7 text-primary" />
         </div>
