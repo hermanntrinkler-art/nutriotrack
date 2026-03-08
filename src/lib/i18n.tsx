@@ -316,8 +316,8 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('nutrilens-language', lang);
   }, []);
 
-  const t = useCallback((key: TranslationKey, params?: Record<string, string | number>) => {
-    let text = translations[language][key] || key;
+  const t = useCallback((key: TranslationKey, params?: Record<string, string | number>): string => {
+    let text: string = translations[language][key] || key;
     if (params) {
       Object.entries(params).forEach(([k, v]) => {
         text = text.replace(`{${k}}`, String(v));
