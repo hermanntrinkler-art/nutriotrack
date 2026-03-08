@@ -1,0 +1,375 @@
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from '@/lib/i18n';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { searchFoods, type FoodEntry } from '@/lib/food-database';
+import { searchOpenFoodFacts } from '@/lib/openfoodfacts-search';
+import type { AnalyzedFoodItem } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Search, Plus, Minus, Globe, Loader2, X, ArrowLeft, ChevronRight, Flame, Dumbbell, Droplets, Zap } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { hapticFeedback } from '@/lib/haptics';
+
+interface FoodSearchScreenProps {
+  onDone: (items: AnalyzedFoodItem[]) => void;
+  onCancel: () => void;
+}
+
+const CATEGORIES = [
+  { key: 'all', emoji: '🔍' },
+  { key: 'drinks', emoji: '☕' },
+  { key: 'bread', emoji: '🍞' },
+  { key: 'protein', emoji: '🥩' },
+  { key: 'dairy', emoji: '🧀' },
+  { key: 'fruit', emoji: '🍎' },
+  { key: 'snacks', emoji: '🍫' },
+] as const;
+
+const CATEGORY_LABELS_DE: Record<string, string> = {
+  all: 'Alle', drinks: 'Getränke', bread: 'Brot', protein: 'Protein',
+  dairy: 'Milch', fruit: 'Obst', snacks: 'Snacks',
+};
+const CATEGORY_LABELS_EN: Record<string, string> = {
+  all: 'All', drinks: 'Drinks', bread: 'Bread', protein: 'Protein',
+  dairy: 'Dairy', fruit: 'Fruit', snacks: 'Snacks',
+};
+
+// Map chip categories to food-database categories
+const CATEGORY_MAP: Record<string, string[]> = {
+  drinks: ['drinks'],
+  bread: ['bread', 'toppings'],
+  protein: ['meat', 'fish'],
+  dairy: ['dairy', 'brands'],
+  fruit: ['fruit', 'vegetables'],
+  snacks: ['snacks', 'sweets', 'brands'],
+};
+
+export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenProps) {
+  const { t, language } = useTranslation();
+  const { user } = useAuth();
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<FoodEntry[]>([]);
+  const [onlineResults, setOnlineResults] = useState<FoodEntry[]>([]);
+  const [searchingOnline, setSearchingOnline] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedItems, setSelectedItems] = useState<AnalyzedFoodItem[]>([]);
+  const [customProducts, setCustomProducts] = useState<FoodEntry[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const onlineTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onlineController = useRef<AbortController | null>(null);
+  const onlineRequestId = useRef(0);
+
+  const labels = language === 'de' ? CATEGORY_LABELS_DE : CATEGORY_LABELS_EN;
+
+  // Load custom products
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('custom_products')
+      .select('food_name, default_quantity, default_unit, calories, protein_g, fat_g, carbs_g')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(100)
+      .then(({ data }) => {
+        if (!data) return;
+        setCustomProducts(data.map(e => ({
+          name: e.food_name, name_en: e.food_name,
+          quantity: Number(e.default_quantity) || 100, unit: e.default_unit || 'g',
+          calories: Number(e.calories) || 0, protein_g: Number(e.protein_g) || 0,
+          fat_g: Number(e.fat_g) || 0, carbs_g: Number(e.carbs_g) || 0,
+          category: 'custom',
+        })));
+      });
+  }, [user]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (onlineTimer.current) clearTimeout(onlineTimer.current);
+      onlineController.current?.abort();
+    };
+  }, []);
+
+  const performSearch = useCallback((q: string, category: string, online: FoodEntry[] = []) => {
+    const trimmed = q.trim();
+    if (!trimmed && category === 'all') {
+      setResults([]);
+      return;
+    }
+
+    let dbResults = trimmed ? searchFoods(trimmed, language as 'de' | 'en') : [];
+
+    // If no text query but category selected, show popular items from that category
+    if (!trimmed && category !== 'all') {
+      const { foodDatabase } = require('@/lib/food-database');
+      const cats = CATEGORY_MAP[category] || [];
+      dbResults = (foodDatabase as FoodEntry[])
+        .filter(e => cats.some(c => e.category.toLowerCase().includes(c)))
+        .slice(0, 20);
+    }
+
+    // Filter by category if text + category
+    if (trimmed && category !== 'all') {
+      const cats = CATEGORY_MAP[category] || [];
+      dbResults = dbResults.filter(e => cats.some(c => e.category.toLowerCase().includes(c)));
+    }
+
+    // Custom product matches
+    const norm = trimmed.toLowerCase();
+    const customMatches = norm
+      ? customProducts.filter(e => e.name.toLowerCase().includes(norm) || e.name_en.toLowerCase().includes(norm))
+      : [];
+
+    // Merge and dedupe
+    const merged = [...customMatches, ...dbResults, ...online];
+    const seen = new Set<string>();
+    const deduped = merged.filter(e => {
+      const key = `${e.name.toLowerCase()}|${e.unit}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, 20);
+
+    setResults(deduped);
+  }, [language, customProducts]);
+
+  // Trigger online search with debounce
+  const triggerOnlineSearch = useCallback((q: string) => {
+    if (onlineTimer.current) clearTimeout(onlineTimer.current);
+    onlineController.current?.abort();
+
+    if (q.trim().length < 3) {
+      setOnlineResults([]);
+      setSearchingOnline(false);
+      return;
+    }
+
+    setSearchingOnline(true);
+    const id = ++onlineRequestId.current;
+
+    onlineTimer.current = setTimeout(async () => {
+      const ctrl = new AbortController();
+      onlineController.current = ctrl;
+      try {
+        const res = await searchOpenFoodFacts(q.trim(), language as 'de' | 'en', { signal: ctrl.signal });
+        if (id !== onlineRequestId.current) return;
+        setOnlineResults(res);
+        performSearch(q, selectedCategory, res);
+      } finally {
+        if (id === onlineRequestId.current) {
+          setSearchingOnline(false);
+          onlineController.current = null;
+        }
+      }
+    }, 400);
+  }, [language, performSearch, selectedCategory]);
+
+  // Re-search when query or category changes
+  useEffect(() => {
+    performSearch(query, selectedCategory, onlineResults);
+    if (query.trim().length >= 3) {
+      triggerOnlineSearch(query);
+    }
+  }, [query, selectedCategory]);
+
+  const addItem = (food: FoodEntry) => {
+    hapticFeedback('light');
+    const name = language === 'de' ? food.name : food.name_en;
+    setSelectedItems(prev => [...prev, {
+      food_name: name,
+      quantity: food.quantity,
+      unit: food.unit,
+      calories: food.calories,
+      protein_g: food.protein_g,
+      fat_g: food.fat_g,
+      carbs_g: food.carbs_g,
+      confidence_score: 1,
+    }]);
+  };
+
+  const removeItem = (index: number) => {
+    hapticFeedback('light');
+    setSelectedItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const totalCal = selectedItems.reduce((s, i) => s + i.calories, 0);
+  const totalP = selectedItems.reduce((s, i) => s + i.protein_g, 0);
+  const totalF = selectedItems.reduce((s, i) => s + i.fat_g, 0);
+  const totalC = selectedItems.reduce((s, i) => s + i.carbs_g, 0);
+
+  return (
+    <div className="space-y-3 animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <button onClick={onCancel} className="p-1.5 rounded-xl hover:bg-muted transition-colors">
+          <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+        </button>
+        <h2 className="font-bold text-lg flex-1">
+          {language === 'de' ? 'Lebensmittel suchen' : 'Search Food'}
+        </h2>
+      </div>
+
+      {/* Search input */}
+      <div className="relative">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
+        <Input
+          ref={inputRef}
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder={language === 'de' ? 'z.B. Haferflocken, Cappuccino, Reis...' : 'e.g. Oats, Cappuccino, Rice...'}
+          className="pl-10 h-12 rounded-2xl text-base bg-card border-border"
+          autoFocus
+        />
+        {query && (
+          <button
+            onClick={() => { setQuery(''); inputRef.current?.focus(); }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted"
+          >
+            <X className="h-4 w-4 text-muted-foreground" />
+          </button>
+        )}
+      </div>
+
+      {/* Category chips */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        {CATEGORIES.map(cat => (
+          <motion.button
+            key={cat.key}
+            onClick={() => setSelectedCategory(cat.key)}
+            whileTap={{ scale: 0.95 }}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border ${
+              selectedCategory === cat.key
+                ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                : 'bg-card border-border text-foreground hover:border-primary/30'
+            }`}
+          >
+            <span>{cat.emoji}</span>
+            {labels[cat.key]}
+          </motion.button>
+        ))}
+      </div>
+
+      {/* Results */}
+      <div className="space-y-1.5 max-h-[40vh] overflow-y-auto rounded-2xl">
+        {results.length === 0 && !searchingOnline && query.trim().length > 0 && (
+          <div className="text-center py-8 text-muted-foreground text-sm">
+            {language === 'de' ? 'Keine Ergebnisse gefunden' : 'No results found'}
+          </div>
+        )}
+
+        {results.length === 0 && !query.trim() && selectedCategory === 'all' && (
+          <div className="text-center py-8 text-muted-foreground text-sm">
+            {language === 'de' ? 'Tippe einen Namen ein oder wähle eine Kategorie' : 'Type a name or select a category'}
+          </div>
+        )}
+
+        <AnimatePresence mode="popLayout">
+          {results.map((food, i) => {
+            const name = language === 'de' ? food.name : food.name_en;
+            const isOnline = food.category === 'openfoodfacts';
+            const isCustom = food.category === 'custom';
+
+            return (
+              <motion.button
+                key={`${name}-${food.unit}-${i}`}
+                type="button"
+                onClick={() => addItem(food)}
+                className="w-full text-left px-3.5 py-3 rounded-xl bg-card border border-border hover:border-primary/30 hover:bg-accent/30 transition-all flex items-center gap-3 active:scale-[0.98]"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2, delay: Math.min(i * 0.03, 0.2) }}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    {isOnline && <Globe className="h-3 w-3 text-muted-foreground shrink-0" />}
+                    {isCustom && <span className="text-[10px] bg-primary/10 text-primary px-1 rounded shrink-0">★</span>}
+                    <span className="text-sm font-semibold text-foreground truncate">{name}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {food.quantity} {food.unit} · P:{food.protein_g}g F:{food.fat_g}g C:{food.carbs_g}g
+                    {food.matchedAlias && (
+                      <span className="ml-1 italic text-primary/60">
+                        ({language === 'de' ? `auch: ${food.matchedAlias}` : `aka: ${food.matchedAlias}`})
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-sm font-bold tabular-nums text-foreground">{food.calories}</span>
+                  <span className="text-[10px] text-muted-foreground">kcal</span>
+                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Plus className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                </div>
+              </motion.button>
+            );
+          })}
+        </AnimatePresence>
+
+        {searchingOnline && (
+          <div className="flex items-center justify-center gap-2 py-3 text-xs text-muted-foreground">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            {language === 'de' ? 'Suche online...' : 'Searching online...'}
+          </div>
+        )}
+      </div>
+
+      {/* Selected items basket */}
+      <AnimatePresence>
+        {selectedItems.length > 0 && (
+          <motion.div
+            className="nutri-card-highlight space-y-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm">
+                {language === 'de' ? `${selectedItems.length} ausgewählt` : `${selectedItems.length} selected`}
+              </h3>
+              <div className="flex items-center gap-3 text-xs font-semibold">
+                <span className="flex items-center gap-0.5"><Flame className="h-3 w-3 text-energy" />{Math.round(totalCal)}</span>
+                <span className="text-protein">{Math.round(totalP)}P</span>
+                <span className="text-fat">{Math.round(totalF)}F</span>
+                <span className="text-carbs">{Math.round(totalC)}C</span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5 max-h-32 overflow-y-auto">
+              {selectedItems.map((item, i) => (
+                <motion.div
+                  key={`sel-${i}`}
+                  className="flex items-center justify-between py-1.5 px-1 text-sm"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                >
+                  <span className="truncate flex-1 font-medium">{item.food_name}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs text-muted-foreground">{item.quantity} {item.unit}</span>
+                    <button
+                      onClick={() => removeItem(i)}
+                      className="w-6 h-6 rounded-full bg-destructive/10 flex items-center justify-center hover:bg-destructive/20 transition-colors"
+                    >
+                      <Minus className="h-3 w-3 text-destructive" />
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            <Button
+              onClick={() => onDone(selectedItems)}
+              className="w-full rounded-xl h-11 font-bold text-base"
+            >
+              {language === 'de' ? 'Weiter zur Überprüfung' : 'Continue to Review'}
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
