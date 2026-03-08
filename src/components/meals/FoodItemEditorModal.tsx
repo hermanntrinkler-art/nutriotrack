@@ -1,15 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { searchFoods, type FoodEntry } from '@/lib/food-database';
+import { searchOpenFoodFacts } from '@/lib/openfoodfacts-search';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search } from 'lucide-react';
+import { Search, Globe, Loader2 } from 'lucide-react';
 
 interface FoodItemEditorModalProps {
   item: AnalyzedFoodItem | null;
@@ -66,9 +67,12 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
   });
   const [customProducts, setCustomProducts] = useState<FoodEntry[]>([]);
   const [suggestions, setSuggestions] = useState<FoodEntry[]>([]);
+  const [onlineResults, setOnlineResults] = useState<FoodEntry[]>([]);
+  const [searchingOnline, setSearchingOnline] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [baseNutrition, setBaseNutrition] = useState<BaseNutrition | null>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const onlineSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const unitOptions = language === 'de' ? UNIT_OPTIONS_DE : UNIT_OPTIONS_EN;
 
@@ -116,7 +120,7 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
     void loadCustomProducts();
   }, [user, open]);
 
-  const buildSuggestions = (query: string) => {
+  const buildSuggestions = useCallback((query: string, online: FoodEntry[] = []) => {
     const normalized = query.trim().toLowerCase();
     const dbMatches = searchFoods(query, language as 'de' | 'en');
 
@@ -126,7 +130,7 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
         )
       : customProducts;
 
-    const merged = [...customMatches, ...dbMatches];
+    const merged = [...customMatches, ...dbMatches, ...online];
     const seen = new Set<string>();
 
     return merged
@@ -136,8 +140,30 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
         seen.add(key);
         return true;
       })
-      .slice(0, 8);
-  };
+      .slice(0, 12);
+  }, [customProducts, language]);
+
+  const triggerOnlineSearch = useCallback((query: string) => {
+    if (onlineSearchTimer.current) clearTimeout(onlineSearchTimer.current);
+
+    if (query.trim().length < 3) {
+      setOnlineResults([]);
+      setSearchingOnline(false);
+      return;
+    }
+
+    setSearchingOnline(true);
+    onlineSearchTimer.current = setTimeout(async () => {
+      const results = await searchOpenFoodFacts(query, language as 'de' | 'en');
+      setOnlineResults(results);
+      setSearchingOnline(false);
+      // Merge with current local suggestions
+      const local = buildSuggestions(query, results);
+      setSuggestions(local);
+      setShowSuggestions(local.length > 0);
+    }, 500);
+  }, [language, buildSuggestions]);
+
   const scaleByGrams = (base: BaseNutrition, gramsAmount: number) => {
     const baseGrams = getGramsEquivalent(base.baseQuantity, base.baseUnit);
     if (baseGrams === 0) return { calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0 };
@@ -161,9 +187,10 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
     setForm(prev => ({ ...prev, [field]: value }));
 
     if (field === 'food_name' && typeof value === 'string') {
-      const results = buildSuggestions(value);
+      const results = buildSuggestions(value, onlineResults);
       setSuggestions(results);
-      setShowSuggestions(results.length > 0);
+      setShowSuggestions(true);
+      triggerOnlineSearch(value);
     }
   };
 
@@ -251,13 +278,15 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
               />
             </div>
 
-            {showSuggestions && suggestions.length > 0 && (
+            {showSuggestions && (suggestions.length > 0 || searchingOnline) && (
               <div
                 ref={suggestionsRef}
-                className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden"
+                className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden max-h-64 overflow-y-auto"
               >
                 {suggestions.map((food, i) => {
                   const name = language === 'de' ? food.name : food.name_en;
+                  const isOnline = food.category === 'openfoodfacts';
+                  const isCustom = food.category === 'custom';
                   return (
                     <button
                       key={i}
@@ -268,9 +297,13 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
                         selectSuggestion(food);
                       }}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-foreground">{name}</span>
-                        <span className="text-xs text-muted-foreground">{food.calories} kcal</span>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-sm font-medium text-foreground truncate flex items-center gap-1.5">
+                          {isOnline && <Globe className="h-3 w-3 text-muted-foreground shrink-0" />}
+                          {isCustom && <span className="text-[10px] bg-primary/10 text-primary px-1 rounded shrink-0">★</span>}
+                          {name}
+                        </span>
+                        <span className="text-xs text-muted-foreground shrink-0">{food.calories} kcal</span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {food.quantity} {food.unit} · P:{food.protein_g}g F:{food.fat_g}g C:{food.carbs_g}g
@@ -278,6 +311,12 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
                     </button>
                   );
                 })}
+                {searchingOnline && (
+                  <div className="px-3 py-2 flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    {language === 'de' ? 'Suche online...' : 'Searching online...'}
+                  </div>
+                )}
               </div>
             )}
           </div>
