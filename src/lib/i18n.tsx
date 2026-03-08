@@ -130,6 +130,11 @@ const translations = {
     'meals.barcodeSearch': 'Suchen',
     'meals.barcodeScanAgain': 'Erneut scannen',
     'meals.barcodeCameraError': 'Kamera konnte nicht geöffnet werden.',
+    'meals.barcodeNotFoundTitle': 'Produkt nicht gefunden',
+    'meals.customProductHint': 'Trage die Nährwerte ein (stehen auf der Verpackung). Das Produkt wird in deiner persönlichen Datenbank gespeichert.',
+    'meals.nutritionPer100': 'Nährwerte pro 100g/ml',
+    'meals.saveProduct': 'Speichern & verwenden',
+    'meals.customProductSaved': 'Produkt gespeichert!',
 
     // Weight
     'weight.title': 'Gewichtstracking',
