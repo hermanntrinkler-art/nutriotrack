@@ -37,7 +37,7 @@ export default function RegisterPage() {
     setGoogleLoading(true);
     try {
       const result = await lovable.auth.signInWithOAuth('google', {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}/login`,
       });
       if (result.error) {
         toast.error(result.error.message || 'Google Sign-In failed');

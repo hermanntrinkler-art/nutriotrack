@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
@@ -36,7 +36,7 @@ export default function LoginPage() {
     setGoogleLoading(true);
     try {
       const result = await lovable.auth.signInWithOAuth('google', {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}/login`,
       });
       if (result.error) {
         toast.error(result.error.message || 'Google Sign-In failed');
@@ -46,6 +46,33 @@ export default function LoginPage() {
     }
     setGoogleLoading(false);
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('__lovable_token')) return;
+
+    const completeGoogleSignIn = async () => {
+      setGoogleLoading(true);
+      try {
+        const result = await lovable.auth.signInWithOAuth('google', {
+          redirect_uri: `${window.location.origin}/login`,
+        });
+
+        if (result.error) {
+          toast.error(result.error.message || 'Google Sign-In failed');
+          return;
+        }
+
+        navigate('/', { replace: true });
+      } catch (err: any) {
+        toast.error(err.message || 'Google Sign-In failed');
+      } finally {
+        setGoogleLoading(false);
+      }
+    };
+
+    void completeGoogleSignIn();
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-background">
