@@ -5,10 +5,14 @@ import { supabase } from '@/integrations/supabase/client';
 import type { MealEntry, WeightEntry, UserGoals } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 import DailyView from '@/components/history/DailyView';
 import WeeklyView from '@/components/history/WeeklyView';
 import MonthlyView from '@/components/history/MonthlyView';
+import { useSubscription } from '@/hooks/useSubscription';
+import PaywallScreen from '@/components/PaywallScreen';
+import { ProBadge } from '@/components/ProBadge';
+import { toast } from 'sonner';
 
 function getMonday(d: Date): Date {
   const date = new Date(d);
@@ -22,6 +26,8 @@ function getMonday(d: Date): Date {
 export default function HistoryPage() {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const subscription = useSubscription();
+  const [showPaywall, setShowPaywall] = useState(false);
   const [meals, setMeals] = useState<MealEntry[]>([]);
   const [weightEntries, setWeightEntries] = useState<WeightEntry[]>([]);
   const [goals, setGoals] = useState<UserGoals | null>(null);
@@ -85,8 +91,12 @@ export default function HistoryPage() {
       <Tabs defaultValue="daily" className="w-full">
         <TabsList className="w-full">
           <TabsTrigger value="daily" className="flex-1">{t('history.daily')}</TabsTrigger>
-          <TabsTrigger value="weekly" className="flex-1">{t('history.weekly')}</TabsTrigger>
-          <TabsTrigger value="monthly" className="flex-1">{t('history.monthly')}</TabsTrigger>
+          <TabsTrigger value="weekly" className="flex-1 gap-1">
+            {t('history.weekly')} {!subscription.isPro && <Lock className="h-3 w-3" />}
+          </TabsTrigger>
+          <TabsTrigger value="monthly" className="flex-1 gap-1">
+            {t('history.monthly')} {!subscription.isPro && <Lock className="h-3 w-3" />}
+          </TabsTrigger>
         </TabsList>
 
         {/* Daily tab */}
@@ -110,45 +120,79 @@ export default function HistoryPage() {
 
         {/* Weekly tab */}
         <TabsContent value="weekly" className="mt-3 space-y-3">
-          <div className="flex items-center justify-between">
-            <Button variant="ghost" size="icon" onClick={() => navigateWeek(-1)} className="h-8 w-8">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <button
-              onClick={() => setWeekStart(getMonday(new Date()))}
-              className={`text-xs font-medium px-3 py-1 rounded-lg transition-colors ${isCurrentWeek ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
-            >
-              {weekLabel}
-            </button>
-            <Button variant="ghost" size="icon" onClick={() => navigateWeek(1)} className="h-8 w-8" disabled={isCurrentWeek}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-          <WeeklyView meals={meals} weightEntries={weightEntries} goals={goals} weekStart={weekStart} />
+          {!subscription.isPro ? (
+            <div className="nutri-card text-center py-10 space-y-3">
+              <Lock className="h-8 w-8 text-primary mx-auto" />
+              <p className="font-semibold">{t('paywall.premiumFeature')}</p>
+              <p className="text-sm text-muted-foreground">{t('paywall.upgradeToUnlock')}</p>
+              <Button onClick={() => setShowPaywall(true)}>{t('paywall.upgradeButton')}</Button>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <Button variant="ghost" size="icon" onClick={() => navigateWeek(-1)} className="h-8 w-8">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <button
+                  onClick={() => setWeekStart(getMonday(new Date()))}
+                  className={`text-xs font-medium px-3 py-1 rounded-lg transition-colors ${isCurrentWeek ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
+                >
+                  {weekLabel}
+                </button>
+                <Button variant="ghost" size="icon" onClick={() => navigateWeek(1)} className="h-8 w-8" disabled={isCurrentWeek}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <WeeklyView meals={meals} weightEntries={weightEntries} goals={goals} weekStart={weekStart} />
+            </>
+          )}
         </TabsContent>
 
         {/* Monthly tab */}
         <TabsContent value="monthly" className="mt-3 space-y-3">
-          <div className="flex items-center justify-between">
-            <Button variant="ghost" size="icon" onClick={() => navigateMonth(-1)} className="h-8 w-8">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <button
-              onClick={() => {
-                const now = new Date();
-                setMonthDate(new Date(now.getFullYear(), now.getMonth(), 1));
-              }}
-              className={`text-sm font-medium px-3 py-1 rounded-lg transition-colors capitalize ${isCurrentMonth ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
-            >
-              {monthLabel}
-            </button>
-            <Button variant="ghost" size="icon" onClick={() => navigateMonth(1)} className="h-8 w-8" disabled={isCurrentMonth}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-          <MonthlyView meals={meals} weightEntries={weightEntries} goals={goals} month={monthDate} />
+          {!subscription.isPro ? (
+            <div className="nutri-card text-center py-10 space-y-3">
+              <Lock className="h-8 w-8 text-primary mx-auto" />
+              <p className="font-semibold">{t('paywall.premiumFeature')}</p>
+              <p className="text-sm text-muted-foreground">{t('paywall.upgradeToUnlock')}</p>
+              <Button onClick={() => setShowPaywall(true)}>{t('paywall.upgradeButton')}</Button>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <Button variant="ghost" size="icon" onClick={() => navigateMonth(-1)} className="h-8 w-8">
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <button
+                  onClick={() => {
+                    const now = new Date();
+                    setMonthDate(new Date(now.getFullYear(), now.getMonth(), 1));
+                  }}
+                  className={`text-sm font-medium px-3 py-1 rounded-lg transition-colors capitalize ${isCurrentMonth ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'}`}
+                >
+                  {monthLabel}
+                </button>
+                <Button variant="ghost" size="icon" onClick={() => navigateMonth(1)} className="h-8 w-8" disabled={isCurrentMonth}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+              <MonthlyView meals={meals} weightEntries={weightEntries} goals={goals} month={monthDate} />
+            </>
+          )}
         </TabsContent>
+
       </Tabs>
+
+      {showPaywall && (
+        <PaywallScreen
+          onClose={() => setShowPaywall(false)}
+          trigger="premium_feature"
+          onUpgrade={(plan) => {
+            toast.info(t('paywall.comingSoon'));
+            setShowPaywall(false);
+          }}
+        />
+      )}
     </div>
   );
 }
