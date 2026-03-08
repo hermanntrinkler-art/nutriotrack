@@ -509,6 +509,10 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
+
+      {/* Calendar Heatmap */}
+      <CalendarHeatmap meals={allMeals} calorieTarget={calorieTarget} />
+
       <motion.div
         className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
         variants={fadeUp}
