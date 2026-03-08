@@ -106,8 +106,27 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const processedRef = useRef(false);
+  const [foodSuggestions, setFoodSuggestions] = useState<FoodEntry[]>([]);
 
-  const handleCode = async (code: string) => {
+  const handleFoodNameChange = (value: string) => {
+    setCustomForm(f => ({ ...f, food_name: value }));
+    const lang = (document.documentElement.lang === 'en' ? 'en' : 'de') as 'de' | 'en';
+    setFoodSuggestions(value.length >= 1 ? searchFoods(value, lang) : []);
+  };
+
+  const selectFoodSuggestion = (entry: FoodEntry) => {
+    const lang = (document.documentElement.lang === 'en' ? 'en' : 'de') as 'de' | 'en';
+    setCustomForm({
+      food_name: lang === 'de' ? entry.name : entry.name_en,
+      calories: String(entry.calories),
+      protein_g: String(entry.protein_g),
+      fat_g: String(entry.fat_g),
+      carbs_g: String(entry.carbs_g),
+      quantity: String(entry.quantity),
+      unit: entry.unit,
+    });
+    setFoodSuggestions([]);
+  };
     if (processedRef.current) return;
     processedRef.current = true;
     setLoading(true);
