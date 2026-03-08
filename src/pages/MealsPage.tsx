@@ -66,20 +66,16 @@ export default function MealsPage() {
     }
   };
 
-  const handleTakePhoto = () => {
-    cameraInputRef.current?.click();
-  };
-
   const handleCameraSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleImageUpload(file);
-    // Reset so same file can be selected again
-    if (cameraInputRef.current) cameraInputRef.current.value = '';
+    e.currentTarget.value = '';
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleImageUpload(file);
+    e.currentTarget.value = '';
   };
 
   const handleManualEntry = () => {
