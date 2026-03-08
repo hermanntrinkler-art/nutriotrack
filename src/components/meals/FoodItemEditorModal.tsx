@@ -251,7 +251,7 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
   }, [language, buildSuggestions]);
 
   const scaleByGrams = (base: BaseNutrition, gramsAmount: number) => {
-    const baseGrams = getGramsEquivalent(base.baseQuantity, base.baseUnit);
+    const baseGrams = getGramsEquivalent(base.baseQuantity, base.baseUnit, form.food_name);
     if (baseGrams === 0) return { calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0 };
     const factor = gramsAmount / baseGrams;
     return {
@@ -264,7 +264,7 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
 
   const update = (field: keyof AnalyzedFoodItem, value: string | number) => {
     if (field === 'quantity' && baseNutrition && typeof value === 'number') {
-      const grams = getGramsEquivalent(value, form.unit);
+      const grams = getGramsEquivalent(value, form.unit, form.food_name);
       const scaled = scaleByGrams(baseNutrition, grams);
       setForm(prev => ({ ...prev, quantity: value, ...scaled }));
       return;
@@ -286,18 +286,28 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
       return;
     }
 
-    // Keep the same gram-equivalent, recalculate quantity for new unit
-    const currentGrams = getGramsEquivalent(form.quantity, form.unit);
-    const newFactor = UNIT_TO_GRAMS[newUnit];
+    const currentGrams = getGramsEquivalent(form.quantity, form.unit, form.food_name);
     let newQuantity: number;
 
-    if (newFactor && newFactor > 0) {
-      newQuantity = Math.round((currentGrams / newFactor) * 10) / 10;
+    if (newUnit === 'Stück') {
+      const pw = getPieceWeight(form.food_name);
+      if (pw > 0) {
+        newQuantity = Math.round((currentGrams / pw) * 10) / 10;
+      } else {
+        // Unknown piece weight – default to 1 piece, keep nutrition
+        newQuantity = 1;
+      }
     } else {
-      newQuantity = form.quantity;
+      const newFactor = UNIT_TO_GRAMS[newUnit];
+      if (newFactor && newFactor > 0) {
+        newQuantity = Math.round((currentGrams / newFactor) * 10) / 10;
+      } else {
+        newQuantity = form.quantity;
+      }
     }
 
-    const scaled = scaleByGrams(baseNutrition, currentGrams);
+    const newGrams = getGramsEquivalent(newQuantity, newUnit, form.food_name);
+    const scaled = scaleByGrams(baseNutrition, newGrams);
     setForm(prev => ({ ...prev, unit: newUnit, quantity: newQuantity, ...scaled }));
   };
 
