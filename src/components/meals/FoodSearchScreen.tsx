@@ -102,9 +102,8 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
 
     // If no text query but category selected, show popular items from that category
     if (!trimmed && category !== 'all') {
-      const { foodDatabase } = require('@/lib/food-database');
       const cats = CATEGORY_MAP[category] || [];
-      dbResults = (foodDatabase as FoodEntry[])
+      dbResults = foodDatabase
         .filter(e => cats.some(c => e.category.toLowerCase().includes(c)))
         .slice(0, 20);
     }
