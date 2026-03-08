@@ -54,6 +54,10 @@ export default function ProfilePage() {
           setIntensity((data as any).deficit_intensity || 2);
         }
       });
+    supabase.from('meal_entries').select('*').eq('user_id', user.id)
+      .then(({ data }) => setAllMeals((data || []) as any));
+    supabase.from('weight_entries').select('*').eq('user_id', user.id).order('entry_date', { ascending: true })
+      .then(({ data }) => setWeightEntries(data || []));
   }, [user]);
 
   useEffect(() => {
