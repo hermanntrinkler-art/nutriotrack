@@ -191,7 +191,7 @@ export default function ProfilePage() {
 
       {/* Deficit Intensity Slider */}
       {isLoseOrGain && goals && (
-        <div className="nutri-card space-y-4">
+        <motion.div className="nutri-card space-y-4" variants={fadeUp}>
           <div className="flex items-center gap-3">
             {getIntensityIcon(intensity)}
             <div>
