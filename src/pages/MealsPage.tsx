@@ -39,6 +39,7 @@ export default function MealsPage() {
   const [cameraLoading, setCameraLoading] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [savingRecipe, setSavingRecipe] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
