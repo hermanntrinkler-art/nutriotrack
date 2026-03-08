@@ -1,0 +1,1 @@
+ALTER TABLE public.badge_images ADD COLUMN share_text text DEFAULT NULL;
