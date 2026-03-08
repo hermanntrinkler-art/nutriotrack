@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { useTranslation } from '@/lib/i18n';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, ScanBarcode, Keyboard } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Loader2, ScanBarcode, Keyboard, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import type { AnalyzedFoodItem } from '@/lib/types';
 
@@ -12,45 +15,24 @@ interface BarcodeScannerProps {
   onCancel: () => void;
 }
 
-interface OpenFoodFactsProduct {
-  product_name?: string;
-  nutriments?: {
-    'energy-kcal_100g'?: number;
-    proteins_100g?: number;
-    fat_100g?: number;
-    carbohydrates_100g?: number;
-  };
-  serving_quantity?: number;
-  serving_size?: string;
-  quantity?: string;
-}
-
-async function lookupBarcode(code: string): Promise<AnalyzedFoodItem | null> {
+async function lookupOpenFoodFacts(code: string): Promise<AnalyzedFoodItem | null> {
   try {
     const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json`);
     if (!res.ok) return null;
     const data = await res.json();
     if (data.status !== 1 || !data.product) return null;
 
-    const p: OpenFoodFactsProduct = data.product;
+    const p = data.product;
     const n = p.nutriments || {};
-    const name = p.product_name || code;
-    const cal100 = n['energy-kcal_100g'] || 0;
-    const prot100 = n.proteins_100g || 0;
-    const fat100 = n.fat_100g || 0;
-    const carb100 = n.carbohydrates_100g || 0;
-
-    // Default to 100g portion
-    const qty = 100;
 
     return {
-      food_name: name,
-      quantity: qty,
+      food_name: p.product_name || code,
+      quantity: 100,
       unit: 'g',
-      calories: Math.round(cal100),
-      protein_g: Math.round(prot100 * 10) / 10,
-      fat_g: Math.round(fat100 * 10) / 10,
-      carbs_g: Math.round(carb100 * 10) / 10,
+      calories: Math.round(n['energy-kcal_100g'] || 0),
+      protein_g: Math.round((n.proteins_100g || 0) * 10) / 10,
+      fat_g: Math.round((n.fat_100g || 0) * 10) / 10,
+      carbs_g: Math.round((n.carbohydrates_100g || 0) * 10) / 10,
       confidence_score: 0.95,
     };
   } catch {
@@ -58,12 +40,46 @@ async function lookupBarcode(code: string): Promise<AnalyzedFoodItem | null> {
   }
 }
 
+async function lookupCustomProduct(code: string, userId: string): Promise<AnalyzedFoodItem | null> {
+  const { data } = await supabase
+    .from('custom_products')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('barcode', code)
+    .maybeSingle();
+
+  if (!data) return null;
+
+  return {
+    food_name: (data as any).food_name,
+    quantity: Number((data as any).default_quantity) || 100,
+    unit: (data as any).default_unit || 'g',
+    calories: Number((data as any).calories) || 0,
+    protein_g: Number((data as any).protein_g) || 0,
+    fat_g: Number((data as any).fat_g) || 0,
+    carbs_g: Number((data as any).carbs_g) || 0,
+    confidence_score: 1,
+  };
+}
+
 export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [scanning, setScanning] = useState(true);
   const [loading, setLoading] = useState(false);
   const [manualCode, setManualCode] = useState('');
   const [showManual, setShowManual] = useState(false);
+  const [notFound, setNotFound] = useState<string | null>(null);
+  const [savingCustom, setSavingCustom] = useState(false);
+  const [customForm, setCustomForm] = useState({
+    food_name: '',
+    calories: '',
+    protein_g: '',
+    fat_g: '',
+    carbs_g: '',
+    quantity: '100',
+    unit: 'g',
+  });
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const processedRef = useRef(false);
@@ -73,26 +89,77 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     processedRef.current = true;
     setLoading(true);
     setScanning(false);
+    setNotFound(null);
 
-    // Stop scanner
-    try {
-      await scannerRef.current?.stop();
-    } catch {}
+    try { await scannerRef.current?.stop(); } catch {}
 
-    const item = await lookupBarcode(code);
+    // 1. Check personal DB first
+    if (user) {
+      const custom = await lookupCustomProduct(code, user.id);
+      if (custom) {
+        toast.success(`${custom.food_name} ${t('meals.barcodeFound')}`);
+        onResult(custom);
+        return;
+      }
+    }
+
+    // 2. Check Open Food Facts
+    const item = await lookupOpenFoodFacts(code);
     if (item) {
       toast.success(`${item.food_name} ${t('meals.barcodeFound')}`);
       onResult(item);
-    } else {
-      toast.error(t('meals.barcodeNotFound'));
-      processedRef.current = false;
-      setLoading(false);
-      setScanning(true);
+      return;
     }
+
+    // 3. Not found → offer manual creation
+    setNotFound(code);
+    setLoading(false);
+  };
+
+  const handleSaveCustomProduct = async () => {
+    if (!user || !notFound || !customForm.food_name.trim()) return;
+    setSavingCustom(true);
+
+    const qty = Number(customForm.quantity) || 100;
+    const cal = Number(customForm.calories) || 0;
+    const prot = Number(customForm.protein_g) || 0;
+    const fat = Number(customForm.fat_g) || 0;
+    const carbs = Number(customForm.carbs_g) || 0;
+
+    const { error } = await supabase.from('custom_products').insert({
+      user_id: user.id,
+      barcode: notFound,
+      food_name: customForm.food_name.trim(),
+      calories: cal,
+      protein_g: prot,
+      fat_g: fat,
+      carbs_g: carbs,
+      default_quantity: qty,
+      default_unit: customForm.unit || 'g',
+    } as any);
+
+    setSavingCustom(false);
+
+    if (error) {
+      toast.error(t('common.error'));
+      return;
+    }
+
+    toast.success(t('meals.customProductSaved'));
+    onResult({
+      food_name: customForm.food_name.trim(),
+      quantity: qty,
+      unit: customForm.unit || 'g',
+      calories: cal,
+      protein_g: prot,
+      fat_g: fat,
+      carbs_g: carbs,
+      confidence_score: 1,
+    });
   };
 
   useEffect(() => {
-    if (!scanning || showManual) return;
+    if (!scanning || showManual || notFound) return;
 
     const scannerId = 'barcode-scanner-region';
     let html5Qrcode: Html5Qrcode | null = null;
@@ -104,15 +171,9 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
 
         await html5Qrcode.start(
           { facingMode: 'environment' },
-          {
-            fps: 10,
-            qrbox: { width: 280, height: 150 },
-            aspectRatio: 1.5,
-          },
-          (decodedText) => {
-            handleCode(decodedText);
-          },
-          () => {} // ignore scan failures
+          { fps: 10, qrbox: { width: 280, height: 150 }, aspectRatio: 1.5 },
+          (decodedText) => handleCode(decodedText),
+          () => {}
         );
       } catch (err) {
         console.error('Barcode scanner error:', err);
@@ -122,9 +183,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
       }
     };
 
-    // Small delay to ensure DOM element exists
     const timer = setTimeout(startScanner, 100);
-
     return () => {
       clearTimeout(timer);
       if (html5Qrcode) {
@@ -132,15 +191,134 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
         html5Qrcode.clear();
       }
     };
-  }, [scanning, showManual]);
+  }, [scanning, showManual, notFound]);
 
   const handleManualSubmit = () => {
     const code = manualCode.trim();
-    if (code.length >= 8) {
-      handleCode(code);
-    }
+    if (code.length >= 8) handleCode(code);
   };
 
+  const resetScan = () => {
+    setNotFound(null);
+    setShowManual(false);
+    setScanning(true);
+    processedRef.current = false;
+    setCustomForm({ food_name: '', calories: '', protein_g: '', fat_g: '', carbs_g: '', quantity: '100', unit: 'g' });
+  };
+
+  // --- Not found: show create form ---
+  if (notFound) {
+    return (
+      <div className="space-y-4 animate-fade-in">
+        <div className="flex items-center gap-2 mb-2">
+          <ScanBarcode className="h-5 w-5 text-primary" />
+          <h2 className="font-semibold">{t('meals.barcodeNotFoundTitle')}</h2>
+        </div>
+
+        <div className="nutri-card p-4 space-y-1">
+          <p className="text-xs text-muted-foreground">Barcode</p>
+          <p className="font-mono text-sm font-medium">{notFound}</p>
+        </div>
+
+        <p className="text-sm text-muted-foreground">{t('meals.customProductHint')}</p>
+
+        <div className="space-y-3">
+          <div>
+            <Label>{t('meals.foodName')}</Label>
+            <Input
+              value={customForm.food_name}
+              onChange={(e) => setCustomForm(f => ({ ...f, food_name: e.target.value }))}
+              placeholder="z.B. Hafermilch"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>{t('meals.quantity')}</Label>
+              <Input
+                type="number"
+                inputMode="decimal"
+                value={customForm.quantity}
+                onChange={(e) => setCustomForm(f => ({ ...f, quantity: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label>{t('meals.unit')}</Label>
+              <Input
+                value={customForm.unit}
+                onChange={(e) => setCustomForm(f => ({ ...f, unit: e.target.value }))}
+                placeholder="g / ml / Stück"
+              />
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground font-medium mt-2">{t('meals.nutritionPer100')}</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>{t('dashboard.kcal')}</Label>
+              <Input
+                type="number"
+                inputMode="decimal"
+                value={customForm.calories}
+                onChange={(e) => setCustomForm(f => ({ ...f, calories: e.target.value }))}
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <Label>{t('dashboard.protein')} (g)</Label>
+              <Input
+                type="number"
+                inputMode="decimal"
+                value={customForm.protein_g}
+                onChange={(e) => setCustomForm(f => ({ ...f, protein_g: e.target.value }))}
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <Label>{t('dashboard.fat')} (g)</Label>
+              <Input
+                type="number"
+                inputMode="decimal"
+                value={customForm.fat_g}
+                onChange={(e) => setCustomForm(f => ({ ...f, fat_g: e.target.value }))}
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <Label>{t('dashboard.carbs')} (g)</Label>
+              <Input
+                type="number"
+                inputMode="decimal"
+                value={customForm.carbs_g}
+                onChange={(e) => setCustomForm(f => ({ ...f, carbs_g: e.target.value }))}
+                placeholder="0"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={resetScan} className="flex-1">
+            {t('meals.barcodeScanAgain')}
+          </Button>
+          <Button
+            onClick={handleSaveCustomProduct}
+            disabled={!customForm.food_name.trim() || savingCustom}
+            className="flex-1"
+          >
+            {savingCustom ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+            {t('meals.saveProduct')}
+          </Button>
+        </div>
+
+        <Button variant="ghost" onClick={onCancel} className="w-full">
+          {t('meals.cancel')}
+        </Button>
+      </div>
+    );
+  }
+
+  // --- Normal scan view ---
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center gap-2 mb-2">
@@ -201,15 +379,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
                   {t('meals.barcodeSearch')}
                 </Button>
               </div>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setShowManual(false);
-                  setScanning(true);
-                  processedRef.current = false;
-                }}
-                className="w-full"
-              >
+              <Button variant="ghost" onClick={resetScan} className="w-full">
                 {t('meals.barcodeScanAgain')}
               </Button>
             </div>
