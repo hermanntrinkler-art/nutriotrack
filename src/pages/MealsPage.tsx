@@ -274,6 +274,7 @@ export default function MealsPage() {
 
     await supabase.from('meal_food_items').insert(foodItems as any);
 
+    hapticFeedback('success');
     toast.success(t('meals.saved'));
     setSaving(false);
     handleReset();
