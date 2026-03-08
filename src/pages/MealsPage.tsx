@@ -313,16 +313,32 @@ export default function MealsPage() {
             <div className="flex-1">
               <p className="font-medium">{t('meals.takePhoto')}</p>
               <p className="text-xs text-muted-foreground mb-2">{t('meals.aiDescription')}</p>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleCameraSelect}
-                className="w-full text-sm text-muted-foreground file:mr-3 file:rounded-xl file:border-0 file:bg-primary file:text-primary-foreground file:px-4 file:py-2 file:font-medium"
-                aria-label={t('meals.takePhoto')}
-              />
+              <Button type="button" onClick={handleOpenCamera} className="w-full" disabled={cameraLoading}>
+                {cameraLoading ? 'Öffne Kamera…' : t('meals.takePhoto')}
+              </Button>
+              {cameraError && <p className="text-xs text-destructive mt-2">{cameraError}</p>}
             </div>
           </div>
+
+          {cameraOpen && (
+            <div className="nutri-card space-y-3">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-56 rounded-xl object-cover bg-muted"
+              />
+              <div className="flex gap-2">
+                <Button type="button" className="flex-1" onClick={handleCapturePhoto}>
+                  Foto verwenden
+                </Button>
+                <Button type="button" variant="outline" className="flex-1" onClick={stopCamera}>
+                  {t('common.cancel')}
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-info/10 flex items-center justify-center">
@@ -331,11 +347,15 @@ export default function MealsPage() {
             <div className="flex-1">
               <p className="font-medium">{t('meals.uploadImage')}</p>
               <p className="text-xs text-muted-foreground mb-2">{t('meals.aiDescription')}</p>
+              <Button type="button" variant="outline" onClick={handleOpenFilePicker} className="w-full">
+                {t('meals.uploadImage')}
+              </Button>
               <input
+                ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 onChange={handleFileSelect}
-                className="w-full text-sm text-muted-foreground file:mr-3 file:rounded-xl file:border-0 file:bg-info file:text-info-foreground file:px-4 file:py-2 file:font-medium"
+                className="w-full mt-2 text-xs text-muted-foreground file:mr-2 file:rounded-lg file:border-0 file:bg-secondary file:text-secondary-foreground file:px-3 file:py-1.5"
                 aria-label={t('meals.uploadImage')}
               />
             </div>
