@@ -236,6 +236,17 @@ export default function ProfilePage() {
         />
       </motion.div>
 
+      {/* Milestone Timeline */}
+      <motion.div variants={fadeUp}>
+        <MilestoneTimeline
+          meals={allMeals}
+          weightEntries={weightEntries}
+          goalWeightKg={goals?.goal_weight_kg || null}
+          goalType={goals?.goal_type || null}
+          startWeightKg={goals?.start_weight_kg || null}
+        />
+      </motion.div>
+
       {/* Deficit Intensity Slider */}
       {isLoseOrGain && goals && (
         <motion.div className="nutri-card space-y-4" variants={fadeUp}>
