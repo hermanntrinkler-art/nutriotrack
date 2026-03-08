@@ -5,7 +5,7 @@ import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserGoals, MealEntry } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Plus, TrendingDown, TrendingUp, Minus, Flame, Zap, Dumbbell, Droplets, Sparkles } from 'lucide-react';
+import { Plus, TrendingDown, TrendingUp, Minus, Flame, Zap, Dumbbell, Droplets, Sparkles, CalendarDays, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -72,6 +72,27 @@ function getMotivationalMessage(calPct: number, language: string): string {
   return '⚠️ Over goal – you\'ll nail it tomorrow!';
 }
 
+// --- Calculate streak ---
+function calculateStreak(meals: MealEntry[]): number {
+  const uniqueDays = new Set(meals.map(m => m.entry_date));
+  const today = new Date();
+  let streak = 0;
+
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
+    if (uniqueDays.has(dateStr)) {
+      streak++;
+    } else {
+      // Allow today to be missing (day not over yet)
+      if (i === 0) continue;
+      break;
+    }
+  }
+  return streak;
+}
+
 // --- Animation variants ---
 const container = {
   hidden: {},
@@ -89,6 +110,7 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [goals, setGoals] = useState<UserGoals | null>(null);
   const [todayMeals, setTodayMeals] = useState<MealEntry[]>([]);
+  const [allMeals, setAllMeals] = useState<MealEntry[]>([]);
   const [todayTotals, setTodayTotals] = useState({ calories: 0, protein: 0, fat: 0, carbs: 0 });
 
   useEffect(() => {
@@ -98,18 +120,42 @@ export default function DashboardPage() {
     supabase.from('user_goals').select('*').eq('user_id', user.id).single()
       .then(({ data }) => { if (data) setGoals(data as any); });
 
-    supabase.from('meal_entries').select('*').eq('user_id', user.id).eq('entry_date', today).order('created_at', { ascending: false })
+    supabase.from('meal_entries').select('*').eq('user_id', user.id).order('entry_date', { ascending: false })
       .then(({ data }) => {
         const meals = (data || []) as any as MealEntry[];
-        setTodayMeals(meals);
+        setAllMeals(meals);
+        const today_meals = meals.filter(m => m.entry_date === today);
+        setTodayMeals(today_meals);
         setTodayTotals({
-          calories: meals.reduce((s, m) => s + Number(m.total_calories), 0),
-          protein: meals.reduce((s, m) => s + Number(m.total_protein_g), 0),
-          fat: meals.reduce((s, m) => s + Number(m.total_fat_g), 0),
-          carbs: meals.reduce((s, m) => s + Number(m.total_carbs_g), 0),
+          calories: today_meals.reduce((s, m) => s + Number(m.total_calories), 0),
+          protein: today_meals.reduce((s, m) => s + Number(m.total_protein_g), 0),
+          fat: today_meals.reduce((s, m) => s + Number(m.total_fat_g), 0),
+          carbs: today_meals.reduce((s, m) => s + Number(m.total_carbs_g), 0),
         });
       });
   }, [user]);
+
+  const streak = useMemo(() => calculateStreak(allMeals), [allMeals]);
+
+  // Weekly report: last 7 days
+  const weeklyReport = useMemo(() => {
+    const today = new Date();
+    const last7: string[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      last7.push(d.toISOString().split('T')[0]);
+    }
+    const weekMeals = allMeals.filter(m => last7.includes(m.entry_date));
+    const daysWithData = new Set(weekMeals.map(m => m.entry_date)).size;
+    const totalCal = weekMeals.reduce((s, m) => s + Number(m.total_calories), 0);
+    const totalProtein = weekMeals.reduce((s, m) => s + Number(m.total_protein_g), 0);
+    return {
+      daysTracked: daysWithData,
+      avgCalories: daysWithData > 0 ? Math.round(totalCal / daysWithData) : 0,
+      avgProtein: daysWithData > 0 ? Math.round(totalProtein / daysWithData) : 0,
+    };
+  }, [allMeals]);
 
   const calorieTarget = goals?.calorie_target || 2000;
   const remaining = calorieTarget - todayTotals.calories;
@@ -144,6 +190,9 @@ export default function DashboardPage() {
 
   const displayName = profile?.name || profile?.email?.split('@')[0] || '';
 
+  // Weekly trend vs goal
+  const weeklyTrendPct = calorieTarget > 0 ? Math.round((weeklyReport.avgCalories / calorieTarget) * 100) : 0;
+
   return (
     <motion.div
       className="page-container space-y-5"
@@ -167,6 +216,31 @@ export default function DashboardPage() {
           <Flame className="h-3.5 w-3.5" />
           {t('dashboard.goal')}
         </motion.div>
+      </motion.div>
+
+      {/* Streak Counter */}
+      <motion.div
+        className="flex items-center gap-3 rounded-2xl p-3.5 border border-energy/30"
+        style={{ background: 'linear-gradient(135deg, hsl(var(--energy) / 0.08), hsl(var(--energy) / 0.03))' }}
+        variants={fadeUp}
+      >
+        <motion.div
+          className="w-12 h-12 rounded-xl flex items-center justify-center"
+          style={{ background: 'linear-gradient(135deg, hsl(var(--energy) / 0.2), hsl(var(--energy) / 0.1))' }}
+          animate={streak > 0 ? { scale: [1, 1.1, 1] } : {}}
+          transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
+        >
+          <Flame className="h-6 w-6 text-energy" />
+        </motion.div>
+        <div className="flex-1">
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-foreground tabular-nums">{streak}</span>
+            <span className="text-sm font-bold text-muted-foreground">{t('dashboard.streak')}</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {streak === 0 ? t('dashboard.streakEmpty') : '🔥'}
+          </p>
+        </div>
       </motion.div>
 
       {/* Motivational Message */}
@@ -282,6 +356,47 @@ export default function DashboardPage() {
             delay={0.3}
           />
         </div>
+      </motion.div>
+
+      {/* Weekly Report */}
+      <motion.div
+        className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
+        variants={fadeUp}
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <BarChart3 className="h-4 w-4 text-primary" />
+          <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">
+            {t('dashboard.weeklyReport')}
+          </h3>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="text-center p-2 rounded-xl bg-muted/50">
+            <p className="text-lg font-black text-foreground tabular-nums">{weeklyReport.avgCalories}</p>
+            <p className="text-[10px] text-muted-foreground font-medium">{t('dashboard.avgCalories')}</p>
+          </div>
+          <div className="text-center p-2 rounded-xl bg-muted/50">
+            <p className="text-lg font-black text-protein tabular-nums">{weeklyReport.avgProtein}g</p>
+            <p className="text-[10px] text-muted-foreground font-medium">{t('dashboard.avgProtein')}</p>
+          </div>
+          <div className="text-center p-2 rounded-xl bg-muted/50">
+            <p className="text-lg font-black text-foreground tabular-nums">{weeklyReport.daysTracked}<span className="text-xs text-muted-foreground">/7</span></p>
+            <p className="text-[10px] text-muted-foreground font-medium">{t('dashboard.daysTracked')}</p>
+          </div>
+        </div>
+        {weeklyReport.daysTracked > 0 && (
+          <div className="mt-3 flex items-center gap-2">
+            <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+              <motion.div
+                className="h-full rounded-full"
+                style={{ background: `linear-gradient(90deg, hsl(var(--primary)), hsl(var(--energy)))` }}
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(weeklyTrendPct, 100)}%` }}
+                transition={{ duration: 1, delay: 0.5 }}
+              />
+            </div>
+            <span className="text-xs font-bold text-muted-foreground tabular-nums">{weeklyTrendPct}%</span>
+          </div>
+        )}
       </motion.div>
 
       {/* Hints */}
