@@ -215,7 +215,7 @@ export default function MealsPage() {
             <span className="font-medium">{currentMealType?.label}</span>
           </div>
 
-          <button onClick={handleTakePhoto} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
+          <label htmlFor="camera-input" className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors cursor-pointer">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
               <Camera className="h-6 w-6 text-primary" />
             </div>
@@ -223,9 +223,9 @@ export default function MealsPage() {
               <p className="font-medium">{t('meals.takePhoto')}</p>
               <p className="text-xs text-muted-foreground">{t('meals.aiDescription')}</p>
             </div>
-          </button>
+          </label>
 
-          <button onClick={() => fileInputRef.current?.click()} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
+          <label htmlFor="file-input" className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors cursor-pointer">
             <div className="w-12 h-12 rounded-2xl bg-info/10 flex items-center justify-center">
               <Upload className="h-6 w-6 text-info" />
             </div>
@@ -233,7 +233,7 @@ export default function MealsPage() {
               <p className="font-medium">{t('meals.uploadImage')}</p>
               <p className="text-xs text-muted-foreground">{t('meals.aiDescription')}</p>
             </div>
-          </button>
+          </label>
 
           <button onClick={handleManualEntry} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-warning/10 flex items-center justify-center">
