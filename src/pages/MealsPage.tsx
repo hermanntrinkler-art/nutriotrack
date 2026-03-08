@@ -209,39 +209,39 @@ export default function MealsPage() {
             <span className="font-medium">{currentMealType?.label}</span>
           </div>
 
-          <div className="relative nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
+          <div className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
               <Camera className="h-6 w-6 text-primary" />
             </div>
-            <div className="text-left">
+            <div className="flex-1">
               <p className="font-medium">{t('meals.takePhoto')}</p>
-              <p className="text-xs text-muted-foreground">{t('meals.aiDescription')}</p>
+              <p className="text-xs text-muted-foreground mb-2">{t('meals.aiDescription')}</p>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleCameraSelect}
+                className="w-full text-sm text-muted-foreground file:mr-3 file:rounded-xl file:border-0 file:bg-primary file:text-primary-foreground file:px-4 file:py-2 file:font-medium"
+                aria-label={t('meals.takePhoto')}
+              />
             </div>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="absolute inset-0 z-10 opacity-0 cursor-pointer"
-              onChange={handleCameraSelect}
-              aria-label={t('meals.takePhoto')}
-            />
           </div>
 
-          <div className="relative nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
+          <div className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-info/10 flex items-center justify-center">
               <Upload className="h-6 w-6 text-info" />
             </div>
-            <div className="text-left">
+            <div className="flex-1">
               <p className="font-medium">{t('meals.uploadImage')}</p>
-              <p className="text-xs text-muted-foreground">{t('meals.aiDescription')}</p>
+              <p className="text-xs text-muted-foreground mb-2">{t('meals.aiDescription')}</p>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="w-full text-sm text-muted-foreground file:mr-3 file:rounded-xl file:border-0 file:bg-info file:text-info-foreground file:px-4 file:py-2 file:font-medium"
+                aria-label={t('meals.uploadImage')}
+              />
             </div>
-            <input
-              type="file"
-              accept="image/*"
-              className="absolute inset-0 z-10 opacity-0 cursor-pointer"
-              onChange={handleFileSelect}
-              aria-label={t('meals.uploadImage')}
-            />
           </div>
 
           <button onClick={handleManualEntry} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
