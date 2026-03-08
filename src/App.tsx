@@ -12,7 +12,7 @@ import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import OnboardingPage from "@/pages/OnboardingPage";
 import DashboardPage from "@/pages/DashboardPage";
-import MealsPage from "@/pages/MealsPage";
+import EditMealPage from "@/pages/EditMealPage";
 import HistoryPage from "@/pages/HistoryPage";
 import WeightPage from "@/pages/WeightPage";
 import ProfilePage from "@/pages/ProfilePage";
