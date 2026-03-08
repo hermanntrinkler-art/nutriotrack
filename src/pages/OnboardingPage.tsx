@@ -7,18 +7,37 @@ import { calculateNutrition } from '@/lib/nutrition';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, User, Target, Activity, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import logo from '@/assets/logo.png';
 
 type Sex = 'male' | 'female' | 'other';
 type ActivityLevel = 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active' | 'extremely_active';
 type GoalType = 'lose' | 'maintain' | 'gain';
 
+const slideVariants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 80 : -80,
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+  },
+  exit: (direction: number) => ({
+    x: direction < 0 ? 80 : -80,
+    opacity: 0,
+  }),
+};
+
+const stepIcons = [User, Target, Activity];
+
 export default function OnboardingPage() {
   const { user, refreshProfile } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const [sex, setSex] = useState<Sex>('male');
@@ -31,7 +50,6 @@ export default function OnboardingPage() {
   const [goalType, setGoalType] = useState<GoalType>('lose');
   const [loaded, setLoaded] = useState(false);
 
-  // Pre-fill from existing user_goals
   useEffect(() => {
     if (!user || loaded) return;
     supabase.from('user_goals').select('*').eq('user_id', user.id).single()
@@ -52,10 +70,13 @@ export default function OnboardingPage() {
   }, [user, loaded]);
 
   const steps = [
-    { title: t('onboarding.bodyInfo'), key: 'body' },
-    { title: t('onboarding.goals'), key: 'goals' },
-    { title: t('onboarding.activity'), key: 'activity' },
+    { title: t('onboarding.bodyInfo'), key: 'body', icon: User },
+    { title: t('onboarding.goals'), key: 'goals', icon: Target },
+    { title: t('onboarding.activity'), key: 'activity', icon: Activity },
   ];
+
+  const goNext = () => { setDirection(1); setStep(s => s + 1); };
+  const goBack = () => { setDirection(-1); setStep(s => s - 1); };
 
   const handleFinish = async () => {
     if (!user) return;
@@ -86,7 +107,6 @@ export default function OnboardingPage() {
       carbs_target_g: calc.carbsTarget,
     } as any, { onConflict: 'user_id' });
 
-    // Also log initial weight
     await supabase.from('weight_entries').insert({
       user_id: user.id,
       weight_kg: Number(currentWeight),
@@ -105,169 +125,242 @@ export default function OnboardingPage() {
     return true;
   };
 
-  const sexOptions: { value: Sex; label: string }[] = [
-    { value: 'male', label: t('onboarding.male') },
-    { value: 'female', label: t('onboarding.female') },
-    { value: 'other', label: t('onboarding.other') },
+  const sexOptions: { value: Sex; label: string; emoji: string }[] = [
+    { value: 'male', label: t('onboarding.male'), emoji: '👨' },
+    { value: 'female', label: t('onboarding.female'), emoji: '👩' },
+    { value: 'other', label: t('onboarding.other'), emoji: '🧑' },
   ];
 
-  const activityOptions: { value: ActivityLevel; label: string; desc: string }[] = [
-    { value: 'sedentary', label: t('onboarding.sedentary'), desc: t('onboarding.sedentaryDesc') },
-    { value: 'lightly_active', label: t('onboarding.lightlyActive'), desc: t('onboarding.lightlyActiveDesc') },
-    { value: 'moderately_active', label: t('onboarding.moderatelyActive'), desc: t('onboarding.moderatelyActiveDesc') },
-    { value: 'very_active', label: t('onboarding.veryActive'), desc: t('onboarding.veryActiveDesc') },
-    { value: 'extremely_active', label: t('onboarding.extremelyActive'), desc: t('onboarding.extremelyActiveDesc') },
+  const activityOptions: { value: ActivityLevel; label: string; desc: string; emoji: string }[] = [
+    { value: 'sedentary', label: t('onboarding.sedentary'), desc: t('onboarding.sedentaryDesc'), emoji: '🪑' },
+    { value: 'lightly_active', label: t('onboarding.lightlyActive'), desc: t('onboarding.lightlyActiveDesc'), emoji: '🚶' },
+    { value: 'moderately_active', label: t('onboarding.moderatelyActive'), desc: t('onboarding.moderatelyActiveDesc'), emoji: '🏃' },
+    { value: 'very_active', label: t('onboarding.veryActive'), desc: t('onboarding.veryActiveDesc'), emoji: '🏋️' },
+    { value: 'extremely_active', label: t('onboarding.extremelyActive'), desc: t('onboarding.extremelyActiveDesc'), emoji: '⚡' },
   ];
 
-  const goalOptions: { value: GoalType; label: string }[] = [
-    { value: 'lose', label: t('onboarding.lose') },
-    { value: 'maintain', label: t('onboarding.maintain') },
-    { value: 'gain', label: t('onboarding.gain') },
+  const goalOptions: { value: GoalType; label: string; emoji: string }[] = [
+    { value: 'lose', label: t('onboarding.lose'), emoji: '📉' },
+    { value: 'maintain', label: t('onboarding.maintain'), emoji: '⚖️' },
+    { value: 'gain', label: t('onboarding.gain'), emoji: '📈' },
   ];
+
+  const progressPct = ((step + 1) / steps.length) * 100;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
-      <div className="px-6 pt-8 pb-4">
-        <div className="flex items-center gap-2 mb-6">
-          <img src={logo} alt="NutrioTrack" className="h-8" />
-          <span className="font-bold text-lg">NutrioTrack</span>
+      <motion.div
+        className="px-6 pt-8 pb-4"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="flex items-center gap-2.5 mb-5">
+          <img src={logo} alt="NutrioTrack" className="h-10" />
+          <span className="font-bold text-lg tracking-tight">NutrioTrack</span>
         </div>
-        <h1 className="text-2xl font-bold">{t('onboarding.title')}</h1>
-        <p className="text-muted-foreground text-sm mt-1">{t('onboarding.subtitle')}</p>
+        <div className="flex items-center gap-2.5">
+          <Sparkles className="h-5 w-5 text-primary" />
+          <div>
+            <h1 className="text-xl font-bold">{t('onboarding.title')}</h1>
+            <p className="text-muted-foreground text-sm">{t('onboarding.subtitle')}</p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Animated progress bar */}
+      <div className="px-6 pb-5">
+        <div className="relative">
+          {/* Step icons */}
+          <div className="flex justify-between mb-3">
+            {steps.map((s, i) => {
+              const Icon = stepIcons[i];
+              const isActive = i <= step;
+              const isCurrent = i === step;
+              return (
+                <motion.div
+                  key={s.key}
+                  className="flex flex-col items-center gap-1"
+                  animate={{ scale: isCurrent ? 1.1 : 1 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                >
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-300 ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground shadow-md'
+                      : 'bg-muted text-muted-foreground'
+                  }`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <span className={`text-[10px] font-medium transition-colors duration-300 ${
+                    isActive ? 'text-primary' : 'text-muted-foreground'
+                  }`}>
+                    {s.title}
+                  </span>
+                </motion.div>
+              );
+            })}
+          </div>
+          {/* Bar */}
+          <div className="h-2 rounded-full bg-muted overflow-hidden">
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70"
+              initial={{ width: '0%' }}
+              animate={{ width: `${progressPct}%` }}
+              transition={{ duration: 0.5, ease: 'easeOut' as const }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-2 text-center">
+            {t('onboarding.step')} {step + 1} {t('onboarding.of')} {steps.length}
+          </p>
+        </div>
       </div>
 
-      {/* Step indicator */}
-      <div className="px-6 pb-4">
-        <div className="flex items-center gap-2">
-          {steps.map((s, i) => (
-            <div key={s.key} className="flex items-center gap-2 flex-1">
-              <div className={`h-1.5 rounded-full flex-1 transition-colors ${i <= step ? 'bg-primary' : 'bg-muted'}`} />
-            </div>
-          ))}
-        </div>
-        <p className="text-sm text-muted-foreground mt-2">
-          {t('onboarding.step')} {step + 1} {t('onboarding.of')} {steps.length} – {steps[step].title}
-        </p>
-      </div>
-
-      {/* Step content */}
-      <div className="flex-1 px-6 pb-6 animate-fade-in">
-        {step === 0 && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>{t('onboarding.sex')}</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {sexOptions.map(opt => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setSex(opt.value)}
-                    className={`py-3 px-2 rounded-xl text-sm font-medium transition-colors border ${
-                      sex === opt.value
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-card border-border text-foreground hover:bg-accent'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+      {/* Step content with slide animation */}
+      <div className="flex-1 px-6 pb-6 overflow-hidden">
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={step}
+            custom={direction}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.35, ease: 'easeOut' as const }}
+          >
+            {step === 0 && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>{t('onboarding.sex')}</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {sexOptions.map(opt => (
+                      <motion.button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setSex(opt.value)}
+                        whileTap={{ scale: 0.95 }}
+                        className={`py-3.5 px-2 rounded-xl text-sm font-medium transition-colors border ${
+                          sex === opt.value
+                            ? 'bg-primary text-primary-foreground border-primary shadow-md'
+                            : 'bg-card border-border text-foreground hover:bg-accent'
+                        }`}
+                      >
+                        <span className="text-lg block mb-0.5">{opt.emoji}</span>
+                        {opt.label}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="age">{t('onboarding.age')}</Label>
+                  <Input id="age" type="number" value={age} onChange={e => setAge(e.target.value)} min={10} max={120} placeholder="25" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="height">{t('onboarding.height')}</Label>
+                  <Input id="height" type="number" value={height} onChange={e => setHeight(e.target.value)} min={100} max={250} placeholder="175" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="currentWeight">{t('onboarding.currentWeight')}</Label>
+                  <Input id="currentWeight" type="number" step="0.1" value={currentWeight} onChange={e => setCurrentWeight(e.target.value)} min={30} max={300} placeholder="80" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="startWeight">{t('onboarding.startWeight')}</Label>
+                  <Input id="startWeight" type="number" step="0.1" value={startWeight} onChange={e => setStartWeight(e.target.value)} placeholder={currentWeight || '80'} />
+                </div>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="age">{t('onboarding.age')}</Label>
-              <Input id="age" type="number" value={age} onChange={e => setAge(e.target.value)} min={10} max={120} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="height">{t('onboarding.height')}</Label>
-              <Input id="height" type="number" value={height} onChange={e => setHeight(e.target.value)} min={100} max={250} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="currentWeight">{t('onboarding.currentWeight')}</Label>
-              <Input id="currentWeight" type="number" step="0.1" value={currentWeight} onChange={e => setCurrentWeight(e.target.value)} min={30} max={300} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="startWeight">{t('onboarding.startWeight')}</Label>
-              <Input id="startWeight" type="number" step="0.1" value={startWeight} onChange={e => setStartWeight(e.target.value)} placeholder={currentWeight || ''} />
-            </div>
-          </div>
-        )}
+            )}
 
-        {step === 1 && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="goalWeight">{t('onboarding.goalWeight')}</Label>
-              <Input id="goalWeight" type="number" step="0.1" value={goalWeight} onChange={e => setGoalWeight(e.target.value)} min={30} max={300} />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('onboarding.goalType')}</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {goalOptions.map(opt => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setGoalType(opt.value)}
-                    className={`py-3 px-2 rounded-xl text-sm font-medium transition-colors border ${
-                      goalType === opt.value
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-card border-border text-foreground hover:bg-accent'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+            {step === 1 && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="goalWeight">{t('onboarding.goalWeight')}</Label>
+                  <Input id="goalWeight" type="number" step="0.1" value={goalWeight} onChange={e => setGoalWeight(e.target.value)} min={30} max={300} placeholder="70" />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('onboarding.goalType')}</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {goalOptions.map(opt => (
+                      <motion.button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setGoalType(opt.value)}
+                        whileTap={{ scale: 0.95 }}
+                        className={`py-3.5 px-2 rounded-xl text-sm font-medium transition-colors border ${
+                          goalType === opt.value
+                            ? 'bg-primary text-primary-foreground border-primary shadow-md'
+                            : 'bg-card border-border text-foreground hover:bg-accent'
+                        }`}
+                      >
+                        <span className="text-lg block mb-0.5">{opt.emoji}</span>
+                        {opt.label}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {step === 2 && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>{t('onboarding.activityLevel')}</Label>
-              <div className="space-y-2">
-                {activityOptions.map(opt => (
-                  <button
+            {step === 2 && (
+              <div className="space-y-3">
+                <Label>{t('onboarding.activityLevel')}</Label>
+                {activityOptions.map((opt, i) => (
+                  <motion.button
                     key={opt.value}
                     type="button"
                     onClick={() => setActivityLevel(opt.value)}
-                    className={`w-full py-3 px-4 rounded-xl text-left transition-colors border ${
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: i * 0.06 }}
+                    whileTap={{ scale: 0.97 }}
+                    className={`w-full py-3.5 px-4 rounded-xl text-left transition-colors border flex items-center gap-3 ${
                       activityLevel === opt.value
-                        ? 'bg-primary text-primary-foreground border-primary'
+                        ? 'bg-primary text-primary-foreground border-primary shadow-md'
                         : 'bg-card border-border text-foreground hover:bg-accent'
                     }`}
                   >
-                    <span className="text-sm font-medium">{opt.label}</span>
-                    <span className={`block text-xs mt-0.5 ${activityLevel === opt.value ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                      {opt.desc}
-                    </span>
-                  </button>
+                    <span className="text-xl flex-shrink-0">{opt.emoji}</span>
+                    <div>
+                      <span className="text-sm font-medium block">{opt.label}</span>
+                      <span className={`text-xs mt-0.5 block ${activityLevel === opt.value ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                        {opt.desc}
+                      </span>
+                    </div>
+                  </motion.button>
                 ))}
               </div>
-            </div>
-          </div>
-        )}
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Navigation */}
-      <div className="px-6 pb-8 flex gap-3">
+      <motion.div
+        className="px-6 pb-8 flex gap-3"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+      >
         {step > 0 && (
-          <Button variant="outline" onClick={() => setStep(s => s - 1)} className="flex-1">
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            {t('onboarding.back')}
-          </Button>
+          <motion.div className="flex-1" whileTap={{ scale: 0.97 }}>
+            <Button variant="outline" onClick={goBack} className="w-full rounded-xl h-11">
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              {t('onboarding.back')}
+            </Button>
+          </motion.div>
         )}
-        {step < steps.length - 1 ? (
-          <Button onClick={() => setStep(s => s + 1)} disabled={!canNext()} className="flex-1">
-            {t('onboarding.next')}
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
-        ) : (
-          <Button onClick={handleFinish} disabled={loading || !canNext()} className="flex-1">
-            {loading ? t('common.loading') : t('onboarding.finish')}
-          </Button>
-        )}
-      </div>
+        <motion.div className="flex-1" whileTap={{ scale: 0.97 }}>
+          {step < steps.length - 1 ? (
+            <Button onClick={goNext} disabled={!canNext()} className="w-full rounded-xl h-11 text-base font-semibold">
+              {t('onboarding.next')}
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          ) : (
+            <Button onClick={handleFinish} disabled={loading || !canNext()} className="w-full rounded-xl h-11 text-base font-semibold">
+              {loading ? t('common.loading') : t('onboarding.finish')}
+            </Button>
+          )}
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
