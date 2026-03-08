@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, TrendingDown, TrendingUp, Minus, Flame, Zap, Dumbbell, Droplets, Sparkles, CalendarDays, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import WaterTracker from '@/components/WaterTracker';
 
 // --- Animated Macro Ring ---
 function MacroRing({ label, current, target, color, icon: Icon, delay = 0 }: {
@@ -398,6 +399,9 @@ export default function DashboardPage() {
           </div>
         )}
       </motion.div>
+
+      {/* Water Tracker */}
+      <WaterTracker />
 
       {/* Hints */}
       {hints.length > 0 && (

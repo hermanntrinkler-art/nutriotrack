@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
@@ -13,6 +13,8 @@ import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
 import { motion } from 'framer-motion';
 import { hapticFeedback } from '@/lib/haptics';
+import AchievementsBadges from '@/components/AchievementsBadges';
+import type { MealEntry } from '@/lib/types';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -40,6 +42,8 @@ export default function ProfilePage() {
   const [intensity, setIntensity] = useState(2);
   const [saving, setSaving] = useState(false);
   const [previewCalories, setPreviewCalories] = useState<number | null>(null);
+  const [allMeals, setAllMeals] = useState<MealEntry[]>([]);
+  const [weightEntries, setWeightEntries] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -50,6 +54,10 @@ export default function ProfilePage() {
           setIntensity((data as any).deficit_intensity || 2);
         }
       });
+    supabase.from('meal_entries').select('*').eq('user_id', user.id)
+      .then(({ data }) => setAllMeals((data || []) as any));
+    supabase.from('weight_entries').select('*').eq('user_id', user.id).order('entry_date', { ascending: true })
+      .then(({ data }) => setWeightEntries(data || []));
   }, [user]);
 
   useEffect(() => {
@@ -198,6 +206,32 @@ export default function ProfilePage() {
           </div>
         </motion.div>
       )}
+
+      {/* Achievements */}
+      <motion.div variants={fadeUp}>
+        <AchievementsBadges
+          totalMeals={allMeals.length}
+          streak={(() => {
+            const uniqueDays = new Set(allMeals.map(m => m.entry_date));
+            const today = new Date();
+            let s = 0;
+            for (let i = 0; i < 365; i++) {
+              const d = new Date(today);
+              d.setDate(d.getDate() - i);
+              const ds = d.toISOString().split('T')[0];
+              if (uniqueDays.has(ds)) { s++; } else { if (i === 0) continue; break; }
+            }
+            return s;
+          })()}
+          goalReached={
+            goals?.goal_weight_kg && weightEntries.length > 0
+              ? (goals.goal_type === 'lose'
+                ? Number(weightEntries[weightEntries.length - 1]?.weight_kg) <= Number(goals.goal_weight_kg)
+                : Number(weightEntries[weightEntries.length - 1]?.weight_kg) >= Number(goals.goal_weight_kg))
+              : false
+          }
+        />
+      </motion.div>
 
       {/* Deficit Intensity Slider */}
       {isLoseOrGain && goals && (
