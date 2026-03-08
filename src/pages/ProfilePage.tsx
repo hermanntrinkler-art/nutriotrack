@@ -83,6 +83,15 @@ export default function ProfilePage() {
   const goalType = goals?.goal_type;
   const isLoseOrGain = goalType === 'lose' || goalType === 'gain';
 
+  const activityDescMap: Record<string, { label: string; desc: string }> = {
+    sedentary: { label: t('onboarding.sedentary'), desc: t('onboarding.sedentaryDesc') },
+    lightly_active: { label: t('onboarding.lightlyActive'), desc: t('onboarding.lightlyActiveDesc') },
+    moderately_active: { label: t('onboarding.moderatelyActive'), desc: t('onboarding.moderatelyActiveDesc') },
+    very_active: { label: t('onboarding.veryActive'), desc: t('onboarding.veryActiveDesc') },
+    extremely_active: { label: t('onboarding.extremelyActive'), desc: t('onboarding.extremelyActiveDesc') },
+  };
+  const currentActivity = activityDescMap[goals?.activity_level || 'moderately_active'];
+
   const getIntensityLabel = (val: number) => {
     const key = `profile.intensity${val}` as any;
     return t(key);
