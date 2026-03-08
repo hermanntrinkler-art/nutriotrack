@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
@@ -29,6 +29,27 @@ export default function OnboardingPage() {
   const [goalWeight, setGoalWeight] = useState('');
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderately_active');
   const [goalType, setGoalType] = useState<GoalType>('lose');
+  const [loaded, setLoaded] = useState(false);
+
+  // Pre-fill from existing user_goals
+  useEffect(() => {
+    if (!user || loaded) return;
+    supabase.from('user_goals').select('*').eq('user_id', user.id).single()
+      .then(({ data }) => {
+        if (data) {
+          const g = data as any;
+          if (g.sex) setSex(g.sex);
+          if (g.age) setAge(String(g.age));
+          if (g.height_cm) setHeight(String(g.height_cm));
+          if (g.current_weight_kg) setCurrentWeight(String(g.current_weight_kg));
+          if (g.start_weight_kg) setStartWeight(String(g.start_weight_kg));
+          if (g.goal_weight_kg) setGoalWeight(String(g.goal_weight_kg));
+          if (g.activity_level) setActivityLevel(g.activity_level);
+          if (g.goal_type) setGoalType(g.goal_type);
+        }
+        setLoaded(true);
+      });
+  }, [user, loaded]);
 
   const steps = [
     { title: t('onboarding.bodyInfo'), key: 'body' },
