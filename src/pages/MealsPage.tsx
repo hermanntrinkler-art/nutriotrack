@@ -72,10 +72,71 @@ export default function MealsPage() {
     }
   };
 
-  const handleCameraSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleImageUpload(file);
-    e.currentTarget.value = '';
+  const stopCamera = () => {
+    cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    cameraStreamRef.current = null;
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setCameraOpen(false);
+    setCameraLoading(false);
+  };
+
+  const handleOpenCamera = async () => {
+    setCameraError(null);
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      toast.error('Kamera wird auf diesem Gerät nicht unterstützt.');
+      return;
+    }
+
+    try {
+      setCameraLoading(true);
+      // CRITICAL: called directly in user click handler
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false,
+      });
+      cameraStreamRef.current = stream;
+      setCameraOpen(true);
+    } catch (error) {
+      setCameraError('Kamerazugriff blockiert. Bitte Berechtigung erlauben.');
+      toast.error('Kein Kamerazugriff. Bitte Browser-App Berechtigung prüfen.');
+    } finally {
+      setCameraLoading(false);
+    }
+  };
+
+  const handleCapturePhoto = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const canvas = document.createElement('canvas');
+    const width = video.videoWidth || 1280;
+    const height = video.videoHeight || 720;
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext('2d');
+    if (!context) {
+      toast.error('Foto konnte nicht verarbeitet werden.');
+      return;
+    }
+
+    context.drawImage(video, 0, 0, width, height);
+
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, 'image/jpeg', 0.9);
+    });
+
+    if (!blob) {
+      toast.error('Foto konnte nicht erstellt werden.');
+      return;
+    }
+
+    stopCamera();
+    const file = new File([blob], `camera-${Date.now()}.jpg`, { type: 'image/jpeg' });
+    handleImageUpload(file);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,6 +144,18 @@ export default function MealsPage() {
     if (file) handleImageUpload(file);
     e.currentTarget.value = '';
   };
+
+  useEffect(() => {
+    if (!cameraOpen || !videoRef.current || !cameraStreamRef.current) return;
+    videoRef.current.srcObject = cameraStreamRef.current;
+    videoRef.current.play().catch(() => undefined);
+  }, [cameraOpen]);
+
+  useEffect(() => {
+    return () => {
+      cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
 
   const handleManualEntry = () => {
     setIsAiResult(false);
