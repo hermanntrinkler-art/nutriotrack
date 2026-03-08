@@ -159,6 +159,40 @@ export default function DashboardPage() {
     };
   }, [allMeals]);
 
+  // Yesterday comparison
+  const yesterdayTotals = useMemo(() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = yesterday.toISOString().split('T')[0];
+    const yMeals = allMeals.filter(m => m.entry_date === yStr);
+    return {
+      calories: yMeals.reduce((s, m) => s + Number(m.total_calories), 0),
+      protein: yMeals.reduce((s, m) => s + Number(m.total_protein_g), 0),
+      fat: yMeals.reduce((s, m) => s + Number(m.total_fat_g), 0),
+      carbs: yMeals.reduce((s, m) => s + Number(m.total_carbs_g), 0),
+    };
+  }, [allMeals]);
+
+  // 7-day macro trend data
+  const last7DaysData = useMemo(() => {
+    const today = new Date();
+    const days: { label: string; calories: number; protein: number; fat: number; carbs: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const dayMeals = allMeals.filter(m => m.entry_date === dateStr);
+      days.push({
+        label: d.toLocaleDateString(undefined, { weekday: 'narrow' }),
+        calories: dayMeals.reduce((s, m) => s + Number(m.total_calories), 0),
+        protein: dayMeals.reduce((s, m) => s + Number(m.total_protein_g), 0),
+        fat: dayMeals.reduce((s, m) => s + Number(m.total_fat_g), 0),
+        carbs: dayMeals.reduce((s, m) => s + Number(m.total_carbs_g), 0),
+      });
+    }
+    return days;
+  }, [allMeals]);
+
   const calorieTarget = goals?.calorie_target || 2000;
   const remaining = calorieTarget - todayTotals.calories;
   const calPct = Math.min((todayTotals.calories / calorieTarget) * 100, 100);
