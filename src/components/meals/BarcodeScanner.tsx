@@ -376,7 +376,13 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
             <Button
               variant="outline"
               onClick={() => {
-                scannerRef.current?.stop().catch(() => {});
+                try {
+                  const s = scannerRef.current;
+                  if (s) {
+                    const state = s.getState();
+                    if (state === 2 || state === 3) await s.stop();
+                  }
+                } catch {}
                 setScanning(false);
                 setShowManual(true);
               }}
