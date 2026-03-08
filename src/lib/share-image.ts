@@ -358,45 +358,53 @@ export async function shareImage(blob: Blob, language: 'de' | 'en', customShareT
 
   const text = customShareText || defaultText;
 
-  // Try native share with file (shows Facebook, WhatsApp, etc. on mobile)
   if (navigator.share) {
     try {
-      const canShareFiles = navigator.canShare?.({ files: [file] });
+      const fileOnlyData: ShareData = { files: [file] };
+      const canShareFiles = !navigator.canShare || navigator.canShare(fileOnlyData);
+
+      // Best compatibility for Facebook target: share file only first
       if (canShareFiles) {
-        await navigator.share({
-          title: 'NutrioTrack',
-          text,
-          files: [file],
-        });
+        await navigator.share(fileOnlyData);
         return true;
       }
+
+      // Fallback: text share if file share is not supported
+      await navigator.share({
+        title: 'NutrioTrack',
+        text,
+      });
+      return true;
     } catch (e) {
-      // User cancelled or error – fall through
       if ((e as Error)?.name === 'AbortError') return true;
     }
   }
 
-  // Fallback: save to device (works on all browsers)
+  // Fallback: save/open image
+  const url = URL.createObjectURL(blob);
   try {
-    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = 'nutriotrack-achievement.png';
+    a.target = '_blank';
+    a.rel = 'noopener';
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
-    // Clean up after small delay to ensure download starts
     setTimeout(() => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    }, 500);
+    }, 1000);
     return false;
   } catch {
-    // Last resort: open image in new tab so user can save/share manually
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
+    const win = window.open(url, '_blank', 'noopener,noreferrer');
+    if (!win) {
+      // Keep URL alive briefly even if popup is blocked
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      return false;
+    }
     setTimeout(() => URL.revokeObjectURL(url), 60000);
-    return false;
+    return true;
   }
 }
 
