@@ -50,8 +50,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-background">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center space-y-2">
-          <img src={logo} alt="Snap2Fit" className="h-16 mx-auto mb-2" />
-          <h1 className="text-2xl font-bold text-foreground">Snap2Fit</h1>
+          <img src={logo} alt="Snap2Fit" className="h-24 mx-auto mb-2 object-contain" />
           <p className="text-muted-foreground text-sm">{t('auth.subtitle')}</p>
         </div>
 
