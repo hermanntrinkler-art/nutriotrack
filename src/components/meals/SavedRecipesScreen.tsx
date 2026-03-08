@@ -61,7 +61,7 @@ export default function SavedRecipesScreen({ onSelect, onCancel }: SavedRecipesS
 
   const handleSelect = async (recipe: SavedRecipe) => {
     if (!user) return;
-    hapticFeedback('medium');
+    hapticFeedback('success');
 
     // Load recipe items
     const { data: itemsData } = await supabase
