@@ -1,14 +1,17 @@
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Flame, Utensils, Target, Award, Star } from 'lucide-react';
+import { Trophy, Flame, Utensils, Target, Award, Star, Share2, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import type { MealEntry } from '@/lib/types';
 import { fireCenterBurst } from '@/lib/confetti';
+import { generateShareImage, shareImage } from '@/lib/share-image';
+import { toast } from 'sonner';
 
 interface AchievementsBadgesProps {
   totalMeals: number;
   streak: number;
   goalReached: boolean;
+  userName?: string;
 }
 
 interface Achievement {
@@ -30,8 +33,9 @@ const stagger = {
   show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
 };
 
-export default function AchievementsBadges({ totalMeals, streak, goalReached }: AchievementsBadgesProps) {
-  const { t } = useTranslation();
+export default function AchievementsBadges({ totalMeals, streak, goalReached, userName = '' }: AchievementsBadgesProps) {
+  const { t, language } = useTranslation();
+  const [sharing, setSharing] = useState(false);
 
   const achievements: Achievement[] = useMemo(() => [
     {
@@ -95,6 +99,28 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached }: 
     prevUnlocked.current = unlockedCount;
   }, [unlockedCount]);
 
+  const handleShare = async () => {
+    setSharing(true);
+    try {
+      const blob = await generateShareImage({
+        name: userName,
+        streak,
+        totalMeals,
+        unlockedAchievements: unlockedCount,
+        totalAchievements: achievements.length,
+        language: language as 'de' | 'en',
+      });
+      const shared = await shareImage(blob, language as 'de' | 'en');
+      if (!shared) {
+        toast.success(language === 'de' ? 'Bild heruntergeladen!' : 'Image downloaded!');
+      }
+    } catch {
+      toast.error(language === 'de' ? 'Teilen fehlgeschlagen' : 'Sharing failed');
+    } finally {
+      setSharing(false);
+    }
+  };
+
   return (
     <motion.div className="nutri-card space-y-3" variants={fadeUp}>
       <div className="flex items-center justify-between">
@@ -102,7 +128,18 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached }: 
           <Trophy className="h-5 w-5 text-energy" />
           <h3 className="font-semibold text-sm">{t('profile.achievements')}</h3>
         </div>
-        <span className="text-xs font-bold text-muted-foreground">{unlockedCount}/{achievements.length}</span>
+        <div className="flex items-center gap-2">
+          <motion.button
+            onClick={handleShare}
+            disabled={sharing}
+            whileTap={{ scale: 0.9 }}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-colors disabled:opacity-50"
+          >
+            {sharing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Share2 className="h-3 w-3" />}
+            {language === 'de' ? 'Teilen' : 'Share'}
+          </motion.button>
+          <span className="text-xs font-bold text-muted-foreground">{unlockedCount}/{achievements.length}</span>
+        </div>
       </div>
 
       <motion.div

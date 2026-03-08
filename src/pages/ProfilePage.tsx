@@ -210,6 +210,7 @@ export default function ProfilePage() {
       {/* Achievements */}
       <motion.div variants={fadeUp}>
         <AchievementsBadges
+          userName={profile?.name || user?.email?.split('@')[0] || ''}
           totalMeals={allMeals.length}
           streak={(() => {
             const uniqueDays = new Set(allMeals.map(m => m.entry_date));
