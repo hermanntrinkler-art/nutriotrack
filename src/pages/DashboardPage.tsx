@@ -12,6 +12,7 @@ import WaterTracker from '@/components/WaterTracker';
 import ReminderBanner from '@/components/ReminderBanner';
 import CalendarHeatmap from '@/components/CalendarHeatmap';
 import WeeklySummaryReport from '@/components/WeeklySummaryReport';
+import MicronutrientCard from '@/components/MicronutrientCard';
 import { fireConfetti } from '@/lib/confetti';
 import { markTodayHasMeals, initReminders } from '@/components/ReminderSettings';
 
@@ -461,6 +462,9 @@ export default function DashboardPage() {
           />
         </div>
       </motion.div>
+
+      {/* Micronutrient Estimates */}
+      <MicronutrientCard />
 
       {/* 7-Day Macro Sparklines */}
       <motion.div
