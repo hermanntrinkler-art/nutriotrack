@@ -32,6 +32,7 @@ const translations = {
     'auth.checkEmail': 'Bitte bestätige deine E-Mail-Adresse.',
     'auth.orContinueWith': 'Oder weiter mit',
     'auth.googleSignIn': 'Mit Google anmelden',
+    'auth.rememberMe': 'Angemeldet bleiben',
 
     // Onboarding
     'onboarding.title': 'Lass uns loslegen!',
