@@ -1,5 +1,3 @@
-import { supabase } from '@/integrations/supabase/client';
-
 /**
  * Generates a shareable achievement image using Canvas API.
  * Returns a Blob of the PNG image.
@@ -411,28 +409,11 @@ export async function shareImage(blob: Blob, language: 'de' | 'en', customShareT
 }
 
 /**
- * Uploads the generated badge image and opens Facebook share dialog directly.
+ * Opens Facebook share dialog with a branded share page URL (professional preview).
  */
-export async function shareImageToFacebook(blob: Blob, shareText: string) {
-  const filePath = `facebook-shares/${Date.now()}-${crypto.randomUUID()}.png`;
-
-  const { error: uploadError } = await supabase.storage
-    .from('badge-images')
-    .upload(filePath, blob, {
-      contentType: 'image/png',
-      cacheControl: '3600',
-      upsert: false,
-    });
-
-  if (uploadError) {
-    console.error('Facebook image upload failed:', uploadError);
-    return false;
-  }
-
-  const { data } = supabase.storage.from('badge-images').getPublicUrl(filePath);
-  const imageUrl = data.publicUrl;
-
-  const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(imageUrl)}&quote=${encodeURIComponent(shareText)}`;
+export async function shareImageToFacebook(badgeId: string, language: 'de' | 'en', shareText: string) {
+  const shareUrl = `${window.location.origin}/share/${encodeURIComponent(badgeId)}?lang=${encodeURIComponent(language)}`;
+  const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
 
   const popup = window.open(fbShareUrl, '_blank', 'noopener,noreferrer');
   if (!popup) {
