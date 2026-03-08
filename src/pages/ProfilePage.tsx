@@ -6,8 +6,10 @@ import { calculateNutrition } from '@/lib/nutrition';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull, Activity } from 'lucide-react';
+import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull, Activity, Crown } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSubscription } from '@/hooks/useSubscription';
+import PaywallScreen from '@/components/PaywallScreen';
 
 const DEFICIT_VALUES = [300, 500, 750, 1000, 1250];
 const SURPLUS_VALUES = [200, 300, 450, 600, 800];
@@ -17,6 +19,8 @@ export default function ProfilePage() {
   const { user, profile, signOut } = useAuth();
   const { t, language, setLanguage } = useTranslation();
   const navigate = useNavigate();
+  const subscription = useSubscription();
+  const [showPaywall, setShowPaywall] = useState(false);
 
   const [goals, setGoals] = useState<any>(null);
   const [intensity, setIntensity] = useState(2);
@@ -128,6 +132,24 @@ export default function ProfilePage() {
   return (
     <div className="page-container space-y-4">
       <h1 className="text-xl font-bold">{t('profile.title')}</h1>
+
+      {/* Subscription Status */}
+      <div className="nutri-card flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Crown className={`h-5 w-5 ${subscription.isPro ? 'text-primary' : 'text-muted-foreground'}`} />
+          <div>
+            <p className="font-semibold text-sm">{t('profile.account')}</p>
+            <p className={`text-xs font-bold ${subscription.isPro ? 'text-primary' : 'text-muted-foreground'}`}>
+              {subscription.status === 'lifetime' ? t('paywall.lifetime2') : subscription.status === 'pro' ? t('paywall.pro') : t('paywall.free')}
+            </p>
+          </div>
+        </div>
+        {!subscription.isPro && (
+          <Button size="sm" onClick={() => setShowPaywall(true)}>
+            {t('paywall.upgradeButton')}
+          </Button>
+        )}
+      </div>
 
       {/* User info */}
       <div className="nutri-card flex items-center gap-4">
@@ -271,6 +293,17 @@ export default function ProfilePage() {
         <LogOut className="h-4 w-4 mr-2" />
         {t('auth.logout')}
       </Button>
+
+      {showPaywall && (
+        <PaywallScreen
+          onClose={() => setShowPaywall(false)}
+          trigger="premium_feature"
+          onUpgrade={(plan) => {
+            toast.info(t('paywall.comingSoon'));
+            setShowPaywall(false);
+          }}
+        />
+      )}
     </div>
   );
 }

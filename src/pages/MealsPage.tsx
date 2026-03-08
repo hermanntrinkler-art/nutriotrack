@@ -7,6 +7,8 @@ import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Camera, Upload, PenLine, ScanBarcode } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSubscription } from '@/hooks/useSubscription';
+import PaywallScreen from '@/components/PaywallScreen';
 
 import AnalyseScreen from '@/components/meals/AnalyseScreen';
 import EditableFoodItemsList from '@/components/meals/EditableFoodItemsList';
@@ -20,6 +22,7 @@ type Step = 'select-type' | 'select-method' | 'analyzing' | 'review' | 'confirm'
 export default function MealsPage() {
   const { user } = useAuth();
   const { t, language } = useTranslation();
+  const subscription = useSubscription();
 
   const [step, setStep] = useState<Step>('select-type');
   const [mealType, setMealType] = useState<MealType>('lunch');
@@ -32,6 +35,7 @@ export default function MealsPage() {
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraLoading, setCameraLoading] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,10 +50,19 @@ export default function MealsPage() {
   const currentMealType = mealTypes.find(m => m.value === mealType);
 
   const handleImageUpload = async (file: File) => {
+    // Check scan limit for free users
+    if (!subscription.canScanPhoto) {
+      setShowPaywall(true);
+      return;
+    }
+
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
     setStep('analyzing');
     setIsAiResult(true);
+
+    // Increment scan count before analysis
+    await subscription.incrementScanCount();
 
     try {
       const results = await analyzeFoodImage(file, language);
@@ -279,6 +292,30 @@ export default function MealsPage() {
   return (
     <div className="page-container space-y-4">
       <h1 className="text-xl font-bold">{t('meals.title')}</h1>
+
+      {/* Scan counter for free users */}
+      {!subscription.isPro && !subscription.loading && (
+        <div className="flex items-center justify-between text-xs bg-muted/50 rounded-xl px-3 py-2">
+          <span className="text-muted-foreground">
+            {t('paywall.remainingScans', { count: subscription.remainingScans })}
+          </span>
+          <button onClick={() => setShowPaywall(true)} className="text-primary font-bold">
+            {t('paywall.upgradeButton')}
+          </button>
+        </div>
+      )}
+
+      {/* Paywall */}
+      {showPaywall && (
+        <PaywallScreen
+          onClose={() => setShowPaywall(false)}
+          trigger="scan_limit"
+          onUpgrade={(plan) => {
+            toast.info(t('paywall.comingSoon'));
+            setShowPaywall(false);
+          }}
+        />
+      )}
 
       {/* Step: Select meal type */}
       {step === 'select-type' && (

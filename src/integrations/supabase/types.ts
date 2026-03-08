@@ -220,31 +220,46 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          daily_photo_scans: number
+          daily_scans_reset_date: string
           email: string | null
           id: string
           language: string | null
           name: string | null
           onboarding_completed: boolean | null
+          subscription_end_date: string | null
+          subscription_start_date: string | null
+          subscription_status: string
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          daily_photo_scans?: number
+          daily_scans_reset_date?: string
           email?: string | null
           id?: string
           language?: string | null
           name?: string | null
           onboarding_completed?: boolean | null
+          subscription_end_date?: string | null
+          subscription_start_date?: string | null
+          subscription_status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          daily_photo_scans?: number
+          daily_scans_reset_date?: string
           email?: string | null
           id?: string
           language?: string | null
           name?: string | null
           onboarding_completed?: boolean | null
+          subscription_end_date?: string | null
+          subscription_start_date?: string | null
+          subscription_status?: string
           updated_at?: string
           user_id?: string
         }
