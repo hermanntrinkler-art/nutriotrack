@@ -111,12 +111,12 @@ export default function OnboardingPage() {
     { value: 'other', label: t('onboarding.other') },
   ];
 
-  const activityOptions: { value: ActivityLevel; label: string }[] = [
-    { value: 'sedentary', label: t('onboarding.sedentary') },
-    { value: 'lightly_active', label: t('onboarding.lightlyActive') },
-    { value: 'moderately_active', label: t('onboarding.moderatelyActive') },
-    { value: 'very_active', label: t('onboarding.veryActive') },
-    { value: 'extremely_active', label: t('onboarding.extremelyActive') },
+  const activityOptions: { value: ActivityLevel; label: string; desc: string }[] = [
+    { value: 'sedentary', label: t('onboarding.sedentary'), desc: t('onboarding.sedentaryDesc') },
+    { value: 'lightly_active', label: t('onboarding.lightlyActive'), desc: t('onboarding.lightlyActiveDesc') },
+    { value: 'moderately_active', label: t('onboarding.moderatelyActive'), desc: t('onboarding.moderatelyActiveDesc') },
+    { value: 'very_active', label: t('onboarding.veryActive'), desc: t('onboarding.veryActiveDesc') },
+    { value: 'extremely_active', label: t('onboarding.extremelyActive'), desc: t('onboarding.extremelyActiveDesc') },
   ];
 
   const goalOptions: { value: GoalType; label: string }[] = [
@@ -231,13 +231,16 @@ export default function OnboardingPage() {
                     key={opt.value}
                     type="button"
                     onClick={() => setActivityLevel(opt.value)}
-                    className={`w-full py-3 px-4 rounded-xl text-sm font-medium transition-colors border text-left ${
+                    className={`w-full py-3 px-4 rounded-xl text-left transition-colors border ${
                       activityLevel === opt.value
                         ? 'bg-primary text-primary-foreground border-primary'
                         : 'bg-card border-border text-foreground hover:bg-accent'
                     }`}
                   >
-                    {opt.label}
+                    <span className="text-sm font-medium">{opt.label}</span>
+                    <span className={`block text-xs mt-0.5 ${activityLevel === opt.value ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                      {opt.desc}
+                    </span>
                   </button>
                 ))}
               </div>
