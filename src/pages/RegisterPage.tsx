@@ -52,7 +52,7 @@ export default function RegisterPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-2">
             <Leaf className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">NutriLens</h1>
+          <h1 className="text-2xl font-bold text-foreground">Snap2Fit</h1>
           <p className="text-muted-foreground text-sm">{t('auth.subtitle')}</p>
         </div>
 
