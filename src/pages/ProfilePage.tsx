@@ -14,6 +14,7 @@ import PaywallScreen from '@/components/PaywallScreen';
 import { motion } from 'framer-motion';
 import { hapticFeedback } from '@/lib/haptics';
 import AchievementsBadges from '@/components/AchievementsBadges';
+import ReminderSettings from '@/components/ReminderSettings';
 import type { MealEntry } from '@/lib/types';
 
 const fadeUp = {

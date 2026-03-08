@@ -9,7 +9,9 @@ import { Plus, TrendingDown, TrendingUp, Minus, Flame, Zap, Dumbbell, Droplets, 
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import WaterTracker from '@/components/WaterTracker';
+import ReminderBanner from '@/components/ReminderBanner';
 import { fireConfetti } from '@/lib/confetti';
+import { markTodayHasMeals, initReminders } from '@/components/ReminderSettings';
 
 // --- Animated Macro Ring ---
 function MacroRing({ label, current, target, color, icon: Icon, delay = 0 }: {
