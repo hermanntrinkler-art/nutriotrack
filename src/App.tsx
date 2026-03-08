@@ -75,12 +75,13 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<AuthRoute><LandingPage /></AuthRoute>} />
       <Route path="/login" element={<AuthRoute><LoginPage /></AuthRoute>} />
       <Route path="/register" element={<AuthRoute><RegisterPage /></AuthRoute>} />
       <Route path="/forgot-password" element={<AuthRoute><ForgotPasswordPage /></AuthRoute>} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
-      <Route path="/" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
       <Route path="/meals" element={<ProtectedRoute><AppLayout><MealsPage /></AppLayout></ProtectedRoute>} />
       <Route path="/meals/:id/edit" element={<ProtectedRoute><AppLayout><EditMealPage /></AppLayout></ProtectedRoute>} />
       <Route path="/history" element={<ProtectedRoute><AppLayout><HistoryPage /></AppLayout></ProtectedRoute>} />
