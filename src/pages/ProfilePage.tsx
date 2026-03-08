@@ -150,7 +150,7 @@ export default function ProfilePage() {
       <motion.h1 className="text-xl font-bold" variants={fadeUp}>{t('profile.title')}</motion.h1>
 
       {/* Subscription Status */}
-      <div className="nutri-card flex items-center justify-between">
+      <motion.div className="nutri-card flex items-center justify-between" variants={fadeUp}>
         <div className="flex items-center gap-3">
           <Crown className={`h-5 w-5 ${subscription.isPro ? 'text-primary' : 'text-muted-foreground'}`} />
           <div>
