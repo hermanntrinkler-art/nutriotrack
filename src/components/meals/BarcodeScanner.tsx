@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, ScanBarcode, Keyboard, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import type { AnalyzedFoodItem } from '@/lib/types';
+import { searchFoods, type FoodEntry } from '@/lib/food-database';
 
 interface BarcodeScannerProps {
   onResult: (item: AnalyzedFoodItem) => void;
