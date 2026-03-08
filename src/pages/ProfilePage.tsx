@@ -6,7 +6,7 @@ import { calculateNutrition } from '@/lib/nutrition';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull } from 'lucide-react';
+import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 
 const DEFICIT_VALUES = [300, 500, 750, 1000, 1250];
@@ -83,6 +83,15 @@ export default function ProfilePage() {
   const goalType = goals?.goal_type;
   const isLoseOrGain = goalType === 'lose' || goalType === 'gain';
 
+  const activityDescMap: Record<string, { label: string; desc: string }> = {
+    sedentary: { label: t('onboarding.sedentary'), desc: t('onboarding.sedentaryDesc') },
+    lightly_active: { label: t('onboarding.lightlyActive'), desc: t('onboarding.lightlyActiveDesc') },
+    moderately_active: { label: t('onboarding.moderatelyActive'), desc: t('onboarding.moderatelyActiveDesc') },
+    very_active: { label: t('onboarding.veryActive'), desc: t('onboarding.veryActiveDesc') },
+    extremely_active: { label: t('onboarding.extremelyActive'), desc: t('onboarding.extremelyActiveDesc') },
+  };
+  const currentActivity = activityDescMap[goals?.activity_level || 'moderately_active'];
+
   const getIntensityLabel = (val: number) => {
     const key = `profile.intensity${val}` as any;
     return t(key);
@@ -130,6 +139,17 @@ export default function ProfilePage() {
           <p className="text-sm text-muted-foreground">{user?.email}</p>
         </div>
       </div>
+
+      {/* Activity Level Info */}
+      {goals && (
+        <div className="nutri-card flex items-center gap-3">
+          <Activity className="h-5 w-5 text-primary flex-shrink-0" />
+          <div>
+            <p className="font-semibold text-sm">{currentActivity.label}</p>
+            <p className="text-xs text-muted-foreground">{currentActivity.desc}</p>
+          </div>
+        </div>
+      )}
 
       {/* Deficit Intensity Slider */}
       {isLoseOrGain && goals && (
