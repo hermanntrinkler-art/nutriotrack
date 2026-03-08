@@ -20,6 +20,7 @@ export default function MealsPage() {
   const { user } = useAuth();
   const { t, language } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<Step>('select-type');
   const [mealType, setMealType] = useState<MealType>('lunch');
