@@ -201,6 +201,22 @@ const translations = {
     'profile.onlyForLoseGain': 'Nur bei Abnehmen/Zunehmen verfügbar.',
     'profile.weeklyLoss': '~{value} kg/Woche',
     'profile.account': 'Konto',
+    'profile.theme': 'Design',
+    'profile.themeLight': 'Hell',
+    'profile.themeDark': 'Dunkel',
+    'profile.themeSystem': 'System',
+
+    // Streak
+    'dashboard.streak': 'Tage-Streak',
+    'dashboard.streakEmpty': 'Logge heute deine erste Mahlzeit!',
+    'dashboard.streakRecord': 'Rekord: {value} Tage',
+
+    // Weekly Report
+    'dashboard.weeklyReport': 'Wochenreport',
+    'dashboard.avgCalories': 'Ø Kalorien',
+    'dashboard.avgProtein': 'Ø Protein',
+    'dashboard.daysTracked': 'Tage geloggt',
+    'dashboard.weekTrend': 'Trend',
 
     // Hints
     'hint.caloriesRemaining': 'Du kannst heute noch {value} kcal essen.',
