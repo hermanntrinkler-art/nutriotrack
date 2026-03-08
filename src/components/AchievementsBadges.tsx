@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Flame, Utensils, Target, Award, Star } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import type { MealEntry } from '@/lib/types';
+import { fireCenterBurst } from '@/lib/confetti';
 
 interface AchievementsBadgesProps {
   totalMeals: number;
