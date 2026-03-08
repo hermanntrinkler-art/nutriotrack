@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import type { Easing } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
@@ -9,6 +9,7 @@ import { Plus, TrendingDown, TrendingUp, Minus, Flame, Zap, Dumbbell, Droplets, 
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import WaterTracker from '@/components/WaterTracker';
+import { fireConfetti } from '@/lib/confetti';
 
 // --- Animated Macro Ring ---
 function MacroRing({ label, current, target, color, icon: Icon, delay = 0 }: {
