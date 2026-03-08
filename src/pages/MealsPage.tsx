@@ -345,9 +345,6 @@ export default function MealsPage() {
         onSave={handleSaveEditedItem}
       />
 
-      {/* Persistent file inputs - must be outside conditional blocks */}
-      <input id="file-input" ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
-      <input id="camera-input" ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleCameraSelect} />
     </div>
   );
 }
