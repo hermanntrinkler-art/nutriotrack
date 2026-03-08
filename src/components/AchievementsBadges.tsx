@@ -1,11 +1,32 @@
 import { useMemo, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Flame, Utensils, Target, Award, Star, Share2, Loader2, Zap, Crown, Heart, Dumbbell, Salad, Scale, Clock, Sparkles } from 'lucide-react';
+import { Trophy, Share2, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { fireCenterBurst } from '@/lib/confetti';
 import { generateShareImage, shareImage } from '@/lib/share-image';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+// Badge images
+import badgeFirstMeal from '@/assets/badges/first-meal.png';
+import badgeStreak3 from '@/assets/badges/streak-3.png';
+import badgeStreak7 from '@/assets/badges/streak-7.png';
+import badgeStreak14 from '@/assets/badges/streak-14.png';
+import badgeStreak30 from '@/assets/badges/streak-30.png';
+import badgeStreak60 from '@/assets/badges/streak-60.png';
+import badgeStreak100 from '@/assets/badges/streak-100.png';
+import badgeMeal10 from '@/assets/badges/meal-10.png';
+import badgeMeal25 from '@/assets/badges/meal-25.png';
+import badgeMeal50 from '@/assets/badges/meal-50.png';
+import badgeMeal100 from '@/assets/badges/meal-100.png';
+import badgeMeal500 from '@/assets/badges/meal-500.png';
+import badgeWeight1 from '@/assets/badges/weight-1.png';
+import badgeWeight5 from '@/assets/badges/weight-5.png';
+import badgeWeight10 from '@/assets/badges/weight-10.png';
+import badgeGoalReached from '@/assets/badges/goal-reached.png';
+import badgeWeek1 from '@/assets/badges/week-1.png';
+import badgeMonth1 from '@/assets/badges/month-1.png';
+import badgeQuarter from '@/assets/badges/quarter.png';
 
 interface AchievementsBadgesProps {
   totalMeals: number;
@@ -18,7 +39,7 @@ interface AchievementsBadgesProps {
 
 interface Achievement {
   id: string;
-  icon: React.ElementType;
+  badgeImage: string;
   title: string;
   desc: string;
   shareText: string;
@@ -59,31 +80,31 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
 
   const achievements: Achievement[] = useMemo(() => [
     // Streak badges
-    { id: 'streak_3', icon: Flame, title: '3-Day Streak', desc: de ? '3 Tage am Stück geloggt' : 'Logged 3 days in a row', shareText: de ? '3 Tage am Stück getrackt – der Anfang einer Gewohnheit! 🔥' : '3 days tracked in a row – building a habit! 🔥', unlocked: streak >= 3, color: 'hsl(var(--energy))', xp: 15, category: 'streak' },
-    { id: 'streak_7', icon: Flame, title: '7-Day Streak', desc: de ? 'Eine ganze Woche durchgehalten!' : 'A full week of tracking!', shareText: de ? '7 Tage am Stück – Disziplin zahlt sich aus! 💪🔥' : '7 days in a row – consistency pays off! 💪🔥', unlocked: streak >= 7, color: 'hsl(var(--energy))', xp: 30, category: 'streak' },
-    { id: 'streak_14', icon: Zap, title: '14-Day Streak', desc: de ? '2 Wochen am Stück – stark!' : '2 weeks straight – strong!', shareText: de ? '2 Wochen Streak – nichts hält mich auf! ⚡' : '2-week streak – nothing can stop me! ⚡', unlocked: streak >= 14, color: 'hsl(var(--energy))', xp: 60, category: 'streak' },
-    { id: 'streak_30', icon: Award, title: '30-Day Streak', desc: de ? 'Ein ganzer Monat! Wahnsinn!' : 'A full month! Amazing!', shareText: de ? '30 Tage Streak! Ein ganzer Monat Disziplin! 🏅' : '30-day streak! A full month of discipline! 🏅', unlocked: streak >= 30, color: 'hsl(var(--fat))', xp: 120, category: 'streak' },
-    { id: 'streak_60', icon: Dumbbell, title: '60-Day Streak', desc: de ? 'Disziplin pur!' : 'Pure discipline!', shareText: de ? '60 Tage ohne Pause – das ist Lifestyle! 💎' : '60 days without a break – this is lifestyle! 💎', unlocked: streak >= 60, color: 'hsl(var(--protein))', xp: 200, category: 'streak' },
-    { id: 'streak_100', icon: Crown, title: '100-Day Streak', desc: de ? 'Unstoppbar! 100 Tage!' : 'Unstoppable! 100 days!', shareText: de ? '100 Tage Streak – absolut unstoppbar! 👑🔥' : '100-day streak – absolutely unstoppable! 👑🔥', unlocked: streak >= 100, color: 'hsl(var(--primary))', xp: 350, category: 'streak' },
+    { id: 'streak_3', badgeImage: badgeStreak3, title: '3-Day Streak', desc: de ? '3 Tage am Stück geloggt' : 'Logged 3 days in a row', shareText: de ? '3 Tage am Stück getrackt – der Anfang einer Gewohnheit! 🔥' : '3 days tracked in a row – building a habit! 🔥', unlocked: streak >= 3, color: 'hsl(var(--energy))', xp: 15, category: 'streak' },
+    { id: 'streak_7', badgeImage: badgeStreak7, title: '7-Day Streak', desc: de ? 'Eine ganze Woche durchgehalten!' : 'A full week of tracking!', shareText: de ? '7 Tage am Stück – Disziplin zahlt sich aus! 💪🔥' : '7 days in a row – consistency pays off! 💪🔥', unlocked: streak >= 7, color: 'hsl(var(--energy))', xp: 30, category: 'streak' },
+    { id: 'streak_14', badgeImage: badgeStreak14, title: '14-Day Streak', desc: de ? '2 Wochen am Stück – stark!' : '2 weeks straight – strong!', shareText: de ? '2 Wochen Streak – nichts hält mich auf! ⚡' : '2-week streak – nothing can stop me! ⚡', unlocked: streak >= 14, color: 'hsl(var(--energy))', xp: 60, category: 'streak' },
+    { id: 'streak_30', badgeImage: badgeStreak30, title: '30-Day Streak', desc: de ? 'Ein ganzer Monat! Wahnsinn!' : 'A full month! Amazing!', shareText: de ? '30 Tage Streak! Ein ganzer Monat Disziplin! 🏅' : '30-day streak! A full month of discipline! 🏅', unlocked: streak >= 30, color: 'hsl(var(--fat))', xp: 120, category: 'streak' },
+    { id: 'streak_60', badgeImage: badgeStreak60, title: '60-Day Streak', desc: de ? 'Disziplin pur!' : 'Pure discipline!', shareText: de ? '60 Tage ohne Pause – das ist Lifestyle! 💎' : '60 days without a break – this is lifestyle! 💎', unlocked: streak >= 60, color: 'hsl(var(--protein))', xp: 200, category: 'streak' },
+    { id: 'streak_100', badgeImage: badgeStreak100, title: '100-Day Streak', desc: de ? 'Unstoppbar! 100 Tage!' : 'Unstoppable! 100 days!', shareText: de ? '100 Tage Streak – absolut unstoppbar! 👑🔥' : '100-day streak – absolutely unstoppable! 👑🔥', unlocked: streak >= 100, color: 'hsl(var(--primary))', xp: 350, category: 'streak' },
     
     // Meal badges
-    { id: 'meal_1', icon: Utensils, title: 'First Meal', desc: de ? 'Deine Reise beginnt!' : 'Your journey begins!', shareText: de ? 'Meine erste Mahlzeit mit NutrioTrack geloggt! 🍽️' : 'Just logged my first meal with NutrioTrack! 🍽️', unlocked: totalMeals >= 1, color: 'hsl(var(--primary))', xp: 10, category: 'meals' },
-    { id: 'meal_10', icon: Salad, title: '10 Meals', desc: de ? 'Du bleibst dran!' : 'You\'re keeping at it!', shareText: de ? '10 Mahlzeiten getrackt – ich bleibe dran! 🥗' : '10 meals tracked – staying consistent! 🥗', unlocked: totalMeals >= 10, color: 'hsl(var(--carbs))', xp: 25, category: 'meals' },
-    { id: 'meal_25', icon: Star, title: '25 Meals', desc: de ? 'Silber-Status erreicht' : 'Silver status reached', shareText: de ? '25 Mahlzeiten – Silber-Status bei NutrioTrack! ⭐' : '25 meals – Silver status on NutrioTrack! ⭐', unlocked: totalMeals >= 25, color: 'hsl(var(--protein))', xp: 50, category: 'meals' },
-    { id: 'meal_50', icon: Star, title: '50 Meals', desc: de ? 'Gold-Status erreicht' : 'Gold status reached', shareText: de ? '50 Mahlzeiten getrackt – Gold-Status! 🌟' : '50 meals tracked – Gold status! 🌟', unlocked: totalMeals >= 50, color: 'hsl(var(--fat))', xp: 80, category: 'meals' },
-    { id: 'meal_100', icon: Trophy, title: '100 Meals', desc: de ? 'Platin! Echte Hingabe!' : 'Platinum! True dedication!', shareText: de ? '100 Mahlzeiten getrackt – was für eine Reise! 🏆' : '100 meals tracked – what a journey! 🏆', unlocked: totalMeals >= 100, color: 'hsl(var(--energy))', xp: 150, category: 'meals' },
-    { id: 'meal_500', icon: Crown, title: '500 Meals', desc: de ? 'Diamant-Status! Legendär!' : 'Diamond status! Legendary!', shareText: de ? '500 Mahlzeiten – Diamant-Status erreicht! 💎👑' : '500 meals – Diamond status achieved! 💎👑', unlocked: totalMeals >= 500, color: 'hsl(var(--primary))', xp: 400, category: 'meals' },
+    { id: 'meal_1', badgeImage: badgeFirstMeal, title: 'First Meal', desc: de ? 'Deine Reise beginnt!' : 'Your journey begins!', shareText: de ? 'Meine erste Mahlzeit mit NutrioTrack geloggt! 🍽️' : 'Just logged my first meal with NutrioTrack! 🍽️', unlocked: totalMeals >= 1, color: 'hsl(var(--primary))', xp: 10, category: 'meals' },
+    { id: 'meal_10', badgeImage: badgeMeal10, title: '10 Meals', desc: de ? 'Du bleibst dran!' : 'You\'re keeping at it!', shareText: de ? '10 Mahlzeiten getrackt – ich bleibe dran! 🥗' : '10 meals tracked – staying consistent! 🥗', unlocked: totalMeals >= 10, color: 'hsl(var(--carbs))', xp: 25, category: 'meals' },
+    { id: 'meal_25', badgeImage: badgeMeal25, title: '25 Meals', desc: de ? 'Silber-Status erreicht' : 'Silver status reached', shareText: de ? '25 Mahlzeiten – Silber-Status bei NutrioTrack! ⭐' : '25 meals – Silver status on NutrioTrack! ⭐', unlocked: totalMeals >= 25, color: 'hsl(var(--protein))', xp: 50, category: 'meals' },
+    { id: 'meal_50', badgeImage: badgeMeal50, title: '50 Meals', desc: de ? 'Gold-Status erreicht' : 'Gold status reached', shareText: de ? '50 Mahlzeiten getrackt – Gold-Status! 🌟' : '50 meals tracked – Gold status! 🌟', unlocked: totalMeals >= 50, color: 'hsl(var(--fat))', xp: 80, category: 'meals' },
+    { id: 'meal_100', badgeImage: badgeMeal100, title: '100 Meals', desc: de ? 'Platin! Echte Hingabe!' : 'Platinum! True dedication!', shareText: de ? '100 Mahlzeiten getrackt – was für eine Reise! 🏆' : '100 meals tracked – what a journey! 🏆', unlocked: totalMeals >= 100, color: 'hsl(var(--energy))', xp: 150, category: 'meals' },
+    { id: 'meal_500', badgeImage: badgeMeal500, title: '500 Meals', desc: de ? 'Diamant-Status! Legendär!' : 'Diamond status! Legendary!', shareText: de ? '500 Mahlzeiten – Diamant-Status erreicht! 💎👑' : '500 meals – Diamond status achieved! 💎👑', unlocked: totalMeals >= 500, color: 'hsl(var(--primary))', xp: 400, category: 'meals' },
 
     // Weight badges
-    { id: 'weight_1', icon: Scale, title: '1 kg Milestone', desc: de ? 'Erster Kilo geschafft!' : 'First kg done!', shareText: de ? 'Erstes Kilo geschafft – der Anfang ist gemacht! ⚖️' : 'First kg down – the journey has begun! ⚖️', unlocked: weightLostKg >= 1, color: 'hsl(var(--primary))', xp: 30, category: 'weight' },
-    { id: 'weight_5', icon: Scale, title: '5 kg Milestone', desc: de ? '5 kg – toller Fortschritt!' : '5 kg – great progress!', shareText: de ? '5 kg abgenommen – der Fortschritt ist real! 💪⚖️' : '5 kg down – the progress is real! 💪⚖️', unlocked: weightLostKg >= 5, color: 'hsl(var(--carbs))', xp: 80, category: 'weight' },
-    { id: 'weight_10', icon: Target, title: '10 kg Milestone', desc: de ? '10 kg! Beeindruckend!' : '10 kg! Impressive!', shareText: de ? '10 kg Meilenstein geknackt – unglaublich! 🎯' : '10 kg milestone crushed – incredible! 🎯', unlocked: weightLostKg >= 10, color: 'hsl(var(--protein))', xp: 200, category: 'weight' },
-    { id: 'goal_reached', icon: Target, title: 'Goal Reached!', desc: de ? 'Zielgewicht erreicht – Respekt!' : 'Goal weight reached – respect!', shareText: de ? 'Zielgewicht erreicht! Alles ist möglich! 🎯🏆' : 'Goal weight reached! Anything is possible! 🎯🏆', unlocked: goalReached, color: 'hsl(var(--success, var(--primary)))', xp: 500, category: 'weight' },
+    { id: 'weight_1', badgeImage: badgeWeight1, title: '1 kg Milestone', desc: de ? 'Erster Kilo geschafft!' : 'First kg done!', shareText: de ? 'Erstes Kilo geschafft – der Anfang ist gemacht! ⚖️' : 'First kg down – the journey has begun! ⚖️', unlocked: weightLostKg >= 1, color: 'hsl(var(--primary))', xp: 30, category: 'weight' },
+    { id: 'weight_5', badgeImage: badgeWeight5, title: '5 kg Milestone', desc: de ? '5 kg – toller Fortschritt!' : '5 kg – great progress!', shareText: de ? '5 kg abgenommen – der Fortschritt ist real! 💪⚖️' : '5 kg down – the progress is real! 💪⚖️', unlocked: weightLostKg >= 5, color: 'hsl(var(--carbs))', xp: 80, category: 'weight' },
+    { id: 'weight_10', badgeImage: badgeWeight10, title: '10 kg Milestone', desc: de ? '10 kg! Beeindruckend!' : '10 kg! Impressive!', shareText: de ? '10 kg Meilenstein geknackt – unglaublich! 🎯' : '10 kg milestone crushed – incredible! 🎯', unlocked: weightLostKg >= 10, color: 'hsl(var(--protein))', xp: 200, category: 'weight' },
+    { id: 'goal_reached', badgeImage: badgeGoalReached, title: 'Goal Reached!', desc: de ? 'Zielgewicht erreicht – Respekt!' : 'Goal weight reached – respect!', shareText: de ? 'Zielgewicht erreicht! Alles ist möglich! 🎯🏆' : 'Goal weight reached! Anything is possible! 🎯🏆', unlocked: goalReached, color: 'hsl(var(--success, var(--primary)))', xp: 500, category: 'weight' },
 
     // Special badges
-    { id: 'week_1', icon: Clock, title: 'First Week', desc: de ? '7 Tage dabei!' : '7 days in!', shareText: de ? 'Erste Woche mit NutrioTrack geschafft! 📅' : 'First week with NutrioTrack complete! 📅', unlocked: daysTracked >= 7, color: 'hsl(var(--info))', xp: 20, category: 'special' },
-    { id: 'month_1', icon: Heart, title: 'First Month', desc: de ? '30 Tage dabei – Gewohnheit!' : '30 days in – it\'s a habit!', shareText: de ? 'Einen Monat dabei – es ist zur Gewohnheit geworden! ❤️' : 'One month in – it\'s become a habit! ❤️', unlocked: daysTracked >= 30, color: 'hsl(var(--destructive))', xp: 100, category: 'special' },
-    { id: 'quarter', icon: Sparkles, title: '3 Months', desc: de ? 'Vierteljahr! Lifestyle!' : 'Quarter year! Lifestyle!', shareText: de ? '3 Monate NutrioTrack – das ist jetzt Lifestyle! ✨' : '3 months on NutrioTrack – this is lifestyle now! ✨', unlocked: daysTracked >= 90, color: 'hsl(var(--primary))', xp: 250, category: 'special' },
+    { id: 'week_1', badgeImage: badgeWeek1, title: 'First Week', desc: de ? '7 Tage dabei!' : '7 days in!', shareText: de ? 'Erste Woche mit NutrioTrack geschafft! 📅' : 'First week with NutrioTrack complete! 📅', unlocked: daysTracked >= 7, color: 'hsl(var(--info))', xp: 20, category: 'special' },
+    { id: 'month_1', badgeImage: badgeMonth1, title: 'First Month', desc: de ? '30 Tage dabei – Gewohnheit!' : '30 days in – it\'s a habit!', shareText: de ? 'Einen Monat dabei – es ist zur Gewohnheit geworden! ❤️' : 'One month in – it\'s become a habit! ❤️', unlocked: daysTracked >= 30, color: 'hsl(var(--destructive))', xp: 100, category: 'special' },
+    { id: 'quarter', badgeImage: badgeQuarter, title: '3 Months', desc: de ? 'Vierteljahr! Lifestyle!' : 'Quarter year! Lifestyle!', shareText: de ? '3 Monate NutrioTrack – das ist jetzt Lifestyle! ✨' : '3 months on NutrioTrack – this is lifestyle now! ✨', unlocked: daysTracked >= 90, color: 'hsl(var(--primary))', xp: 250, category: 'special' },
   ], [totalMeals, streak, goalReached, weightLostKg, daysTracked, de]);
 
   // XP & Level calculation
@@ -152,6 +173,7 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
         language: language as 'de' | 'en',
         badgeTitle: badge.title,
         badgeShareText: badge.shareText,
+        badgeImageUrl: badge.badgeImage,
       });
       const shared = await shareImage(blob, language as 'de' | 'en', badge.shareText);
       if (!shared) toast.success(de ? 'Bild heruntergeladen!' : 'Image downloaded!');
@@ -181,7 +203,7 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
             className={`relative flex flex-col items-center gap-1 p-3 rounded-xl border transition-all text-center ${
               a.unlocked
                 ? 'border-primary/20 bg-primary/5 hover:border-primary/40'
-                : 'border-border bg-muted/30 opacity-40 grayscale'
+                : 'border-border bg-muted/30'
             }`}
             variants={fadeUp}
             whileHover={a.unlocked ? { scale: 1.05 } : {}}
@@ -192,11 +214,14 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
                 +{a.xp}XP
               </span>
             )}
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: a.unlocked ? `${a.color}20` : undefined }}
-            >
-              <a.icon className="h-5 w-5" style={{ color: a.unlocked ? a.color : 'hsl(var(--muted-foreground))' }} />
+            <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center">
+              <img
+                src={a.badgeImage}
+                alt={a.title}
+                className={`w-full h-full object-cover transition-all ${
+                  a.unlocked ? '' : 'grayscale brightness-50 opacity-40'
+                }`}
+              />
             </div>
             <span className="text-[10px] font-bold leading-tight">{a.title}</span>
           </motion.button>
@@ -293,13 +318,13 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
             className="nutri-card overflow-hidden"
           >
             <div className="flex items-center gap-3">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ background: selectedBadge.unlocked ? `${selectedBadge.color}20` : 'hsl(var(--muted))' }}
-              >
-                <selectedBadge.icon
-                  className="h-6 w-6"
-                  style={{ color: selectedBadge.unlocked ? selectedBadge.color : 'hsl(var(--muted-foreground))' }}
+              <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0">
+                <img
+                  src={selectedBadge.badgeImage}
+                  alt={selectedBadge.title}
+                  className={`w-full h-full object-cover ${
+                    selectedBadge.unlocked ? '' : 'grayscale brightness-50 opacity-40'
+                  }`}
                 />
               </div>
               <div className="flex-1 min-w-0">

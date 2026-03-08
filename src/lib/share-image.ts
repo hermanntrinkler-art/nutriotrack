@@ -2,6 +2,16 @@
  * Generates a shareable achievement image using Canvas API.
  * Returns a Blob of the PNG image.
  */
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
 export async function generateShareImage({
   name,
   streak,
@@ -11,6 +21,7 @@ export async function generateShareImage({
   language,
   badgeTitle,
   badgeShareText,
+  badgeImageUrl,
 }: {
   name: string;
   streak: number;
@@ -20,6 +31,7 @@ export async function generateShareImage({
   language: 'de' | 'en';
   badgeTitle?: string;
   badgeShareText?: string;
+  badgeImageUrl?: string;
 }): Promise<Blob> {
   const W = 1080;
   const H = 1080;
@@ -69,7 +81,8 @@ export async function generateShareImage({
 
   if (badgeTitle && badgeShareText) {
     // === Single badge share mode ===
-    drawBadgeShareLayout(ctx, W, H, { badgeTitle, badgeShareText, streak, totalMeals, unlockedAchievements, totalAchievements, language });
+    const badgeImg = badgeImageUrl ? await loadImage(badgeImageUrl) : null;
+    drawBadgeShareLayout(ctx, W, H, { badgeTitle, badgeShareText, streak, totalMeals, unlockedAchievements, totalAchievements, language, badgeImg });
   } else {
     // === General overview mode ===
     drawOverviewLayout(ctx, W, H, { streak, totalMeals, unlockedAchievements, totalAchievements, language });
@@ -97,7 +110,7 @@ function drawBadgeShareLayout(
   ctx: CanvasRenderingContext2D,
   W: number,
   H: number,
-  opts: { badgeTitle: string; badgeShareText: string; streak: number; totalMeals: number; unlockedAchievements: number; totalAchievements: number; language: 'de' | 'en' }
+  opts: { badgeTitle: string; badgeShareText: string; streak: number; totalMeals: number; unlockedAchievements: number; totalAchievements: number; language: 'de' | 'en'; badgeImg: HTMLImageElement | null }
 ) {
   const centerY = 380;
 
@@ -127,10 +140,21 @@ function drawBadgeShareLayout(
   ctx.arc(W / 2, centerY, ringR, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Trophy emoji
-  ctx.font = '72px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('🏆', W / 2, centerY + 25);
+  // Badge image or trophy emoji
+  if (opts.badgeImg) {
+    const imgSize = 160;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(W / 2, centerY, imgSize / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(opts.badgeImg, W / 2 - imgSize / 2, centerY - imgSize / 2, imgSize, imgSize);
+    ctx.restore();
+  } else {
+    ctx.font = '72px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('🏆', W / 2, centerY + 25);
+  }
 
   // Badge title
   ctx.font = 'bold 48px "Inter", "SF Pro Display", -apple-system, sans-serif';
