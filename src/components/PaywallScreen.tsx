@@ -45,7 +45,7 @@ export default function PaywallScreen({ onClose, onUpgrade, trigger }: PaywallSc
       onUpgrade?.(selectedPlan);
     } catch (err: any) {
       console.error('Checkout error:', err);
-      toast.error(t('paywall.checkoutError') || 'Fehler beim Starten des Checkouts');
+      toast.error('Fehler beim Starten des Checkouts');
     } finally {
       setIsLoading(false);
     }
