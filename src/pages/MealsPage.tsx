@@ -438,6 +438,18 @@ export default function MealsPage() {
         </div>
       )}
 
+      {/* Step: Food Search */}
+      {step === 'search' && (
+        <FoodSearchScreen
+          onDone={(searchItems) => {
+            setIsAiResult(false);
+            setItems(searchItems);
+            setStep('review');
+          }}
+          onCancel={() => setStep('select-method')}
+        />
+      )}
+
       {/* Step: Barcode */}
       {step === 'barcode' && (
         <BarcodeScanner
