@@ -235,6 +235,7 @@ export default function MealsPage() {
             </div>
           </button>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
+          <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleCameraSelect} />
 
           <button onClick={handleManualEntry} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-warning/10 flex items-center justify-center">
