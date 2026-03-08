@@ -332,6 +332,11 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {food.quantity} {food.unit} · P:{food.protein_g}g F:{food.fat_g}g C:{food.carbs_g}g
+                        {food.matchedAlias && (
+                          <span className="ml-1 italic text-primary/70">
+                            ({language === 'de' ? `auch: ${food.matchedAlias}` : `aka: ${food.matchedAlias}`})
+                          </span>
+                        )}
                       </p>
                     </button>
                   );

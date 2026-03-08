@@ -8,6 +8,7 @@ export interface FoodEntry {
   fat_g: number;
   carbs_g: number;
   category: string;
+  matchedAlias?: string;
 }
 
 // Common foods with typical portion sizes and nutritional values
@@ -486,15 +487,17 @@ function normalizeSearchText(value: string): string {
     .trim();
 }
 
-function findSynonymTargets(query: string): string[] {
+function findSynonymMatches(query: string): { targets: string[]; alias: string } | null {
   const normalized = normalizeSearchText(query);
-  const targets: string[] = [];
   for (const [alias, canonicals] of Object.entries(SYNONYMS)) {
     if (normalized.includes(alias) || alias.includes(normalized)) {
-      targets.push(...canonicals.map(normalizeSearchText));
+      return {
+        targets: canonicals.map(normalizeSearchText),
+        alias,
+      };
     }
   }
-  return targets;
+  return null;
 }
 
 function levenshteinDistance(a: string, b: string): number {
@@ -532,7 +535,9 @@ export function searchFoods(query: string, language: 'de' | 'en'): FoodEntry[] {
   if (!normalizedQuery) return [];
 
   const queryTokens = tokenize(normalizedQuery);
-  const synonymTargets = findSynonymTargets(normalizedQuery);
+  const synonymMatch = findSynonymMatches(normalizedQuery);
+  const synonymTargets = synonymMatch?.targets ?? [];
+  const matchedAlias = synonymMatch?.alias ?? '';
 
   const scored = foodDatabase
     .map((entry) => {
@@ -545,12 +550,14 @@ export function searchFoods(query: string, language: 'de' | 'en'): FoodEntry[] {
       const secondaryTokens = tokenize(secondaryName);
 
       let score = 0;
+      let isSynonymHit = false;
 
       // Check synonym matches
       if (synonymTargets.length > 0) {
         for (const target of synonymTargets) {
           if (primary.includes(target) || secondary.includes(target)) {
             score = Math.max(score, 70);
+            isSynonymHit = true;
             break;
           }
         }
@@ -581,7 +588,11 @@ export function searchFoods(query: string, language: 'de' | 'en'): FoodEntry[] {
         }
       }
 
-      return score > 0 ? { entry, score } : null;
+      if (score > 0) {
+        const resultEntry = isSynonymHit ? { ...entry, matchedAlias } : entry;
+        return { entry: resultEntry, score };
+      }
+      return null;
     })
     .filter((result): result is { entry: FoodEntry; score: number } => result !== null)
     .sort((a, b) => b.score - a.score || a.entry.name.localeCompare(b.entry.name));
