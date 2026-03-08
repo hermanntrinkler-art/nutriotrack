@@ -265,6 +265,98 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_recipe_items: {
+        Row: {
+          calories: number | null
+          carbs_g: number | null
+          created_at: string
+          fat_g: number | null
+          food_name: string
+          id: string
+          protein_g: number | null
+          quantity: number | null
+          recipe_id: string
+          unit: string | null
+        }
+        Insert: {
+          calories?: number | null
+          carbs_g?: number | null
+          created_at?: string
+          fat_g?: number | null
+          food_name: string
+          id?: string
+          protein_g?: number | null
+          quantity?: number | null
+          recipe_id: string
+          unit?: string | null
+        }
+        Update: {
+          calories?: number | null
+          carbs_g?: number | null
+          created_at?: string
+          fat_g?: number | null
+          food_name?: string
+          id?: string
+          protein_g?: number | null
+          quantity?: number | null
+          recipe_id?: string
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_recipe_items_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "saved_recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_recipes: {
+        Row: {
+          created_at: string
+          emoji: string | null
+          id: string
+          meal_type: string | null
+          name: string
+          total_calories: number | null
+          total_carbs_g: number | null
+          total_fat_g: number | null
+          total_protein_g: number | null
+          updated_at: string
+          use_count: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          meal_type?: string | null
+          name: string
+          total_calories?: number | null
+          total_carbs_g?: number | null
+          total_fat_g?: number | null
+          total_protein_g?: number | null
+          updated_at?: string
+          use_count?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          meal_type?: string | null
+          name?: string
+          total_calories?: number | null
+          total_carbs_g?: number | null
+          total_fat_g?: number | null
+          total_protein_g?: number | null
+          updated_at?: string
+          use_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_goals: {
         Row: {
           activity_level: Database["public"]["Enums"]["activity_level"] | null
