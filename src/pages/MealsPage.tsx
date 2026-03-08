@@ -20,6 +20,7 @@ export default function MealsPage() {
   const { user } = useAuth();
   const { t, language } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<Step>('select-type');
   const [mealType, setMealType] = useState<MealType>('lunch');
@@ -68,15 +69,14 @@ export default function MealsPage() {
   };
 
   const handleTakePhoto = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) handleImageUpload(file);
-    };
-    input.click();
+    cameraInputRef.current?.click();
+  };
+
+  const handleCameraSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleImageUpload(file);
+    // Reset so same file can be selected again
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -235,6 +235,7 @@ export default function MealsPage() {
             </div>
           </button>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
+          <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleCameraSelect} />
 
           <button onClick={handleManualEntry} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-warning/10 flex items-center justify-center">
