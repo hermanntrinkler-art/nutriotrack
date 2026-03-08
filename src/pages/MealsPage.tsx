@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +28,12 @@ export default function MealsPage() {
   const [saving, setSaving] = useState(false);
   const [isAiResult, setIsAiResult] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraLoading, setCameraLoading] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const mealTypes: { value: MealType; label: string; emoji: string }[] = [
     { value: 'breakfast', label: t('meals.breakfast'), emoji: '🌅' },
@@ -66,10 +72,71 @@ export default function MealsPage() {
     }
   };
 
-  const handleCameraSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleImageUpload(file);
-    e.currentTarget.value = '';
+  const stopCamera = () => {
+    cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    cameraStreamRef.current = null;
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setCameraOpen(false);
+    setCameraLoading(false);
+  };
+
+  const handleOpenCamera = async () => {
+    setCameraError(null);
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      toast.error('Kamera wird auf diesem Gerät nicht unterstützt.');
+      return;
+    }
+
+    try {
+      setCameraLoading(true);
+      // CRITICAL: called directly in user click handler
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } },
+        audio: false,
+      });
+      cameraStreamRef.current = stream;
+      setCameraOpen(true);
+    } catch (error) {
+      setCameraError('Kamerazugriff blockiert. Bitte Berechtigung erlauben.');
+      toast.error('Kein Kamerazugriff. Bitte Browser-App Berechtigung prüfen.');
+    } finally {
+      setCameraLoading(false);
+    }
+  };
+
+  const handleCapturePhoto = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const canvas = document.createElement('canvas');
+    const width = video.videoWidth || 1280;
+    const height = video.videoHeight || 720;
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext('2d');
+    if (!context) {
+      toast.error('Foto konnte nicht verarbeitet werden.');
+      return;
+    }
+
+    context.drawImage(video, 0, 0, width, height);
+
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, 'image/jpeg', 0.9);
+    });
+
+    if (!blob) {
+      toast.error('Foto konnte nicht erstellt werden.');
+      return;
+    }
+
+    stopCamera();
+    const file = new File([blob], `camera-${Date.now()}.jpg`, { type: 'image/jpeg' });
+    handleImageUpload(file);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,6 +144,34 @@ export default function MealsPage() {
     if (file) handleImageUpload(file);
     e.currentTarget.value = '';
   };
+
+  const handleOpenFilePicker = () => {
+    const input = fileInputRef.current;
+    if (!input) return;
+
+    const pickerInput = input as HTMLInputElement & { showPicker?: () => void };
+    try {
+      if (pickerInput.showPicker) {
+        pickerInput.showPicker();
+      } else {
+        input.click();
+      }
+    } catch {
+      input.click();
+    }
+  };
+
+  useEffect(() => {
+    if (!cameraOpen || !videoRef.current || !cameraStreamRef.current) return;
+    videoRef.current.srcObject = cameraStreamRef.current;
+    videoRef.current.play().catch(() => undefined);
+  }, [cameraOpen]);
+
+  useEffect(() => {
+    return () => {
+      cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
 
   const handleManualEntry = () => {
     setIsAiResult(false);
@@ -170,6 +265,8 @@ export default function MealsPage() {
   };
 
   const handleReset = () => {
+    stopCamera();
+    setCameraError(null);
     setStep('select-type');
     setItems([]);
     setImageFile(null);
@@ -216,16 +313,32 @@ export default function MealsPage() {
             <div className="flex-1">
               <p className="font-medium">{t('meals.takePhoto')}</p>
               <p className="text-xs text-muted-foreground mb-2">{t('meals.aiDescription')}</p>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleCameraSelect}
-                className="w-full text-sm text-muted-foreground file:mr-3 file:rounded-xl file:border-0 file:bg-primary file:text-primary-foreground file:px-4 file:py-2 file:font-medium"
-                aria-label={t('meals.takePhoto')}
-              />
+              <Button type="button" onClick={handleOpenCamera} className="w-full" disabled={cameraLoading}>
+                {cameraLoading ? 'Öffne Kamera…' : t('meals.takePhoto')}
+              </Button>
+              {cameraError && <p className="text-xs text-destructive mt-2">{cameraError}</p>}
             </div>
           </div>
+
+          {cameraOpen && (
+            <div className="nutri-card space-y-3">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-56 rounded-xl object-cover bg-muted"
+              />
+              <div className="flex gap-2">
+                <Button type="button" className="flex-1" onClick={handleCapturePhoto}>
+                  Foto verwenden
+                </Button>
+                <Button type="button" variant="outline" className="flex-1" onClick={stopCamera}>
+                  {t('common.cancel')}
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-info/10 flex items-center justify-center">
@@ -234,11 +347,15 @@ export default function MealsPage() {
             <div className="flex-1">
               <p className="font-medium">{t('meals.uploadImage')}</p>
               <p className="text-xs text-muted-foreground mb-2">{t('meals.aiDescription')}</p>
+              <Button type="button" variant="outline" onClick={handleOpenFilePicker} className="w-full">
+                {t('meals.uploadImage')}
+              </Button>
               <input
+                ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 onChange={handleFileSelect}
-                className="w-full text-sm text-muted-foreground file:mr-3 file:rounded-xl file:border-0 file:bg-info file:text-info-foreground file:px-4 file:py-2 file:font-medium"
+                className="w-full mt-2 text-xs text-muted-foreground file:mr-2 file:rounded-lg file:border-0 file:bg-secondary file:text-secondary-foreground file:px-3 file:py-1.5"
                 aria-label={t('meals.uploadImage')}
               />
             </div>
