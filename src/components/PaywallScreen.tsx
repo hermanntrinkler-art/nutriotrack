@@ -26,7 +26,7 @@ export default function PaywallScreen({ onClose, onUpgrade, trigger }: PaywallSc
   ];
 
   const plans = [
-    { id: 'monthly' as const, label: t('paywall.monthly'), price: '7,99 €', sub: t('paywall.perMonth') },
+    { id: 'monthly' as const, label: t('paywall.monthly'), price: '7,99 €', sub: t('paywall.perMonth'), trial: '7 Tage kostenlos testen' },
     { id: 'yearly' as const, label: t('paywall.yearly'), price: '49 €', sub: t('paywall.perYear'), badge: t('paywall.savePercent') },
     { id: 'lifetime' as const, label: t('paywall.lifetime'), price: '79 €', sub: t('paywall.oneTime'), badge: t('paywall.founderDeal') },
   ];
@@ -106,8 +106,15 @@ export default function PaywallScreen({ onClose, onUpgrade, trigger }: PaywallSc
                         {plan.badge}
                       </span>
                     )}
+                    {plan.trial && (
+                      <span className="text-[10px] font-bold bg-green-500/10 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full">
+                        {plan.trial}
+                      </span>
+                    )}
                   </div>
-                  <span className="text-xs text-muted-foreground">{plan.sub}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {plan.trial ? `${plan.trial}, danach ${plan.price}/${t('paywall.perMonth').toLowerCase()}` : plan.sub}
+                  </span>
                 </div>
               </div>
               <span className="font-bold text-lg">{plan.price}</span>
@@ -122,7 +129,7 @@ export default function PaywallScreen({ onClose, onUpgrade, trigger }: PaywallSc
           ) : (
             <Sparkles className="h-4 w-4 mr-2" />
           )}
-          {t('paywall.upgradeCta')}
+          {selectedPlan === 'monthly' ? '7 Tage kostenlos testen' : t('paywall.upgradeCta')}
         </Button>
 
         <p className="text-center text-xs text-muted-foreground mt-3">

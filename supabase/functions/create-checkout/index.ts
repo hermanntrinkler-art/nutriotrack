@@ -50,14 +50,25 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
 
-    const session = await stripe.checkout.sessions.create({
+    // Add 7-day trial for monthly subscription
+    const isMonthly = plan === "monthly";
+    const sessionParams: any = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: isLifetime ? "payment" : "subscription",
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/dashboard?checkout=cancel`,
-    });
+    };
+
+    // Add 7-day free trial for monthly plan
+    if (isMonthly) {
+      sessionParams.subscription_data = {
+        trial_period_days: 7,
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
