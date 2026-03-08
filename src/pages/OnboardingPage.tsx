@@ -7,7 +7,8 @@ import { calculateNutrition } from '@/lib/nutrition';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ChevronLeft, ChevronRight, Leaf } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 type Sex = 'male' | 'female' | 'other';
 type ActivityLevel = 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active' | 'extremely_active';
@@ -108,7 +109,7 @@ export default function OnboardingPage() {
       {/* Header */}
       <div className="px-6 pt-8 pb-4">
         <div className="flex items-center gap-2 mb-6">
-          <Leaf className="h-6 w-6 text-primary" />
+          <img src={logo} alt="Snap2Fit" className="h-8" />
           <span className="font-bold text-lg">Snap2Fit</span>
         </div>
         <h1 className="text-2xl font-bold">{t('onboarding.title')}</h1>

@@ -5,7 +5,8 @@ import { useTranslation } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Leaf, CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 export default function RegisterPage() {
   const { signUp } = useAuth();
@@ -49,9 +50,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-background">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-2">
-            <Leaf className="h-8 w-8 text-primary" />
-          </div>
+          <img src={logo} alt="Snap2Fit" className="h-16 mx-auto mb-2" />
           <h1 className="text-2xl font-bold text-foreground">Snap2Fit</h1>
           <p className="text-muted-foreground text-sm">{t('auth.subtitle')}</p>
         </div>
