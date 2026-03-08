@@ -219,7 +219,7 @@ const translations = {
     'common.of': 'von',
 
     // Paywall
-    'paywall.title': 'Upgrade auf Snap2Fit Pro',
+    'paywall.title': 'Upgrade auf NutrioTrack Pro',
     'paywall.subtitle': 'Schalte alle Premium-Funktionen frei und erreiche deine Ziele schneller.',
     'paywall.featureUnlimitedScans': 'Unbegrenzte Fotoanalyse',
     'paywall.featureWeeklyStats': 'Detaillierte Wochenstatistiken',
@@ -454,7 +454,7 @@ const translations = {
     'common.of': 'of',
 
     // Paywall
-    'paywall.title': 'Upgrade to Snap2Fit Pro',
+    'paywall.title': 'Upgrade to NutrioTrack Pro',
     'paywall.subtitle': 'Unlock all premium features and reach your goals faster.',
     'paywall.featureUnlimitedScans': 'Unlimited photo analysis',
     'paywall.featureWeeklyStats': 'Detailed weekly statistics',
