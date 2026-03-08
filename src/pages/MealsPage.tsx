@@ -371,6 +371,16 @@ export default function MealsPage() {
             </div>
           </button>
 
+          <button onClick={() => setStep('barcode')} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
+            <div className="w-12 h-12 rounded-2xl bg-accent/30 flex items-center justify-center">
+              <ScanBarcode className="h-6 w-6 text-foreground" />
+            </div>
+            <div className="text-left">
+              <p className="font-medium">{t('meals.scanBarcode')}</p>
+              <p className="text-xs text-muted-foreground">{t('meals.barcodeDescription')}</p>
+            </div>
+          </button>
+
           <Button variant="ghost" onClick={handleReset} className="w-full">
             {t('meals.cancel')}
           </Button>
