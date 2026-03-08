@@ -71,7 +71,8 @@ export async function generateShareImage({
 
   if (badgeTitle && badgeShareText) {
     // === Single badge share mode ===
-    drawBadgeShareLayout(ctx, W, H, { badgeTitle, badgeShareText, streak, totalMeals, unlockedAchievements, totalAchievements, language });
+    const badgeImg = badgeImageUrl ? await loadImage(badgeImageUrl) : null;
+    drawBadgeShareLayout(ctx, W, H, { badgeTitle, badgeShareText, streak, totalMeals, unlockedAchievements, totalAchievements, language, badgeImg });
   } else {
     // === General overview mode ===
     drawOverviewLayout(ctx, W, H, { streak, totalMeals, unlockedAchievements, totalAchievements, language });
