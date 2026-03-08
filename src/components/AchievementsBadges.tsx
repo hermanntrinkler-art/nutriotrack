@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Share2, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { fireCenterBurst } from '@/lib/confetti';
-import { generateShareImage, shareImage } from '@/lib/share-image';
+import { generateShareImage, shareImage, shareBadgeLink } from '@/lib/share-image';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
