@@ -1,51 +1,91 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import type { Easing } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserGoals, MealEntry } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Plus, TrendingDown, TrendingUp, Minus, Flame, Zap, Dumbbell, Droplets } from 'lucide-react';
+import { Plus, TrendingDown, TrendingUp, Minus, Flame, Zap, Dumbbell, Droplets, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
-function MacroRing({ label, current, target, color, icon: Icon }: {
-  label: string; current: number; target: number; color: string; icon: React.ElementType;
+// --- Animated Macro Ring ---
+function MacroRing({ label, current, target, color, icon: Icon, delay = 0 }: {
+  label: string; current: number; target: number; color: string; icon: React.ElementType; delay?: number;
 }) {
   const pct = target > 0 ? Math.min((current / target) * 100, 100) : 0;
   const circumference = 2 * Math.PI * 28;
   const offset = circumference - (pct / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center gap-1.5">
-      <div className="relative w-[72px] h-[72px]">
+    <motion.div
+      className="flex flex-col items-center gap-1.5"
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5, delay, ease: 'easeOut' }}
+    >
+      <div className="relative w-[76px] h-[76px]">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
-          <circle cx="32" cy="32" r="28" fill="none" strokeWidth="5" className="stroke-muted" />
-          <circle
+          <circle cx="32" cy="32" r="28" fill="none" strokeWidth="5" className="stroke-muted/50" />
+          <motion.circle
             cx="32" cy="32" r="28"
             fill="none"
             strokeWidth="5"
             strokeLinecap="round"
             stroke={color}
-            className="transition-all duration-700"
             strokeDasharray={circumference}
-            strokeDashoffset={offset}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 1.2, delay: delay + 0.3, ease: 'easeOut' }}
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <Icon className="h-4 w-4" style={{ color }} />
+          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: `${color}18` }}>
+            <Icon className="h-4 w-4" style={{ color }} />
+          </div>
         </div>
       </div>
       <div className="text-center">
-        <p className="text-sm font-bold text-foreground">{Math.round(current)}g</p>
+        <p className="text-sm font-bold text-foreground tabular-nums">{Math.round(current)}g</p>
         <p className="text-[10px] text-muted-foreground font-medium">{label}</p>
-        <p className="text-[10px] text-muted-foreground">/ {target}g</p>
+        <p className="text-[10px] text-muted-foreground tabular-nums">/ {target}g</p>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
+// --- Motivational messages ---
+function getMotivationalMessage(calPct: number, language: string): string {
+  if (language === 'de') {
+    if (calPct === 0) return '🌟 Neuer Tag, neue Energie! Starte jetzt.';
+    if (calPct < 30) return '🚀 Guter Start! Bleib am Ball.';
+    if (calPct < 60) return '💪 Läuft super! Du bist auf Kurs.';
+    if (calPct < 85) return '🔥 Fast geschafft! Starke Leistung.';
+    if (calPct <= 100) return '🏆 Ziel fast erreicht! Perfekter Tag.';
+    return '⚠️ Über dem Ziel – morgen packst du es!';
+  }
+  if (calPct === 0) return '🌟 New day, new energy! Let\'s go.';
+  if (calPct < 30) return '🚀 Great start! Keep it up.';
+  if (calPct < 60) return '💪 Going strong! You\'re on track.';
+  if (calPct < 85) return '🔥 Almost there! Strong performance.';
+  if (calPct <= 100) return '🏆 Goal almost reached! Perfect day.';
+  return '⚠️ Over goal – you\'ll nail it tomorrow!';
+}
+
+// --- Animation variants ---
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+};
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' as const } },
+};
+
 export default function DashboardPage() {
   const { user, profile } = useAuth();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const navigate = useNavigate();
   const [goals, setGoals] = useState<UserGoals | null>(null);
   const [todayMeals, setTodayMeals] = useState<MealEntry[]>([]);
@@ -74,94 +114,111 @@ export default function DashboardPage() {
   const calorieTarget = goals?.calorie_target || 2000;
   const remaining = calorieTarget - todayTotals.calories;
   const calPct = Math.min((todayTotals.calories / calorieTarget) * 100, 100);
+  const circumference = 2 * Math.PI * 42;
+  const calOffset = circumference - (calPct / 100) * circumference;
+
+  const motivationalMsg = useMemo(() => getMotivationalMessage(calPct, language), [calPct, language]);
 
   const mealTypeLabel = (type: string) => {
     const map: Record<string, string> = {
-      breakfast: t('meals.breakfast'),
-      lunch: t('meals.lunch'),
-      dinner: t('meals.dinner'),
-      snack: t('meals.snack'),
+      breakfast: t('meals.breakfast'), lunch: t('meals.lunch'),
+      dinner: t('meals.dinner'), snack: t('meals.snack'),
     };
     return map[type] || type;
   };
 
   const mealTypeIcon = (type: string) => {
     const map: Record<string, string> = {
-      breakfast: '🌅',
-      lunch: '☀️',
-      dinner: '🌙',
-      snack: '⚡',
+      breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '⚡',
     };
     return map[type] || '🍽️';
   };
 
   const hints: string[] = [];
-  if (remaining > 0) {
-    hints.push(t('hint.caloriesRemaining', { value: Math.round(remaining) }));
-  } else if (remaining < 0) {
-    hints.push(t('hint.overGoal'));
-  }
+  if (remaining > 0) hints.push(t('hint.caloriesRemaining', { value: Math.round(remaining) }));
+  else if (remaining < 0) hints.push(t('hint.overGoal'));
   const proteinRemaining = (goals?.protein_target_g || 0) - todayTotals.protein;
-  if (proteinRemaining > 10) {
-    hints.push(t('hint.proteinMissing', { value: Math.round(proteinRemaining) }));
-  }
+  if (proteinRemaining > 10) hints.push(t('hint.proteinMissing', { value: Math.round(proteinRemaining) }));
   const fatPct = goals?.fat_target_g ? todayTotals.fat / goals.fat_target_g : 0;
-  if (fatPct >= 0.85 && fatPct < 1) {
-    hints.push(t('hint.fatAlmost'));
-  }
+  if (fatPct >= 0.85 && fatPct < 1) hints.push(t('hint.fatAlmost'));
 
   const displayName = profile?.name || profile?.email?.split('@')[0] || '';
 
   return (
-    <div className="page-container space-y-5">
+    <motion.div
+      className="page-container space-y-5"
+      variants={container}
+      initial="hidden"
+      animate="show"
+    >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <motion.div className="flex items-center justify-between" variants={fadeUp}>
         <div>
           <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{t('dashboard.today')}</p>
           <h1 className="text-2xl font-extrabold tracking-tight">
             {t('dashboard.hello')}, <span className="gradient-text">{displayName}</span> 💪
           </h1>
         </div>
-        <div className="sport-badge">
+        <motion.div
+          className="sport-badge"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
           <Flame className="h-3.5 w-3.5" />
           {t('dashboard.goal')}
+        </motion.div>
+      </motion.div>
+
+      {/* Motivational Message */}
+      <motion.div
+        className="rounded-2xl p-3.5 border border-primary/20 bg-primary/5"
+        variants={fadeUp}
+      >
+        <div className="flex items-center gap-2.5">
+          <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
+          <p className="text-sm font-medium text-foreground">{motivationalMsg}</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Calorie Ring Card */}
-      <div className="nutri-card-highlight">
+      <motion.div
+        className="nutri-card-highlight shadow-lg hover:shadow-xl transition-shadow duration-300"
+        variants={fadeUp}
+      >
         <div className="flex items-center gap-6">
-          {/* Circular progress */}
           <div className="relative w-32 h-32 flex-shrink-0">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="42" fill="none" strokeWidth="8" className="stroke-muted" />
-              <circle
+              <circle cx="50" cy="50" r="42" fill="none" strokeWidth="8" className="stroke-muted/40" />
+              <motion.circle
                 cx="50" cy="50" r="42"
                 fill="none"
                 strokeWidth="8"
                 strokeLinecap="round"
-                className="transition-all duration-1000"
-                style={{
-                  stroke: 'url(#calGradient)',
-                  strokeDasharray: `${calPct * 2.64} ${264 - calPct * 2.64}`,
-                }}
+                style={{ stroke: 'url(#calGradient)' }}
+                strokeDasharray={circumference}
+                initial={{ strokeDashoffset: circumference }}
+                animate={{ strokeDashoffset: calOffset }}
+                transition={{ duration: 1.5, delay: 0.4, ease: 'easeOut' }}
               />
               <defs>
                 <linearGradient id="calGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="hsl(153, 58%, 45%)" />
-                  <stop offset="50%" stopColor="hsl(168, 70%, 38%)" />
-                  <stop offset="100%" stopColor="hsl(32, 95%, 55%)" />
+                  <stop offset="0%" stopColor="hsl(var(--primary))" />
+                  <stop offset="100%" stopColor="hsl(var(--energy))" />
                 </linearGradient>
               </defs>
             </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <motion.div
+              className="absolute inset-0 flex flex-col items-center justify-center"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+            >
               <Flame className="h-4 w-4 text-primary mb-0.5" />
-              <span className="text-2xl font-black text-foreground tracking-tight">{Math.round(remaining)}</span>
+              <span className="text-2xl font-black text-foreground tracking-tight tabular-nums">{Math.round(remaining)}</span>
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('dashboard.kcal')}</span>
-            </div>
+            </motion.div>
           </div>
 
-          {/* Stats */}
           <div className="flex-1 space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground font-medium">{t('dashboard.eaten')}</span>
@@ -187,62 +244,82 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Macros as rings */}
-      <div className="nutri-card">
+      {/* Macros */}
+      <motion.div
+        className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
+        variants={fadeUp}
+      >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">{t('dashboard.protein')} / {t('dashboard.fat')} / {t('dashboard.carbs')}</h3>
+          <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">
+            {t('dashboard.protein')} / {t('dashboard.fat')} / {t('dashboard.carbs')}
+          </h3>
         </div>
         <div className="flex justify-around">
           <MacroRing
             label={t('dashboard.protein')}
             current={todayTotals.protein}
             target={goals?.protein_target_g || 150}
-            color="hsl(210, 80%, 55%)"
+            color="hsl(var(--protein))"
             icon={Dumbbell}
+            delay={0}
           />
           <MacroRing
             label={t('dashboard.fat')}
             current={todayTotals.fat}
             target={goals?.fat_target_g || 65}
-            color="hsl(38, 92%, 55%)"
+            color="hsl(var(--fat))"
             icon={Droplets}
+            delay={0.15}
           />
           <MacroRing
             label={t('dashboard.carbs')}
             current={todayTotals.carbs}
             target={goals?.carbs_target_g || 250}
-            color="hsl(153, 58%, 45%)"
+            color="hsl(var(--carbs))"
             icon={Zap}
+            delay={0.3}
           />
         </div>
-      </div>
+      </motion.div>
 
       {/* Hints */}
       {hints.length > 0 && (
-        <div className="glass-card space-y-2" style={{
-          background: 'linear-gradient(135deg, hsl(153 58% 45% / 0.06), hsl(168 70% 38% / 0.06))',
-        }}>
+        <motion.div
+          className="rounded-2xl border border-primary/15 p-4 space-y-2 shadow-sm"
+          style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.06), hsl(var(--gradient-end) / 0.06))' }}
+          variants={fadeUp}
+        >
           <h3 className="font-bold text-sm text-primary flex items-center gap-1.5">
             <Zap className="h-3.5 w-3.5" /> {t('dashboard.hints')}
           </h3>
           {hints.map((hint, i) => (
             <p key={i} className="text-sm text-foreground/80">💡 {hint}</p>
           ))}
-        </div>
+        </motion.div>
       )}
 
       {/* Recent meals */}
-      <div className="space-y-3">
+      <motion.div className="space-y-3" variants={fadeUp}>
         <div className="flex items-center justify-between">
           <h3 className="font-bold uppercase tracking-wider text-sm text-muted-foreground">{t('dashboard.recentMeals')}</h3>
-          <button onClick={() => navigate('/meals')} className="text-primary text-sm font-bold flex items-center gap-1 hover:opacity-80 transition-opacity">
+          <motion.button
+            onClick={() => navigate('/meals')}
+            className="text-primary text-sm font-bold flex items-center gap-1 hover:opacity-80 transition-opacity"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
             <Plus className="h-4 w-4" /> {t('dashboard.addMeal')}
-          </button>
+          </motion.button>
         </div>
         {todayMeals.length === 0 ? (
-          <div className="nutri-card text-center py-10">
+          <motion.div
+            className="nutri-card text-center py-10 shadow-sm"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+          >
             <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-primary/10 to-accent flex items-center justify-center">
               <Flame className="h-7 w-7 text-primary" />
             </div>
@@ -250,13 +327,17 @@ export default function DashboardPage() {
             <Button className="mt-4 font-bold" onClick={() => navigate('/meals')}>
               <Plus className="h-4 w-4 mr-1" /> {t('dashboard.addMeal')}
             </Button>
-          </div>
+          </motion.div>
         ) : (
-          todayMeals.slice(0, 5).map(meal => (
-            <div
+          todayMeals.slice(0, 5).map((meal, i) => (
+            <motion.div
               key={meal.id}
               onClick={() => navigate(`/meals/${meal.id}/edit`)}
-              className="nutri-card flex items-center gap-3 cursor-pointer hover:shadow-md hover:border-primary/30 transition-all active:scale-[0.98]"
+              className="nutri-card flex items-center gap-3 cursor-pointer shadow-sm hover:shadow-md hover:border-primary/30 transition-all active:scale-[0.98]"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.35, delay: i * 0.08 }}
+              whileHover={{ y: -2 }}
             >
               <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/10 to-accent flex items-center justify-center text-lg">
                 {mealTypeIcon(meal.meal_type)}
@@ -272,10 +353,10 @@ export default function DashboardPage() {
                   <span className="text-carbs">{Math.round(Number(meal.total_carbs_g))}C</span>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
