@@ -118,7 +118,7 @@ export default function EditMealPage() {
     <div className="page-container space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate('/')} className="p-1.5 rounded-lg hover:bg-accent transition-colors">
+        <button onClick={() => navigate('/dashboard')} className="p-1.5 rounded-lg hover:bg-accent transition-colors">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2 flex-1">
