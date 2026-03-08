@@ -6,6 +6,7 @@ import { fireCenterBurst } from '@/lib/confetti';
 import { generateShareImage, shareImage } from '@/lib/share-image';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/integrations/supabase/client';
 
 // Badge images
 import badgeFirstMeal from '@/assets/badges/first-meal.png';
