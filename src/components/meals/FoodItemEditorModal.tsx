@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search } from 'lucide-react';
 
 interface FoodItemEditorModalProps {
@@ -15,13 +16,44 @@ interface FoodItemEditorModalProps {
   onSave: (item: AnalyzedFoodItem) => void;
 }
 
-// Store the "per base unit" nutrition from the database entry
 interface BaseNutrition {
   baseQuantity: number;
+  baseUnit: string;
   calories: number;
   protein_g: number;
   fat_g: number;
   carbs_g: number;
+}
+
+// Gram equivalents for common units
+const UNIT_TO_GRAMS: Record<string, number> = {
+  g: 1,
+  ml: 1,
+  TL: 5,
+  EL: 15,
+  'Stück': 0,
+};
+
+const UNIT_OPTIONS_DE = [
+  { value: 'g', label: 'g (Gramm)' },
+  { value: 'ml', label: 'ml (Milliliter)' },
+  { value: 'TL', label: 'TL (Teelöffel ≈ 5g)' },
+  { value: 'EL', label: 'EL (Esslöffel ≈ 15g)' },
+  { value: 'Stück', label: 'Stück' },
+];
+
+const UNIT_OPTIONS_EN = [
+  { value: 'g', label: 'g (grams)' },
+  { value: 'ml', label: 'ml (milliliters)' },
+  { value: 'TL', label: 'tsp (teaspoon ≈ 5g)' },
+  { value: 'EL', label: 'tbsp (tablespoon ≈ 15g)' },
+  { value: 'Stück', label: 'piece' },
+];
+
+function getGramsEquivalent(quantity: number, unit: string): number {
+  const factor = UNIT_TO_GRAMS[unit];
+  if (factor === undefined || factor === 0) return quantity;
+  return quantity * factor;
 }
 
 export default function FoodItemEditorModal({ item, open, onClose, onSave }: FoodItemEditorModalProps) {
@@ -34,27 +66,31 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
   const [baseNutrition, setBaseNutrition] = useState<BaseNutrition | null>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
+  const unitOptions = language === 'de' ? UNIT_OPTIONS_DE : UNIT_OPTIONS_EN;
+
   useEffect(() => {
     if (item) {
       setForm({ ...item });
-      setBaseNutrition(null); // Reset base when opening with a new item
+      setBaseNutrition(null);
     }
   }, [item]);
 
-  const scaleNutrition = (base: BaseNutrition, newQuantity: number) => {
-    if (base.baseQuantity === 0) return { calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0 };
-    const factor = newQuantity / base.baseQuantity;
+  const scaleByGrams = (base: BaseNutrition, gramsAmount: number) => {
+    const baseGrams = getGramsEquivalent(base.baseQuantity, base.baseUnit);
+    if (baseGrams === 0) return { calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0 };
+    const factor = gramsAmount / baseGrams;
     return {
       calories: Math.round(base.calories * factor),
-      protein_g: Math.round(base.protein_g * factor),
-      fat_g: Math.round(base.fat_g * factor),
-      carbs_g: Math.round(base.carbs_g * factor),
+      protein_g: Math.round(base.protein_g * factor * 10) / 10,
+      fat_g: Math.round(base.fat_g * factor * 10) / 10,
+      carbs_g: Math.round(base.carbs_g * factor * 10) / 10,
     };
   };
 
   const update = (field: keyof AnalyzedFoodItem, value: string | number) => {
     if (field === 'quantity' && baseNutrition && typeof value === 'number') {
-      const scaled = scaleNutrition(baseNutrition, value);
+      const grams = getGramsEquivalent(value, form.unit);
+      const scaled = scaleByGrams(baseNutrition, grams);
       setForm(prev => ({ ...prev, quantity: value, ...scaled }));
       return;
     }
@@ -68,10 +104,32 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
     }
   };
 
+  const handleUnitChange = (newUnit: string) => {
+    if (!baseNutrition) {
+      setForm(prev => ({ ...prev, unit: newUnit }));
+      return;
+    }
+
+    // Keep the same gram-equivalent, recalculate quantity for new unit
+    const currentGrams = getGramsEquivalent(form.quantity, form.unit);
+    const newFactor = UNIT_TO_GRAMS[newUnit];
+    let newQuantity: number;
+
+    if (newFactor && newFactor > 0) {
+      newQuantity = Math.round((currentGrams / newFactor) * 10) / 10;
+    } else {
+      newQuantity = form.quantity;
+    }
+
+    const scaled = scaleByGrams(baseNutrition, currentGrams);
+    setForm(prev => ({ ...prev, unit: newUnit, quantity: newQuantity, ...scaled }));
+  };
+
   const selectSuggestion = (food: FoodEntry) => {
     const name = language === 'de' ? food.name : food.name_en;
     const base: BaseNutrition = {
       baseQuantity: food.quantity,
+      baseUnit: food.unit,
       calories: food.calories,
       protein_g: food.protein_g,
       fat_g: food.fat_g,
@@ -132,7 +190,6 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
               />
             </div>
 
-            {/* Suggestions dropdown */}
             {showSuggestions && suggestions.length > 0 && (
               <div
                 ref={suggestionsRef}
@@ -171,16 +228,24 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">{t('meals.unit')}</Label>
-              <Input value={form.unit} onChange={e => update('unit', e.target.value)} />
+              <Select value={form.unit} onValueChange={handleUnitChange}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {unitOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          {/* Scaled nutrition hint */}
           {baseNutrition && (
             <p className="text-[10px] text-muted-foreground italic">
               {language === 'de'
-                ? `Nährwerte skalieren automatisch (Basis: ${baseNutrition.baseQuantity} ${form.unit})`
-                : `Nutrition scales automatically (base: ${baseNutrition.baseQuantity} ${form.unit})`}
+                ? `Nährwerte skalieren automatisch (Basis: ${baseNutrition.baseQuantity} ${baseNutrition.baseUnit})`
+                : `Nutrition scales automatically (base: ${baseNutrition.baseQuantity} ${baseNutrition.baseUnit})`}
             </p>
           )}
 
