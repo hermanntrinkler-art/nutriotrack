@@ -238,11 +238,9 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
                 value={form.food_name}
                 onChange={e => update('food_name', e.target.value)}
                 onFocus={() => {
-                  if (form.food_name) {
-                    const results = searchFoods(form.food_name, language as 'de' | 'en');
-                    setSuggestions(results);
-                    setShowSuggestions(results.length > 0);
-                  }
+                  const results = buildSuggestions(form.food_name);
+                  setSuggestions(results);
+                  setShowSuggestions(results.length > 0);
                 }}
                 onBlur={() => {
                   setTimeout(() => setShowSuggestions(false), 200);
