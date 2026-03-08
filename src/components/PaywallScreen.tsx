@@ -106,8 +106,15 @@ export default function PaywallScreen({ onClose, onUpgrade, trigger }: PaywallSc
                         {plan.badge}
                       </span>
                     )}
+                    {plan.trial && (
+                      <span className="text-[10px] font-bold bg-green-500/10 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full">
+                        {plan.trial}
+                      </span>
+                    )}
                   </div>
-                  <span className="text-xs text-muted-foreground">{plan.sub}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {plan.trial ? `${plan.trial}, danach ${plan.price}/${t('paywall.perMonth').toLowerCase()}` : plan.sub}
+                  </span>
                 </div>
               </div>
               <span className="font-bold text-lg">{plan.price}</span>
