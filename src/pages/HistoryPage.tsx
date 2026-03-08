@@ -104,6 +104,7 @@ export default function HistoryPage() {
     >
       <motion.h1 className="text-xl font-bold" variants={fadeUp}>{t('history.title')}</motion.h1>
 
+      <motion.div variants={fadeUp}>
       <Tabs defaultValue="daily" className="w-full">
         <TabsList className="w-full">
           <TabsTrigger value="daily" className="flex-1">{t('history.daily')}</TabsTrigger>
