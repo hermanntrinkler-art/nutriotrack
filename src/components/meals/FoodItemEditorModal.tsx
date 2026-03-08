@@ -161,7 +161,7 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
     setForm(prev => ({ ...prev, [field]: value }));
 
     if (field === 'food_name' && typeof value === 'string') {
-      const results = searchFoods(value, language as 'de' | 'en');
+      const results = buildSuggestions(value);
       setSuggestions(results);
       setShowSuggestions(results.length > 0);
     }
