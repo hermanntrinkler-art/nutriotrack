@@ -199,6 +199,7 @@ export default function HistoryPage() {
         </TabsContent>
 
       </Tabs>
+      </motion.div>
 
       {showPaywall && (
         <PaywallScreen
