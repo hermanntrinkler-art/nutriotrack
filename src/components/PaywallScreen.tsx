@@ -26,7 +26,7 @@ export default function PaywallScreen({ onClose, onUpgrade, trigger }: PaywallSc
   ];
 
   const plans = [
-    { id: 'monthly' as const, label: t('paywall.monthly'), price: '7,99 €', sub: t('paywall.perMonth') },
+    { id: 'monthly' as const, label: t('paywall.monthly'), price: '7,99 €', sub: t('paywall.perMonth'), trial: '7 Tage kostenlos testen' },
     { id: 'yearly' as const, label: t('paywall.yearly'), price: '49 €', sub: t('paywall.perYear'), badge: t('paywall.savePercent') },
     { id: 'lifetime' as const, label: t('paywall.lifetime'), price: '79 €', sub: t('paywall.oneTime'), badge: t('paywall.founderDeal') },
   ];
