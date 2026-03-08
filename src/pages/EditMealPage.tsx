@@ -171,7 +171,7 @@ export default function EditMealPage() {
       </div>
 
       <div className="flex gap-3">
-        <Button variant="outline" onClick={() => navigate('/')} className="flex-1">
+        <Button variant="outline" onClick={() => navigate('/dashboard')} className="flex-1">
           {t('common.cancel')}
         </Button>
         <Button onClick={handleSave} className="flex-1" disabled={saving || items.length === 0 || items.some(i => !i.food_name)}>
