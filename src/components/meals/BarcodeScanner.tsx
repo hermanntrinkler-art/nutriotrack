@@ -293,16 +293,20 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
         <p className="text-sm text-muted-foreground">{t('meals.customProductHint')}</p>
 
         <div className="space-y-3">
-          <div className="relative">
+          <div className="space-y-2">
             <Label>{t('meals.foodName')}</Label>
             <Input
               value={customForm.food_name}
               onChange={(e) => handleFoodNameChange(e.target.value)}
+              onFocus={() => {
+                const lang = (document.documentElement.lang === 'en' ? 'en' : 'de') as 'de' | 'en';
+                setFoodSuggestions(searchFoods(customForm.food_name, lang));
+              }}
               placeholder="z.B. Prosecco, Hafermilch"
               autoComplete="off"
             />
             {foodSuggestions.length > 0 && (
-              <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+              <div className="bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                 {foodSuggestions.map((entry, i) => {
                   const lang = (document.documentElement.lang === 'en' ? 'en' : 'de') as 'de' | 'en';
                   const displayName = lang === 'de' ? entry.name : entry.name_en;
