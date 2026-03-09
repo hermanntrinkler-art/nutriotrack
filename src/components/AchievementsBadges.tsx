@@ -86,19 +86,58 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
   const [selectedBadge, setSelectedBadge] = useState<Achievement | null>(null);
 
   const [customBadgeImages, setCustomBadgeImages] = useState<Record<string, string>>({});
+  const [customShareTexts, setCustomShareTexts] = useState<Record<string, string>>({});
 
-  // Load custom badge images from DB
+  // Load custom badge images and translated share texts from DB
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase.from('badge_images').select('badge_id, image_url');
+      const { data } = await supabase.from('badge_images').select('badge_id, image_url, share_text');
       if (data) {
-        const map: Record<string, string> = {};
-        (data as Array<{ badge_id: string; image_url: string }>).forEach(r => { map[r.badge_id] = r.image_url; });
-        setCustomBadgeImages(map);
+        const imgMap: Record<string, string> = {};
+        const txtMap: Record<string, string> = {};
+        (data as Array<{ badge_id: string; image_url: string; share_text: string | null }>).forEach(r => {
+          if (r.image_url) imgMap[r.badge_id] = r.image_url;
+          if (r.share_text) txtMap[r.badge_id] = r.share_text;
+        });
+        setCustomBadgeImages(imgMap);
+
+        // If not German, fetch translations for custom texts
+        if (language !== 'de' && Object.keys(txtMap).length > 0) {
+          const badgeIds = Object.keys(txtMap);
+          const { data: translations } = await supabase
+            .from('badge_share_translations')
+            .select('badge_id, translated_text')
+            .eq('language', language)
+            .in('badge_id', badgeIds);
+
+          if (translations) {
+            const translatedMap: Record<string, string> = {};
+            (translations as Array<{ badge_id: string; translated_text: string }>).forEach(t => {
+              translatedMap[t.badge_id] = t.translated_text;
+            });
+            // Use translated texts, fall back to German custom texts
+            badgeIds.forEach(id => {
+              txtMap[id] = translatedMap[id] || txtMap[id];
+            });
+
+            // Trigger translation for uncached badges
+            const uncached = badgeIds.filter(id => !translatedMap[id]);
+            for (const badgeId of uncached) {
+              supabase.functions.invoke('translate-badge-text', {
+                body: { badge_id: badgeId, source_text: txtMap[badgeId], target_language: language },
+              }).then(({ data: result }) => {
+                if (result?.translated_text) {
+                  setCustomShareTexts(prev => ({ ...prev, [badgeId]: result.translated_text }));
+                }
+              }).catch(() => {});
+            }
+          }
+        }
+        setCustomShareTexts(prev => ({ ...prev, ...txtMap }));
       }
     };
     load();
-  }, []);
+  }, [language]);
 
   const getBadgeImage = (id: string, fallback: string) => customBadgeImages[id] || fallback;
 
