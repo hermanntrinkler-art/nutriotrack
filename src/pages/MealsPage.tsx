@@ -250,7 +250,10 @@ export default function MealsPage() {
     setItems(prev => prev.map((item, i) => i === index ? { ...item, [field]: value, confidence_score: 1 } : item));
   };
 
-  const removeItem = (index: number) => {
+  const replaceItem = (index: number, newItem: AnalyzedFoodItem) => {
+    setItems(prev => prev.map((item, i) => i === index ? { ...newItem, confidence_score: 1 } : item));
+  };
+
     setItems(prev => prev.filter((_, i) => i !== index));
   };
 
