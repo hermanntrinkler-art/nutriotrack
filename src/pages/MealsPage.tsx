@@ -65,14 +65,6 @@ export default function MealsPage() {
       .order('use_count', { ascending: false })
       .limit(5);
     setFavorites((data || []) as any);
-
-    // Load all for the picker
-    const { data: allData } = await supabase
-      .from('saved_recipes')
-      .select('id, name, emoji, meal_type, total_calories, total_protein_g, total_fat_g, total_carbs_g')
-      .eq('user_id', user.id)
-      .order('use_count', { ascending: false });
-    setAllFavorites((allData || []) as any);
   }, [user]);
 
   useEffect(() => { loadFavorites(); }, [loadFavorites]);
