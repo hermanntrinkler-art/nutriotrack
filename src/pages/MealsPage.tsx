@@ -483,23 +483,14 @@ export default function MealsPage() {
             </div>
           </div>
 
-          {/* Food Search - PRIMARY position */}
+          {/* Food Search - PRIMARY and ONLY entry point */}
           <button onClick={() => setStep('search')} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors border-primary/20">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
               <Search className="h-6 w-6 text-primary" />
             </div>
             <div className="text-left flex-1">
               <p className="font-medium">{language === 'de' ? 'Lebensmittel suchen' : 'Search Food'}</p>
-              <p className="text-xs text-muted-foreground">{language === 'de' ? 'Durchsuche 600+ Lebensmittel & Online-Datenbank' : 'Search 600+ foods & online database'}</p>
-            </div>
-          </button>
-
-          <button onClick={handleManualEntry} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
-            <div className="w-12 h-12 rounded-2xl bg-warning/10 flex items-center justify-center">
-              <PenLine className="h-6 w-6 text-warning" />
-            </div>
-            <div className="text-left">
-              <p className="font-medium">{t('meals.manualEntry')}</p>
+              <p className="text-xs text-muted-foreground">{language === 'de' ? 'Suchen, Favoriten & Stücklisten – alles an einem Ort' : 'Search, favorites & combos – all in one place'}</p>
             </div>
           </button>
 
@@ -510,17 +501,6 @@ export default function MealsPage() {
             <div className="text-left">
               <p className="font-medium">{t('meals.scanBarcode')}</p>
               <p className="text-xs text-muted-foreground">{t('meals.barcodeDescription')}</p>
-            </div>
-          </button>
-
-          {/* Saved Recipes */}
-          <button onClick={() => setStep('recipes')} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <Star className="h-6 w-6 text-primary" />
-            </div>
-            <div className="text-left flex-1">
-              <p className="font-medium">{language === 'de' ? 'Alle Favoriten' : 'All Favorites'}</p>
-              <p className="text-xs text-muted-foreground">{language === 'de' ? 'Häufige Mahlzeiten verwalten & tracken' : 'Manage & track frequent meals'}</p>
             </div>
           </button>
 
