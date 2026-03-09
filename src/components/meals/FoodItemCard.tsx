@@ -40,12 +40,13 @@ function scaleItem(item: AnalyzedFoodItem, oldQty: number, newQty: number): Anal
 export default function FoodItemCard({ item, index, isAiResult, onEdit, onRemove, onQuantityChange }: FoodItemCardProps) {
   const { t } = useTranslation();
 
-  const step = item.unit === 'Stück' || item.unit === 'piece' ? 1 : item.quantity <= 10 ? 1 : item.quantity <= 50 ? 5 : 10;
+  const isPiece = item.unit === 'Stück' || item.unit === 'piece';
+  const step = isPiece ? 1 : item.quantity <= 20 ? 1 : item.quantity <= 100 ? 5 : 10;
 
   const handleStep = (delta: number) => {
     if (!onQuantityChange) return;
     const oldQty = item.quantity;
-    const newQty = Math.max(step, oldQty + delta * step);
+    const newQty = Math.max(isPiece ? 1 : step, Math.round((oldQty + delta * step) * 10) / 10);
     onQuantityChange(scaleItem(item, oldQty, newQty));
   };
 
