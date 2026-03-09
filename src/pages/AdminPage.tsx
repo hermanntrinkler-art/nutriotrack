@@ -33,6 +33,7 @@ import badgeWeek1 from '@/assets/badges/week-1.png';
 import badgeMonth1 from '@/assets/badges/month-1.png';
 import badgeQuarter from '@/assets/badges/quarter.png';
 import badgeMonth6 from '@/assets/badges/month-6.png';
+import badgeProfilePic from '@/assets/badges/profile-pic.png';
 
 const BADGE_DEFINITIONS = [
   { id: 'streak_3', title: '3-Day Streak', fallback: badgeStreak3 },
@@ -58,6 +59,7 @@ const BADGE_DEFINITIONS = [
   { id: 'month_1', title: 'First Month', fallback: badgeMonth1 },
   { id: 'quarter', title: '3 Months', fallback: badgeQuarter },
   { id: 'month_6', title: '6 Months', fallback: badgeMonth6 },
+  { id: 'profile_pic', title: 'Profile Pic', fallback: badgeProfilePic },
 ];
 
 interface UserStats {
