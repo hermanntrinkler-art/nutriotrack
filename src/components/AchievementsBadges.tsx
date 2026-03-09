@@ -78,7 +78,7 @@ const stagger = {
   show: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
 };
 
-export default function AchievementsBadges({ totalMeals, streak, goalReached, userName = '', weightLostKg = 0, daysTracked = 0 }: AchievementsBadgesProps) {
+export default function AchievementsBadges({ totalMeals, streak, goalReached, userName = '', weightLostKg = 0, daysTracked = 0, hasProfilePic = false }: AchievementsBadgesProps) {
   const { language } = useTranslation();
   const de = language === 'de';
   const [sharing, setSharing] = useState(false);
