@@ -454,6 +454,7 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
                   <div className="flex items-center gap-1.5">
                     {isOnline && <Globe className="h-3 w-3 text-muted-foreground shrink-0" />}
                     {isCustom && <span className="text-[10px] bg-primary/10 text-primary px-1 rounded shrink-0">★</span>}
+                    {isCommunity && <Users className="h-3 w-3 text-primary shrink-0" />}
                     <span className="text-sm font-semibold text-foreground truncate">{name}</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
