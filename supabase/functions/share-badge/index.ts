@@ -33,6 +33,22 @@ const BADGE_DEFAULTS: Record<string, { title_de: string; title_en: string; share
   profile_pic: { title_de: 'Profilbild', title_en: 'Profile Pic', shareText_de: 'Ich habe mein Profilbild bei NutrioTrack gesetzt! 📸', shareText_en: 'I set my profile picture on NutrioTrack! 📸' },
 }
 
+const escapeHtmlAttr = (value: string) =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+const escapeHtmlText = (value: string) =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .trim()
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
