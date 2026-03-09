@@ -135,6 +135,9 @@ Deno.serve(async (req) => {
     const ogTitle = escapeHtmlAttr(ogTitleRaw)
     const ogDescription = escapeHtmlAttr(ogDescriptionRaw)
     const ogImageEscaped = escapeHtmlAttr(ogImage)
+    const safeOrigin = originOverride && /^https?:\/\//i.test(originOverride) ? originOverride.replace(/\/$/, '') : null
+    const ogCanonicalUrlRaw = safeOrigin ? `${safeOrigin}/share/${badgeId}` : url.toString()
+    const ogCanonicalUrl = escapeHtmlAttr(ogCanonicalUrlRaw)
     const bodyTitle = escapeHtmlText(title)
     const bodyShareText = escapeHtmlText(shareText)
 
