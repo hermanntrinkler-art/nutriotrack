@@ -9,6 +9,9 @@ export interface FoodEntry {
   carbs_g: number;
   category: string;
   matchedAlias?: string;
+  communityContributor?: string;
+  communityBrand?: string;
+  communityStore?: string;
 }
 
 // Common foods with typical portion sizes and nutritional values

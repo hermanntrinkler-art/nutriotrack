@@ -7,11 +7,12 @@ import { searchOpenFoodFacts } from '@/lib/openfoodfacts-search';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Plus, Minus, Globe, Loader2, X, ArrowLeft, ChevronRight, Flame, Star } from 'lucide-react';
+import { Search, Plus, Minus, Globe, Loader2, X, ArrowLeft, ChevronRight, Flame, Star, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { hapticFeedback } from '@/lib/haptics';
 import { saveAsRecipe } from '@/components/meals/SavedRecipesScreen';
 import { toast } from 'sonner';
+import CommunityProductForm from '@/components/CommunityProductForm';
 
 interface FoodSearchScreenProps {
   onDone: (items: AnalyzedFoodItem[]) => void;
@@ -68,10 +69,12 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedItems, setSelectedItems] = useState<AnalyzedFoodItem[]>([]);
   const [customProducts, setCustomProducts] = useState<FoodEntry[]>([]);
+  const [communityProducts, setCommunityProducts] = useState<FoodEntry[]>([]);
   const [favorites, setFavorites] = useState<SavedFavorite[]>([]);
   const [savingFav, setSavingFav] = useState(false);
   const [showSaveFavInput, setShowSaveFavInput] = useState(false);
   const [favName, setFavName] = useState('');
+  const [showCommunityForm, setShowCommunityForm] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const onlineTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onlineController = useRef<AbortController | null>(null);
@@ -79,7 +82,32 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
 
   const labels = language === 'de' ? CATEGORY_LABELS_DE : CATEGORY_LABELS_EN;
 
-  // Load custom products + favorites
+  const loadCommunityProducts = useCallback(async () => {
+    const { data } = await supabase
+      .from('community_products')
+      .select('food_name, quantity, unit, calories, protein_g, fat_g, carbs_g, contributor_display_name, contributor_avatar_emoji, brand, store')
+      .eq('is_hidden', false)
+      .order('verified_count', { ascending: false })
+      .limit(200);
+    if (data) {
+      setCommunityProducts((data as any[]).map(e => ({
+        name: e.food_name,
+        name_en: e.food_name,
+        quantity: Number(e.quantity) || 100,
+        unit: e.unit || 'g',
+        calories: Number(e.calories) || 0,
+        protein_g: Number(e.protein_g) || 0,
+        fat_g: Number(e.fat_g) || 0,
+        carbs_g: Number(e.carbs_g) || 0,
+        category: 'community',
+        communityContributor: `${e.contributor_avatar_emoji || '😊'} ${e.contributor_display_name}`,
+        communityBrand: e.brand,
+        communityStore: e.store,
+      })));
+    }
+  }, []);
+
+  // Load custom products + favorites + community
   useEffect(() => {
     if (!user) return;
     supabase
@@ -107,7 +135,8 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
       .then(({ data }) => {
         setFavorites((data || []) as SavedFavorite[]);
       });
-  }, [user]);
+    loadCommunityProducts();
+  }, [user, loadCommunityProducts]);
 
   // Cleanup
   useEffect(() => {
@@ -143,17 +172,22 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
       ? customProducts.filter(e => e.name.toLowerCase().includes(norm) || e.name_en.toLowerCase().includes(norm))
       : [];
 
-    const merged = [...customMatches, ...dbResults, ...online];
+    // Community products search
+    const communityMatches = norm
+      ? communityProducts.filter(e => e.name.toLowerCase().includes(norm) || (e as any).communityBrand?.toLowerCase().includes(norm))
+      : [];
+
+    const merged = [...customMatches, ...dbResults, ...communityMatches, ...online];
     const seen = new Set<string>();
     const deduped = merged.filter(e => {
       const key = `${e.name.toLowerCase()}|${e.unit}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
-    }).slice(0, 20);
+    }).slice(0, 25);
 
     setResults(deduped);
-  }, [language, customProducts]);
+  }, [language, customProducts, communityProducts]);
 
   const triggerOnlineSearch = useCallback((q: string) => {
     if (onlineTimer.current) clearTimeout(onlineTimer.current);
@@ -376,8 +410,19 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
       {/* Results */}
       <div className="space-y-1.5 max-h-[40vh] overflow-y-auto rounded-2xl">
         {results.length === 0 && !searchingOnline && query.trim().length > 0 && filteredFavorites.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            {language === 'de' ? 'Keine Ergebnisse gefunden' : 'No results found'}
+          <div className="text-center py-6 space-y-3">
+            <p className="text-muted-foreground text-sm">
+              {language === 'de' ? 'Keine Ergebnisse gefunden' : 'No results found'}
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => setShowCommunityForm(true)}
+            >
+              <Users className="h-3.5 w-3.5 mr-1.5" />
+              {language === 'de' ? 'Zur Community hinzufügen' : 'Add to Community'}
+            </Button>
           </div>
         )}
 
@@ -392,6 +437,7 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
             const name = language === 'de' ? food.name : food.name_en;
             const isOnline = food.category === 'openfoodfacts';
             const isCustom = food.category === 'custom';
+            const isCommunity = food.category === 'community';
 
             return (
               <motion.button
@@ -408,6 +454,7 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
                   <div className="flex items-center gap-1.5">
                     {isOnline && <Globe className="h-3 w-3 text-muted-foreground shrink-0" />}
                     {isCustom && <span className="text-[10px] bg-primary/10 text-primary px-1 rounded shrink-0">★</span>}
+                    {isCommunity && <Users className="h-3 w-3 text-primary shrink-0" />}
                     <span className="text-sm font-semibold text-foreground truncate">{name}</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
@@ -418,6 +465,12 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
                       </span>
                     )}
                   </p>
+                  {isCommunity && (food as any).communityContributor && (
+                    <p className="text-[10px] text-primary/70 mt-0.5">
+                      👥 {(food as any).communityContributor}
+                      {(food as any).communityStore && ` · ${(food as any).communityStore}`}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-sm font-bold tabular-nums text-foreground">{food.calories}</span>
@@ -542,6 +595,18 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Community product form */}
+      {showCommunityForm && (
+        <CommunityProductForm
+          onClose={() => setShowCommunityForm(false)}
+          onSaved={() => {
+            setShowCommunityForm(false);
+            loadCommunityProducts();
+          }}
+          prefillName={query.trim()}
+        />
+      )}
     </div>
   );
 }

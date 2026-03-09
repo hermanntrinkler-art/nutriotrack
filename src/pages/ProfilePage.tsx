@@ -15,6 +15,7 @@ import PaywallScreen from '@/components/PaywallScreen';
 import { motion } from 'framer-motion';
 import { hapticFeedback } from '@/lib/haptics';
 import AchievementsBadges from '@/components/AchievementsBadges';
+import AvatarEditor from '@/components/AvatarEditor';
 import ReminderSettings from '@/components/ReminderSettings';
 import MilestoneTimeline from '@/components/MilestoneTimeline';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -219,15 +220,27 @@ export default function ProfilePage() {
         )}
       </motion.div>
 
-      {/* User info */}
+      {/* User info with avatar */}
       <motion.div className="nutri-card flex items-center gap-4" variants={fadeUp}>
-        <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-          <Leaf className="h-7 w-7 text-primary" />
+        <div className="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center border-2 border-primary/20">
+          {profile?.avatar_url ? (
+            <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-3xl">{profile?.avatar_emoji || '😊'}</span>
+          )}
         </div>
         <div>
-          <p className="font-semibold">{profile?.name || user?.email?.split('@')[0]}</p>
+          <p className="font-semibold">{profile?.display_name || profile?.name || user?.email?.split('@')[0]}</p>
           <p className="text-sm text-muted-foreground">{user?.email}</p>
+          {profile?.display_name && (
+            <p className="text-xs text-primary font-medium">{profile.avatar_emoji} {profile.display_name}</p>
+          )}
         </div>
+      </motion.div>
+
+      {/* Avatar Editor */}
+      <motion.div variants={fadeUp}>
+        <AvatarEditor />
       </motion.div>
 
       {/* Activity Level Info */}

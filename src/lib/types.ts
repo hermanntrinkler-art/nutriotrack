@@ -3,10 +3,33 @@ export interface Profile {
   user_id: string;
   email: string | null;
   name: string | null;
+  display_name: string | null;
+  avatar_emoji: string | null;
+  avatar_url: string | null;
   language: string;
   onboarding_completed: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface CommunityProduct {
+  id: string;
+  contributor_id: string;
+  contributor_display_name: string;
+  contributor_avatar_emoji: string | null;
+  food_name: string;
+  barcode: string | null;
+  brand: string | null;
+  store: string | null;
+  quantity: number;
+  unit: string;
+  calories: number;
+  protein_g: number;
+  fat_g: number;
+  carbs_g: number;
+  verified_count: number;
+  reported_count: number;
+  created_at: string;
 }
 
 export interface UserGoals {

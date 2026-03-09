@@ -41,6 +41,72 @@ export type Database = {
         }
         Relationships: []
       }
+      community_products: {
+        Row: {
+          barcode: string | null
+          brand: string | null
+          calories: number
+          carbs_g: number
+          contributor_avatar_emoji: string | null
+          contributor_display_name: string
+          contributor_id: string
+          created_at: string
+          fat_g: number
+          food_name: string
+          id: string
+          is_hidden: boolean
+          protein_g: number
+          quantity: number
+          reported_count: number
+          store: string | null
+          unit: string
+          updated_at: string
+          verified_count: number
+        }
+        Insert: {
+          barcode?: string | null
+          brand?: string | null
+          calories?: number
+          carbs_g?: number
+          contributor_avatar_emoji?: string | null
+          contributor_display_name?: string
+          contributor_id: string
+          created_at?: string
+          fat_g?: number
+          food_name: string
+          id?: string
+          is_hidden?: boolean
+          protein_g?: number
+          quantity?: number
+          reported_count?: number
+          store?: string | null
+          unit?: string
+          updated_at?: string
+          verified_count?: number
+        }
+        Update: {
+          barcode?: string | null
+          brand?: string | null
+          calories?: number
+          carbs_g?: number
+          contributor_avatar_emoji?: string | null
+          contributor_display_name?: string
+          contributor_id?: string
+          created_at?: string
+          fat_g?: number
+          food_name?: string
+          id?: string
+          is_hidden?: boolean
+          protein_g?: number
+          quantity?: number
+          reported_count?: number
+          store?: string | null
+          unit?: string
+          updated_at?: string
+          verified_count?: number
+        }
+        Relationships: []
+      }
       custom_products: {
         Row: {
           barcode: string
@@ -246,9 +312,12 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_emoji: string | null
+          avatar_url: string | null
           created_at: string
           daily_photo_scans: number
           daily_scans_reset_date: string
+          display_name: string | null
           email: string | null
           id: string
           language: string | null
@@ -261,9 +330,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          avatar_emoji?: string | null
+          avatar_url?: string | null
           created_at?: string
           daily_photo_scans?: number
           daily_scans_reset_date?: string
+          display_name?: string | null
           email?: string | null
           id?: string
           language?: string | null
@@ -276,9 +348,12 @@ export type Database = {
           user_id: string
         }
         Update: {
+          avatar_emoji?: string | null
+          avatar_url?: string | null
           created_at?: string
           daily_photo_scans?: number
           daily_scans_reset_date?: string
+          display_name?: string | null
           email?: string | null
           id?: string
           language?: string | null
