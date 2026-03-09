@@ -18,6 +18,7 @@ import AchievementsBadges from '@/components/AchievementsBadges';
 import AvatarEditor from '@/components/AvatarEditor';
 import ReminderSettings from '@/components/ReminderSettings';
 import MilestoneTimeline from '@/components/MilestoneTimeline';
+import VirtualGarden from '@/components/VirtualGarden';
 import { useAdmin } from '@/hooks/useAdmin';
 import type { MealEntry } from '@/lib/types';
 
