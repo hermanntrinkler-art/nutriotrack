@@ -351,6 +351,53 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath();
 }
 
+function downloadBlob(blob: Blob, filename = 'nutriotrack-achievement.png') {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+export async function shareToFacebook(blob: Blob, shareText: string, language: 'de' | 'en') {
+  downloadBlob(blob);
+  const appUrl = window.location.origin;
+  const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(appUrl)}&quote=${encodeURIComponent(shareText)}`;
+  window.open(fbUrl, '_blank', 'noopener,noreferrer');
+  const { toast } = await import('sonner');
+  toast.success(
+    language === 'de'
+      ? '📋 Bild heruntergeladen — füge es als Foto zu deinem Facebook-Post hinzu!'
+      : '📋 Image downloaded — add it as a photo to your Facebook post!'
+  );
+}
+
+export async function shareToWhatsApp(blob: Blob, shareText: string, language: 'de' | 'en') {
+  downloadBlob(blob);
+  const waUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+  window.open(waUrl, '_blank', 'noopener,noreferrer');
+  const { toast } = await import('sonner');
+  toast.success(
+    language === 'de'
+      ? '📋 Bild heruntergeladen — hänge es in WhatsApp an!'
+      : '📋 Image downloaded — attach it in WhatsApp!'
+  );
+}
+
+export async function shareToInstagram(blob: Blob, language: 'de' | 'en') {
+  downloadBlob(blob);
+  const { toast } = await import('sonner');
+  toast.success(
+    language === 'de'
+      ? '📸 Bild heruntergeladen — öffne Instagram und teile es als Story oder Post!'
+      : '📸 Image downloaded — open Instagram and share it as a Story or Post!'
+  );
+}
+
 export async function shareImage(blob: Blob, language: 'de' | 'en', customShareText?: string) {
   const file = new File([blob], 'nutriotrack-achievement.png', { type: 'image/png' });
 
@@ -360,60 +407,30 @@ export async function shareImage(blob: Blob, language: 'de' | 'en', customShareT
 
   const text = customShareText || defaultText;
 
-  // Try native share with file (works on mobile browsers, NOT in iframes)
   if (navigator.share) {
     try {
       const fileOnlyData: ShareData = { files: [file] };
       const canShareFiles = !navigator.canShare || navigator.canShare(fileOnlyData);
-
       if (canShareFiles) {
         await navigator.share(fileOnlyData);
         return true;
       }
     } catch (e) {
       if ((e as Error)?.name === 'AbortError') return true;
-      // share failed (e.g. iframe restriction) — continue to fallback
-    }
-
-    // Try text-only share
-    try {
-      await navigator.share({ title: 'NutrioTrack 🏆', text });
-      return true;
-    } catch (e) {
-      if ((e as Error)?.name === 'AbortError') return true;
     }
   }
 
-  // Fallback: copy text to clipboard + download image
-  const url = URL.createObjectURL(blob);
+  downloadBlob(blob);
   try {
-    // Download the image
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'nutriotrack-achievement.png';
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    // Also copy share text to clipboard
-    try {
-      await navigator.clipboard.writeText(text);
-      const { toast } = await import('sonner');
-      toast.success(
-        language === 'de' 
-          ? '📋 Bild heruntergeladen & Text kopiert! Teile beides auf Facebook.' 
-          : '📋 Image downloaded & text copied! Share both on Facebook.'
-      );
-      return true;
-    } catch {
-      // clipboard failed, just downloaded
-    }
-
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
-    return false;
+    await navigator.clipboard.writeText(text);
+    const { toast } = await import('sonner');
+    toast.success(
+      language === 'de'
+        ? '📋 Bild heruntergeladen & Text kopiert!'
+        : '📋 Image downloaded & text copied!'
+    );
+    return true;
   } catch {
-    URL.revokeObjectURL(url);
     return false;
   }
 }
