@@ -28,7 +28,7 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Proteinshake', name_en: 'Protein Shake', quantity: 300, unit: 'ml', calories: 150, protein_g: 25, fat_g: 2, carbs_g: 8, category: 'drinks' },
 
   // Kaffee-Zutaten / Coffee Add-ins
-  { name: 'Sahne (Kaffee)', name_en: 'Coffee Cream', quantity: 15, unit: 'ml', calories: 45, protein_g: 0, fat_g: 5, carbs_g: 0, category: 'drinks' },
+  { name: 'Sahne (Kaffee)', name_en: 'Coffee Cream', quantity: 50, unit: 'g', calories: 150, protein_g: 1, fat_g: 15, carbs_g: 2, category: 'drinks' },
   { name: 'Milch (zum Kaffee)', name_en: 'Milk (for coffee)', quantity: 30, unit: 'ml', calories: 19, protein_g: 1, fat_g: 1, carbs_g: 1, category: 'drinks' },
   { name: 'Kondensmilch', name_en: 'Condensed Milk', quantity: 15, unit: 'ml', calories: 20, protein_g: 1, fat_g: 1, carbs_g: 2, category: 'drinks' },
   { name: 'Hafermilch (zum Kaffee)', name_en: 'Oat Milk (for coffee)', quantity: 50, unit: 'ml', calories: 23, protein_g: 0, fat_g: 1, carbs_g: 4, category: 'drinks' },
