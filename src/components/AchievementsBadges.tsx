@@ -261,7 +261,7 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
   const renderBadges = (filter: string) => {
     const filtered = filter === 'all' ? achievements : achievements.filter(a => a.category === filter);
     return (
-      <motion.div className="grid grid-cols-3 gap-2" variants={stagger} initial="hidden" animate="show">
+      <motion.div className="grid grid-cols-3 gap-2" variants={stagger} initial={false} animate="show">
         {filtered.map((a) => (
           <motion.button
             key={a.id}
