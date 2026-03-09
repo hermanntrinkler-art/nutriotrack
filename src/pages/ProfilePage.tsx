@@ -274,15 +274,21 @@ export default function ProfilePage() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="badges">
-            <AchievementsBadges
-              userName={profile?.name || user?.email?.split('@')[0] || ''}
-              totalMeals={allMeals.length}
-              streak={streakValue}
-              goalReached={goalReachedValue}
-              weightLostKg={weightLostKgValue}
-              daysTracked={daysTrackedValue}
-              hasProfilePic={!!profile?.avatar_url}
-            />
+            {dataLoaded ? (
+              <AchievementsBadges
+                userName={profile?.name || user?.email?.split('@')[0] || ''}
+                totalMeals={allMeals.length}
+                streak={streakValue}
+                goalReached={goalReachedValue}
+                weightLostKg={weightLostKgValue}
+                daysTracked={daysTrackedValue}
+                hasProfilePic={!!profile?.avatar_url}
+              />
+            ) : (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent" />
+              </div>
+            )}
           </TabsContent>
           <TabsContent value="timeline">
             <MilestoneTimeline
