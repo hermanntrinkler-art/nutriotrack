@@ -85,6 +85,39 @@ async function lookupCustomProduct(code: string, userId: string): Promise<Analyz
   };
 }
 
+interface CommunityResult {
+  item: AnalyzedFoodItem;
+  contributorName: string;
+  contributorEmoji: string;
+}
+
+async function lookupCommunityProduct(code: string): Promise<CommunityResult | null> {
+  const { data } = await supabase
+    .from('community_products')
+    .select('food_name, quantity, unit, calories, protein_g, fat_g, carbs_g, contributor_display_name, contributor_avatar_emoji')
+    .eq('barcode', code)
+    .eq('is_hidden', false)
+    .limit(1)
+    .maybeSingle();
+
+  if (!data) return null;
+
+  return {
+    item: {
+      food_name: data.food_name,
+      quantity: Number(data.quantity) || 100,
+      unit: data.unit || 'g',
+      calories: Number(data.calories) || 0,
+      protein_g: Number(data.protein_g) || 0,
+      fat_g: Number(data.fat_g) || 0,
+      carbs_g: Number(data.carbs_g) || 0,
+      confidence_score: 1,
+    },
+    contributorName: data.contributor_display_name,
+    contributorEmoji: data.contributor_avatar_emoji || '😊',
+  };
+}
+
 export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
