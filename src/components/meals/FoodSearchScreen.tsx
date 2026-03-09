@@ -82,7 +82,32 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
 
   const labels = language === 'de' ? CATEGORY_LABELS_DE : CATEGORY_LABELS_EN;
 
-  // Load custom products + favorites
+  const loadCommunityProducts = useCallback(async () => {
+    const { data } = await supabase
+      .from('community_products')
+      .select('food_name, quantity, unit, calories, protein_g, fat_g, carbs_g, contributor_display_name, contributor_avatar_emoji, brand, store')
+      .eq('is_hidden', false)
+      .order('verified_count', { ascending: false })
+      .limit(200);
+    if (data) {
+      setCommunityProducts((data as any[]).map(e => ({
+        name: e.food_name,
+        name_en: e.food_name,
+        quantity: Number(e.quantity) || 100,
+        unit: e.unit || 'g',
+        calories: Number(e.calories) || 0,
+        protein_g: Number(e.protein_g) || 0,
+        fat_g: Number(e.fat_g) || 0,
+        carbs_g: Number(e.carbs_g) || 0,
+        category: 'community',
+        communityContributor: `${e.contributor_avatar_emoji || '😊'} ${e.contributor_display_name}`,
+        communityBrand: e.brand,
+        communityStore: e.store,
+      })));
+    }
+  }, []);
+
+  // Load custom products + favorites + community
   useEffect(() => {
     if (!user) return;
     supabase
@@ -110,7 +135,8 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
       .then(({ data }) => {
         setFavorites((data || []) as SavedFavorite[]);
       });
-  }, [user]);
+    loadCommunityProducts();
+  }, [user, loadCommunityProducts]);
 
   // Cleanup
   useEffect(() => {
