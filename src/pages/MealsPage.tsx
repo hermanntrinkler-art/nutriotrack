@@ -515,17 +515,17 @@ export default function MealsPage() {
         <FoodSearchScreen
           onDone={(searchItems) => {
             setIsAiResult(false);
-            if (addingToReview) {
+            if (returnToReview) {
               setItems(prev => [...prev.filter(i => i.food_name), ...searchItems]);
-              setAddingToReview(false);
+              setReturnToReview(false);
             } else {
               setItems(searchItems);
             }
             setStep('review');
           }}
           onCancel={() => {
-            if (addingToReview) {
-              setAddingToReview(false);
+            if (returnToReview) {
+              setReturnToReview(false);
               setStep('review');
             } else {
               setStep('select-method');
