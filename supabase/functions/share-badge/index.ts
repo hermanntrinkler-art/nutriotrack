@@ -146,13 +146,15 @@ Deno.serve(async (req) => {
   <meta property="og:type" content="website" />
   <meta property="og:title" content="${ogTitle}" />
   <meta property="og:description" content="${ogDescription}" />
-  <meta property="og:image" content="${ogImage}" />
+  <meta property="og:image" content="${ogImageEscaped}" />
+  <meta property="og:image:secure_url" content="${ogImageEscaped}" />
+  <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="512" />
   <meta property="og:image:height" content="512" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${ogTitle}" />
   <meta name="twitter:description" content="${ogDescription}" />
-  <meta name="twitter:image" content="${ogImage}" />
+  <meta name="twitter:image" content="${ogImageEscaped}" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
