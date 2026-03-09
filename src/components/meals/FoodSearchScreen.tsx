@@ -465,6 +465,12 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
                       </span>
                     )}
                   </p>
+                  {isCommunity && (food as any).communityContributor && (
+                    <p className="text-[10px] text-primary/70 mt-0.5">
+                      👥 {(food as any).communityContributor}
+                      {(food as any).communityStore && ` · ${(food as any).communityStore}`}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-sm font-bold tabular-nums text-foreground">{food.calories}</span>
