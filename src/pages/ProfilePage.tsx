@@ -18,6 +18,7 @@ import AchievementsBadges from '@/components/AchievementsBadges';
 import AvatarEditor from '@/components/AvatarEditor';
 import ReminderSettings from '@/components/ReminderSettings';
 import MilestoneTimeline from '@/components/MilestoneTimeline';
+import VirtualGarden from '@/components/VirtualGarden';
 import { useAdmin } from '@/hooks/useAdmin';
 import type { MealEntry } from '@/lib/types';
 
@@ -153,6 +154,35 @@ export default function ProfilePage() {
     return new Set(allMeals.map(m => m.entry_date)).size;
   }, [allMeals]);
 
+  // XP & Level for garden (mirrors AchievementsBadges logic)
+  const gardenLevel = useMemo(() => {
+    const xpMap: [number, number][] = [
+      [3, 15], [7, 30], [14, 60], [30, 120], [60, 200], [100, 350], // streak
+      [1, 10], [10, 25], [25, 50], [50, 80], [100, 150], [500, 400], // meals
+      [1, 30], [5, 80], [10, 200], [15, 280], [20, 350], [25, 450], // weight
+      [7, 20], [30, 100], [90, 250], [180, 400], // days tracked
+    ];
+    const streakThresholds = [3, 7, 14, 30, 60, 100];
+    const mealThresholds = [1, 10, 25, 50, 100, 500];
+    const weightThresholds = [1, 5, 10, 15, 20, 25];
+    const daysThresholds = [7, 30, 90, 180];
+
+    let xp = 0;
+    streakThresholds.forEach((t, i) => { if (streakValue >= t) xp += xpMap[i][1]; });
+    mealThresholds.forEach((t, i) => { if (allMeals.length >= t) xp += xpMap[6 + i][1]; });
+    weightThresholds.forEach((t, i) => { if (weightLostKgValue >= t) xp += xpMap[12 + i][1]; });
+    daysThresholds.forEach((t, i) => { if (daysTrackedValue >= t) xp += xpMap[18 + i][1]; });
+    if (goalReachedValue) xp += 500;
+    if (profile?.avatar_url) xp += 25;
+
+    const levels = [0, 50, 150, 300, 500, 800, 1200, 1800];
+    let lvl = 1;
+    for (let i = levels.length - 1; i >= 0; i--) {
+      if (xp >= levels[i]) { lvl = i + 1; break; }
+    }
+    return lvl;
+  }, [streakValue, allMeals.length, weightLostKgValue, daysTrackedValue, goalReachedValue, profile?.avatar_url]);
+
   const activityDescMap: Record<string, { label: string; desc: string }> = {
     sedentary: { label: t('onboarding.sedentary'), desc: t('onboarding.sedentaryDesc') },
     lightly_active: { label: t('onboarding.lightlyActive'), desc: t('onboarding.lightlyActiveDesc') },
@@ -265,12 +295,15 @@ export default function ProfilePage() {
       {/* Achievements & Milestones Tab */}
       <motion.div variants={fadeUp}>
         <Tabs defaultValue="badges">
-          <TabsList className="w-full grid grid-cols-2 mb-3">
+          <TabsList className="w-full grid grid-cols-3 mb-3">
             <TabsTrigger value="badges" className="text-xs font-bold">
-              🏆 {language === 'de' ? 'Badges & Level' : 'Badges & Level'}
+              🏆 {language === 'de' ? 'Badges' : 'Badges'}
+            </TabsTrigger>
+            <TabsTrigger value="garden" className="text-xs font-bold">
+              🌱 {language === 'de' ? 'Garten' : 'Garden'}
             </TabsTrigger>
             <TabsTrigger value="timeline" className="text-xs font-bold">
-              📅 {language === 'de' ? 'Timeline' : 'Timeline'}
+              📅 Timeline
             </TabsTrigger>
           </TabsList>
           <TabsContent value="badges">
@@ -289,6 +322,9 @@ export default function ProfilePage() {
                 <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent" />
               </div>
             )}
+          </TabsContent>
+          <TabsContent value="garden">
+            <VirtualGarden level={gardenLevel} streak={streakValue} />
           </TabsContent>
           <TabsContent value="timeline">
             <MilestoneTimeline
