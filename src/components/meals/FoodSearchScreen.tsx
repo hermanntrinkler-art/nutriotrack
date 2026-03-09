@@ -437,6 +437,7 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
             const name = language === 'de' ? food.name : food.name_en;
             const isOnline = food.category === 'openfoodfacts';
             const isCustom = food.category === 'custom';
+            const isCommunity = food.category === 'community';
 
             return (
               <motion.button
