@@ -7,11 +7,12 @@ import { searchOpenFoodFacts } from '@/lib/openfoodfacts-search';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Plus, Minus, Globe, Loader2, X, ArrowLeft, ChevronRight, Flame, Star } from 'lucide-react';
+import { Search, Plus, Minus, Globe, Loader2, X, ArrowLeft, ChevronRight, Flame, Star, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { hapticFeedback } from '@/lib/haptics';
 import { saveAsRecipe } from '@/components/meals/SavedRecipesScreen';
 import { toast } from 'sonner';
+import CommunityProductForm from '@/components/CommunityProductForm';
 
 interface FoodSearchScreenProps {
   onDone: (items: AnalyzedFoodItem[]) => void;
