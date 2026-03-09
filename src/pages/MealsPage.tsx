@@ -514,11 +514,11 @@ export default function MealsPage() {
           {/* Saved Recipes */}
           <button onClick={() => setStep('recipes')} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <BookOpen className="h-6 w-6 text-primary" />
+              <Star className="h-6 w-6 text-primary" />
             </div>
             <div className="text-left flex-1">
-              <p className="font-medium">{language === 'de' ? 'Gespeicherte Rezepte' : 'Saved Recipes'}</p>
-              <p className="text-xs text-muted-foreground">{language === 'de' ? 'Häufige Mahlzeiten schnell erneut tracken' : 'Quickly re-track frequent meals'}</p>
+              <p className="font-medium">{language === 'de' ? 'Alle Favoriten' : 'All Favorites'}</p>
+              <p className="text-xs text-muted-foreground">{language === 'de' ? 'Häufige Mahlzeiten verwalten & tracken' : 'Manage & track frequent meals'}</p>
             </div>
           </button>
 
