@@ -172,17 +172,22 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
       ? customProducts.filter(e => e.name.toLowerCase().includes(norm) || e.name_en.toLowerCase().includes(norm))
       : [];
 
-    const merged = [...customMatches, ...dbResults, ...online];
+    // Community products search
+    const communityMatches = norm
+      ? communityProducts.filter(e => e.name.toLowerCase().includes(norm) || (e as any).communityBrand?.toLowerCase().includes(norm))
+      : [];
+
+    const merged = [...customMatches, ...dbResults, ...communityMatches, ...online];
     const seen = new Set<string>();
     const deduped = merged.filter(e => {
       const key = `${e.name.toLowerCase()}|${e.unit}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
-    }).slice(0, 20);
+    }).slice(0, 25);
 
     setResults(deduped);
-  }, [language, customProducts]);
+  }, [language, customProducts, communityProducts]);
 
   const triggerOnlineSearch = useCallback((q: string) => {
     if (onlineTimer.current) clearTimeout(onlineTimer.current);
