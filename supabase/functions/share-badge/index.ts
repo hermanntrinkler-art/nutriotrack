@@ -84,13 +84,15 @@ Deno.serve(async (req) => {
     }
 
     const isDE = lang === 'de'
-    const title = isDE ? defaults.title_de : defaults.title_en
-    
-    // Determine share text: custom (from admin, written in German) or default
+    const title = titleOverride || (isDE ? defaults.title_de : defaults.title_en)
+
+    // Determine share text: URL override -> custom DB text -> default
     let shareText: string
     const customShareText = badgeData?.share_text
-    
-    if (customShareText && !isDE) {
+
+    if (textOverride) {
+      shareText = textOverride
+    } else if (customShareText && !isDE) {
       // Check for cached translation
       const { data: cached } = await supabase
         .from('badge_share_translations')
@@ -98,7 +100,7 @@ Deno.serve(async (req) => {
         .eq('badge_id', badgeId)
         .eq('language', lang)
         .maybeSingle()
-      
+
       if (cached) {
         shareText = cached.translated_text
       } else {
@@ -122,13 +124,18 @@ Deno.serve(async (req) => {
     } else {
       shareText = customShareText || (isDE ? defaults.shareText_de : defaults.shareText_en)
     }
-    
-    // Build OG image URL - use custom image or a default badge asset
-    const ogImage = badgeData?.image_url || `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/badge-images/${badgeId}.png`
 
-    const appUrl = url.origin.replace('supabase.co/functions/v1/share-badge', 'lovable.app')
-    const ogTitle = `${title} – NutrioTrack 🏆`
-    const ogDescription = shareText
+    // Build OG image URL - prioritize direct URL override
+    const ogImage = imageOverride || badgeData?.image_url || `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/badge-images/${badgeId}.png`
+
+    const ogTitleRaw = `${title} – NutrioTrack 🏆`
+    const ogDescriptionRaw = shareText
+
+    const ogTitle = escapeHtmlAttr(ogTitleRaw)
+    const ogDescription = escapeHtmlAttr(ogDescriptionRaw)
+    const ogImageEscaped = escapeHtmlAttr(ogImage)
+    const bodyTitle = escapeHtmlText(title)
+    const bodyShareText = escapeHtmlText(shareText)
 
     const html = `<!DOCTYPE html>
 <html lang="${lang}">
