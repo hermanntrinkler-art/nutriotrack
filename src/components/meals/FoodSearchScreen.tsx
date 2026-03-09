@@ -410,8 +410,19 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
       {/* Results */}
       <div className="space-y-1.5 max-h-[40vh] overflow-y-auto rounded-2xl">
         {results.length === 0 && !searchingOnline && query.trim().length > 0 && filteredFavorites.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground text-sm">
-            {language === 'de' ? 'Keine Ergebnisse gefunden' : 'No results found'}
+          <div className="text-center py-6 space-y-3">
+            <p className="text-muted-foreground text-sm">
+              {language === 'de' ? 'Keine Ergebnisse gefunden' : 'No results found'}
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => setShowCommunityForm(true)}
+            >
+              <Users className="h-3.5 w-3.5 mr-1.5" />
+              {language === 'de' ? 'Zur Community hinzufügen' : 'Add to Community'}
+            </Button>
           </div>
         )}
 
