@@ -69,10 +69,12 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedItems, setSelectedItems] = useState<AnalyzedFoodItem[]>([]);
   const [customProducts, setCustomProducts] = useState<FoodEntry[]>([]);
+  const [communityProducts, setCommunityProducts] = useState<FoodEntry[]>([]);
   const [favorites, setFavorites] = useState<SavedFavorite[]>([]);
   const [savingFav, setSavingFav] = useState(false);
   const [showSaveFavInput, setShowSaveFavInput] = useState(false);
   const [favName, setFavName] = useState('');
+  const [showCommunityForm, setShowCommunityForm] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const onlineTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onlineController = useRef<AbortController | null>(null);
