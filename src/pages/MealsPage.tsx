@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { analyzeFoodImage } from '@/lib/ai-analysis';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, PenLine, ScanBarcode, Search, BookOpen, BookmarkPlus, Star, Flame } from 'lucide-react';
+import { Camera, Upload, ScanBarcode, Search, Star, Flame, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
@@ -40,10 +40,8 @@ export default function MealsPage() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [savingRecipe, setSavingRecipe] = useState(false);
-  const [addingToReview, setAddingToReview] = useState(false);
-  const [showFavoritePicker, setShowFavoritePicker] = useState(false);
+  const [returnToReview, setReturnToReview] = useState(false);
   const [favorites, setFavorites] = useState<{id: string; name: string; emoji: string; meal_type: string; total_calories: number; total_protein_g: number; total_fat_g: number; total_carbs_g: number}[]>([]);
-  const [allFavorites, setAllFavorites] = useState<{id: string; name: string; emoji: string; meal_type: string; total_calories: number; total_protein_g: number; total_fat_g: number; total_carbs_g: number}[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,14 +65,6 @@ export default function MealsPage() {
       .order('use_count', { ascending: false })
       .limit(5);
     setFavorites((data || []) as any);
-
-    // Load all for the picker
-    const { data: allData } = await supabase
-      .from('saved_recipes')
-      .select('id, name, emoji, meal_type, total_calories, total_protein_g, total_fat_g, total_carbs_g')
-      .eq('user_id', user.id)
-      .order('use_count', { ascending: false });
-    setAllFavorites((allData || []) as any);
   }, [user]);
 
   useEffect(() => { loadFavorites(); }, [loadFavorites]);
@@ -349,8 +339,7 @@ export default function MealsPage() {
     setImagePreview(null);
     setIsAiResult(false);
     setEditingIndex(null);
-    setAddingToReview(false);
-    setShowFavoritePicker(false);
+    setReturnToReview(false);
   };
 
   return (
@@ -494,23 +483,14 @@ export default function MealsPage() {
             </div>
           </div>
 
-          {/* Food Search - PRIMARY position */}
+          {/* Food Search - PRIMARY and ONLY entry point */}
           <button onClick={() => setStep('search')} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors border-primary/20">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
               <Search className="h-6 w-6 text-primary" />
             </div>
             <div className="text-left flex-1">
               <p className="font-medium">{language === 'de' ? 'Lebensmittel suchen' : 'Search Food'}</p>
-              <p className="text-xs text-muted-foreground">{language === 'de' ? 'Durchsuche 600+ Lebensmittel & Online-Datenbank' : 'Search 600+ foods & online database'}</p>
-            </div>
-          </button>
-
-          <button onClick={handleManualEntry} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
-            <div className="w-12 h-12 rounded-2xl bg-warning/10 flex items-center justify-center">
-              <PenLine className="h-6 w-6 text-warning" />
-            </div>
-            <div className="text-left">
-              <p className="font-medium">{t('meals.manualEntry')}</p>
+              <p className="text-xs text-muted-foreground">{language === 'de' ? 'Suchen, Favoriten & Stücklisten – alles an einem Ort' : 'Search, favorites & combos – all in one place'}</p>
             </div>
           </button>
 
@@ -521,17 +501,6 @@ export default function MealsPage() {
             <div className="text-left">
               <p className="font-medium">{t('meals.scanBarcode')}</p>
               <p className="text-xs text-muted-foreground">{t('meals.barcodeDescription')}</p>
-            </div>
-          </button>
-
-          {/* Saved Recipes */}
-          <button onClick={() => setStep('recipes')} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <Star className="h-6 w-6 text-primary" />
-            </div>
-            <div className="text-left flex-1">
-              <p className="font-medium">{language === 'de' ? 'Alle Favoriten' : 'All Favorites'}</p>
-              <p className="text-xs text-muted-foreground">{language === 'de' ? 'Häufige Mahlzeiten verwalten & tracken' : 'Manage & track frequent meals'}</p>
             </div>
           </button>
 
@@ -546,17 +515,17 @@ export default function MealsPage() {
         <FoodSearchScreen
           onDone={(searchItems) => {
             setIsAiResult(false);
-            if (addingToReview) {
+            if (returnToReview) {
               setItems(prev => [...prev.filter(i => i.food_name), ...searchItems]);
-              setAddingToReview(false);
+              setReturnToReview(false);
             } else {
               setItems(searchItems);
             }
             setStep('review');
           }}
           onCancel={() => {
-            if (addingToReview) {
-              setAddingToReview(false);
+            if (returnToReview) {
+              setReturnToReview(false);
               setStep('review');
             } else {
               setStep('select-method');
@@ -625,71 +594,14 @@ export default function MealsPage() {
             onEditItem={handleEditItem}
           />
 
-          {/* Add more items buttons */}
-          <div className="flex gap-2">
-            {allFavorites.length > 0 && (
-              <button
-                onClick={() => setShowFavoritePicker(!showFavoritePicker)}
-                className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 px-3 bg-primary/10 hover:bg-primary/15 border border-primary/20 text-primary font-medium text-xs transition-all active:scale-[0.98]"
-              >
-                <Star className="h-3.5 w-3.5" />
-                {language === 'de' ? 'Aus Favoriten' : 'From Favorites'}
-              </button>
-            )}
-            <button
-              onClick={() => { setAddingToReview(true); setStep('search'); }}
-              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 px-3 bg-muted hover:bg-muted/80 border border-border text-foreground font-medium text-xs transition-all active:scale-[0.98]"
-            >
-              <Search className="h-3.5 w-3.5" />
-              {language === 'de' ? 'Suche öffnen' : 'Search Food'}
-            </button>
-          </div>
-
-          {/* Inline Favorite Picker */}
-          {showFavoritePicker && (
-            <div className="space-y-1.5 animate-fade-in">
-              <p className="text-xs font-semibold text-muted-foreground px-1">
-                {language === 'de' ? 'Favorit hinzufügen:' : 'Add favorite:'}
-              </p>
-              {allFavorites.map(fav => (
-                <button
-                  key={fav.id}
-                  onClick={async () => {
-                    const { data: itemsData } = await supabase
-                      .from('saved_recipe_items')
-                      .select('*')
-                      .eq('recipe_id', fav.id);
-                    if (!itemsData || itemsData.length === 0) {
-                      toast.error(language === 'de' ? 'Favorit ist leer' : 'Favorite is empty');
-                      return;
-                    }
-                    const newItems: AnalyzedFoodItem[] = (itemsData as any[]).map(item => ({
-                      food_name: item.food_name,
-                      quantity: Number(item.quantity),
-                      unit: item.unit,
-                      calories: Number(item.calories),
-                      protein_g: Number(item.protein_g),
-                      fat_g: Number(item.fat_g),
-                      carbs_g: Number(item.carbs_g),
-                      confidence_score: 1,
-                    }));
-                    setItems(prev => [...prev.filter(i => i.food_name), ...newItems]);
-                    setShowFavoritePicker(false);
-                    hapticFeedback('success');
-                    toast.success(language === 'de' ? `${fav.name} hinzugefügt` : `Added ${fav.name}`);
-                  }}
-                  className="nutri-card w-full flex items-center gap-3 py-2.5 hover:border-primary/30 transition-all active:scale-[0.98]"
-                >
-                  <span className="text-base">{fav.emoji}</span>
-                  <span className="text-sm font-medium truncate flex-1 text-left">{fav.name}</span>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Flame className="h-3 w-3 text-energy" />
-                    <span className="text-xs tabular-nums">{Math.round(fav.total_calories)}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Add more items — goes to search (which has favorites built in) */}
+          <button
+            onClick={() => { setReturnToReview(true); setStep('search'); }}
+            className="w-full flex items-center justify-center gap-1.5 rounded-xl py-2.5 px-3 bg-muted hover:bg-muted/80 border border-border text-foreground font-medium text-sm transition-all active:scale-[0.98]"
+          >
+            <Plus className="h-4 w-4" />
+            {language === 'de' ? 'Weitere Lebensmittel hinzufügen' : 'Add more food'}
+          </button>
 
           {/* Totals bar */}
           <div className="nutri-card-highlight">
