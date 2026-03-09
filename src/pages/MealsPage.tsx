@@ -639,7 +639,7 @@ export default function MealsPage() {
                 setSavingRecipe(false);
                 if (success) {
                   hapticFeedback('success');
-                  toast.success(language === 'de' ? 'Als Rezept gespeichert!' : 'Saved as recipe!');
+                  toast.success(language === 'de' ? 'Als Favorit gespeichert!' : 'Saved as favorite!');
                 } else {
                   toast.error(language === 'de' ? 'Fehler beim Speichern' : 'Failed to save');
                 }
