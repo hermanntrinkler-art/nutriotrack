@@ -49,20 +49,28 @@ export default function ProfilePage() {
   const [previewCalories, setPreviewCalories] = useState<number | null>(null);
   const [allMeals, setAllMeals] = useState<MealEntry[]>([]);
   const [weightEntries, setWeightEntries] = useState<any[]>([]);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('user_goals').select('*').eq('user_id', user.id).single()
-      .then(({ data }) => {
-        if (data) {
-          setGoals(data);
-          setIntensity((data as any).deficit_intensity || 2);
-        }
-      });
-    supabase.from('meal_entries').select('*').eq('user_id', user.id)
-      .then(({ data }) => setAllMeals((data || []) as any));
-    supabase.from('weight_entries').select('*').eq('user_id', user.id).order('entry_date', { ascending: true })
-      .then(({ data }) => setWeightEntries(data || []));
+    let cancelled = false;
+
+    Promise.all([
+      supabase.from('user_goals').select('*').eq('user_id', user.id).single(),
+      supabase.from('meal_entries').select('*').eq('user_id', user.id),
+      supabase.from('weight_entries').select('*').eq('user_id', user.id).order('entry_date', { ascending: true }),
+    ]).then(([goalsRes, mealsRes, weightRes]) => {
+      if (cancelled) return;
+      if (goalsRes.data) {
+        setGoals(goalsRes.data);
+        setIntensity((goalsRes.data as any).deficit_intensity || 2);
+      }
+      setAllMeals((mealsRes.data || []) as any);
+      setWeightEntries(weightRes.data || []);
+      setDataLoaded(true);
+    });
+
+    return () => { cancelled = true; };
   }, [user]);
 
   useEffect(() => {
@@ -266,15 +274,21 @@ export default function ProfilePage() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="badges">
-            <AchievementsBadges
-              userName={profile?.name || user?.email?.split('@')[0] || ''}
-              totalMeals={allMeals.length}
-              streak={streakValue}
-              goalReached={goalReachedValue}
-              weightLostKg={weightLostKgValue}
-              daysTracked={daysTrackedValue}
-              hasProfilePic={!!profile?.avatar_url}
-            />
+            {dataLoaded ? (
+              <AchievementsBadges
+                userName={profile?.name || user?.email?.split('@')[0] || ''}
+                totalMeals={allMeals.length}
+                streak={streakValue}
+                goalReached={goalReachedValue}
+                weightLostKg={weightLostKgValue}
+                daysTracked={daysTrackedValue}
+                hasProfilePic={!!profile?.avatar_url}
+              />
+            ) : (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent" />
+              </div>
+            )}
           </TabsContent>
           <TabsContent value="timeline">
             <MilestoneTimeline
