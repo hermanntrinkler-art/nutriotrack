@@ -26,7 +26,7 @@ function Flower({ x, y, color, size = 1, delay = 0 }: { x: number; y: number; co
       transition={{ delay }}
       style={{ originX: `${x}px`, originY: `${y}px` }}
     >
-      <motion.g {...sway}>
+      <motion.g animate={swayAnim}>
         {/* Stem */}
         <line x1={x} y1={y} x2={x} y2={y + 16 * size} stroke="hsl(120,40%,35%)" strokeWidth={2 * size} strokeLinecap="round" />
         {/* Petals */}
