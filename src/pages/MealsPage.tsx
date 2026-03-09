@@ -54,6 +54,51 @@ export default function MealsPage() {
 
   const currentMealType = mealTypes.find(m => m.value === mealType);
 
+  // Load favorites (top saved recipes)
+  const loadFavorites = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('saved_recipes')
+      .select('id, name, emoji, meal_type, total_calories, total_protein_g, total_fat_g, total_carbs_g')
+      .eq('user_id', user.id)
+      .order('use_count', { ascending: false })
+      .limit(5);
+    setFavorites((data || []) as any);
+  }, [user]);
+
+  useEffect(() => { loadFavorites(); }, [loadFavorites]);
+
+  const handleSelectFavorite = async (fav: typeof favorites[0]) => {
+    hapticFeedback('success');
+    const { data: itemsData } = await supabase
+      .from('saved_recipe_items')
+      .select('*')
+      .eq('recipe_id', fav.id);
+    if (!itemsData || itemsData.length === 0) {
+      toast.error(language === 'de' ? 'Favorit ist leer' : 'Favorite is empty');
+      return;
+    }
+    // Increment use count
+    await supabase.from('saved_recipes').update({ use_count: ((fav as any).use_count || 0) + 1 } as any).eq('id', fav.id);
+    
+    const analyzedItems: AnalyzedFoodItem[] = (itemsData as any[]).map(item => ({
+      food_name: item.food_name,
+      quantity: Number(item.quantity),
+      unit: item.unit,
+      calories: Number(item.calories),
+      protein_g: Number(item.protein_g),
+      fat_g: Number(item.fat_g),
+      carbs_g: Number(item.carbs_g),
+      confidence_score: 1,
+    }));
+    setIsAiResult(false);
+    setItems(analyzedItems);
+    if (['breakfast', 'lunch', 'dinner', 'snack'].includes(fav.meal_type)) {
+      setMealType(fav.meal_type as MealType);
+    }
+    setStep('review');
+  };
+
   const handleImageUpload = async (file: File) => {
     // Check scan limit for free users
     if (!subscription.canScanPhoto) {
