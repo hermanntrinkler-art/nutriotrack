@@ -235,31 +235,58 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     const prot = Number(customForm.protein_g) || 0;
     const fat = Number(customForm.fat_g) || 0;
     const carbs = Number(customForm.carbs_g) || 0;
+    const foodName = customForm.food_name.trim();
+    const unit = customForm.unit || 'g';
 
+    // Save to personal DB
     const { error } = await supabase.from('custom_products').insert({
       user_id: user.id,
       barcode: notFound,
-      food_name: customForm.food_name.trim(),
+      food_name: foodName,
       calories: cal,
       protein_g: prot,
       fat_g: fat,
       carbs_g: carbs,
       default_quantity: qty,
-      default_unit: customForm.unit || 'g',
+      default_unit: unit,
     } as any);
 
-    setSavingCustom(false);
-
     if (error) {
+      setSavingCustom(false);
       toast.error(t('common.error'));
       return;
     }
 
+    // Also save to community DB so other users can find it
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('display_name, avatar_emoji')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const displayName = profile?.display_name || profile?.avatar_emoji || 'Anonym';
+    const avatarEmoji = profile?.avatar_emoji || '😊';
+
+    await supabase.from('community_products').insert({
+      contributor_id: user.id,
+      contributor_display_name: displayName,
+      contributor_avatar_emoji: avatarEmoji,
+      barcode: notFound,
+      food_name: foodName,
+      calories: cal,
+      protein_g: prot,
+      fat_g: fat,
+      carbs_g: carbs,
+      quantity: qty,
+      unit,
+    });
+
+    setSavingCustom(false);
     toast.success(t('meals.customProductSaved'));
     onResult({
-      food_name: customForm.food_name.trim(),
+      food_name: foodName,
       quantity: qty,
-      unit: customForm.unit || 'g',
+      unit,
       calories: cal,
       protein_g: prot,
       fat_g: fat,
