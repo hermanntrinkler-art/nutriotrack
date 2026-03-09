@@ -231,7 +231,6 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     let mounted = true;
 
     const startScanner = async () => {
-      // Wait for DOM element to be ready
       const el = document.getElementById(scannerId);
       if (!el || !mounted) return;
 
@@ -259,19 +258,19 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     return () => {
       mounted = false;
       clearTimeout(timer);
+      // Defensive cleanup — scanner may already be stopped/cleared by handleCode
       if (html5Qrcode) {
         try {
           const state = html5Qrcode.getState();
-          if (state === 2 || state === 3) { // SCANNING or PAUSED
-            html5Qrcode.stop().then(() => html5Qrcode?.clear()).catch(() => {});
-          } else {
-            html5Qrcode.clear();
+          if (state === 2 || state === 3) {
+            html5Qrcode.stop().catch(() => {});
           }
-        } catch {
-          // ignore
-        }
+        } catch {}
+        try { html5Qrcode.clear(); } catch {}
       }
-      scannerRef.current = null;
+      if (scannerRef.current === html5Qrcode) {
+        scannerRef.current = null;
+      }
     };
   }, [scanning, showManual, notFound]);
 
