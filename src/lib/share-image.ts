@@ -433,34 +433,18 @@ export async function shareImageToFacebook(
   badgeId: string,
   language: 'de' | 'en',
   shareText: string,
-  imageUrlOverride?: string,
-  badgeTitleOverride?: string,
-  sourceOrigin?: string,
+  _imageUrlOverride?: string,
+  _badgeTitleOverride?: string,
+  _sourceOrigin?: string,
 ) {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const cacheBuster = Date.now();
-  const normalizedText = shareText.replace(/\s+/g, ' ').trim();
-
-  const params = new URLSearchParams({
-    badge: badgeId,
-    lang: language,
-    v: String(cacheBuster),
-  });
-
-  if (imageUrlOverride) params.set('img', imageUrlOverride);
-  if (normalizedText) params.set('text', normalizedText);
-  if (badgeTitleOverride) params.set('title', badgeTitleOverride);
-  if (sourceOrigin) params.set('origin', sourceOrigin);
-
-  const shareUrl = `${supabaseUrl}/functions/v1/share-badge?${params.toString()}`;
-  const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+  // Share the app URL - Facebook will crawl it and get OG tags from index.html
+  // This avoids the Supabase text/plain Content-Type issue entirely
+  const appUrl = window.location.origin;
+  const shareUrl = `${appUrl}/share/${badgeId}`;
+  const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
 
   const popup = window.open(fbShareUrl, '_blank', 'noopener,noreferrer');
-  if (!popup) {
-    return false;
-  }
-
-  return true;
+  return !!popup;
 }
 
 /**
