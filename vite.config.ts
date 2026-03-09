@@ -19,12 +19,11 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
-
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "logo.png"],
       workbox: {
-        navigateFallbackDenylist: [/^\/oauth\//],
+        navigateFallbackDenylist: [/^\/oauth/],
         globPatterns: ["**/*.{js,css,html,ico,svg,woff2}"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
@@ -37,7 +36,7 @@ export default defineConfig(({ mode }) => ({
         background_color: "#f0f2f5",
         display: "standalone",
         orientation: "portrait",
-        start_url: "/",
+        start_url: "/nutriotrack/",
         icons: [
           {
             src: "/logo.png",
