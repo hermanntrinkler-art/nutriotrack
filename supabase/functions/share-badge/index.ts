@@ -33,6 +33,22 @@ const BADGE_DEFAULTS: Record<string, { title_de: string; title_en: string; share
   profile_pic: { title_de: 'Profilbild', title_en: 'Profile Pic', shareText_de: 'Ich habe mein Profilbild bei NutrioTrack gesetzt! 📸', shareText_en: 'I set my profile picture on NutrioTrack! 📸' },
 }
 
+const escapeHtmlAttr = (value: string) =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+const escapeHtmlText = (value: string) =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .trim()
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -42,6 +58,9 @@ Deno.serve(async (req) => {
     const url = new URL(req.url)
     const badgeId = url.searchParams.get('badge')
     const lang = url.searchParams.get('lang') || 'de'
+    const imageOverride = url.searchParams.get('img')
+    const textOverride = url.searchParams.get('text')
+    const titleOverride = url.searchParams.get('title')
 
     if (!badgeId) {
       return new Response('Missing badge parameter', { status: 400, headers: corsHeaders })
@@ -65,13 +84,15 @@ Deno.serve(async (req) => {
     }
 
     const isDE = lang === 'de'
-    const title = isDE ? defaults.title_de : defaults.title_en
-    
-    // Determine share text: custom (from admin, written in German) or default
+    const title = titleOverride || (isDE ? defaults.title_de : defaults.title_en)
+
+    // Determine share text: URL override -> custom DB text -> default
     let shareText: string
     const customShareText = badgeData?.share_text
-    
-    if (customShareText && !isDE) {
+
+    if (textOverride) {
+      shareText = textOverride
+    } else if (customShareText && !isDE) {
       // Check for cached translation
       const { data: cached } = await supabase
         .from('badge_share_translations')
@@ -79,7 +100,7 @@ Deno.serve(async (req) => {
         .eq('badge_id', badgeId)
         .eq('language', lang)
         .maybeSingle()
-      
+
       if (cached) {
         shareText = cached.translated_text
       } else {
@@ -103,13 +124,18 @@ Deno.serve(async (req) => {
     } else {
       shareText = customShareText || (isDE ? defaults.shareText_de : defaults.shareText_en)
     }
-    
-    // Build OG image URL - use custom image or a default badge asset
-    const ogImage = badgeData?.image_url || `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/badge-images/${badgeId}.png`
 
-    const appUrl = url.origin.replace('supabase.co/functions/v1/share-badge', 'lovable.app')
-    const ogTitle = `${title} – NutrioTrack 🏆`
-    const ogDescription = shareText
+    // Build OG image URL - prioritize direct URL override
+    const ogImage = imageOverride || badgeData?.image_url || `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/badge-images/${badgeId}.png`
+
+    const ogTitleRaw = `${title} – NutrioTrack 🏆`
+    const ogDescriptionRaw = shareText
+
+    const ogTitle = escapeHtmlAttr(ogTitleRaw)
+    const ogDescription = escapeHtmlAttr(ogDescriptionRaw)
+    const ogImageEscaped = escapeHtmlAttr(ogImage)
+    const bodyTitle = escapeHtmlText(title)
+    const bodyShareText = escapeHtmlText(shareText)
 
     const html = `<!DOCTYPE html>
 <html lang="${lang}">
@@ -120,13 +146,15 @@ Deno.serve(async (req) => {
   <meta property="og:type" content="website" />
   <meta property="og:title" content="${ogTitle}" />
   <meta property="og:description" content="${ogDescription}" />
-  <meta property="og:image" content="${ogImage}" />
+  <meta property="og:image" content="${ogImageEscaped}" />
+  <meta property="og:image:secure_url" content="${ogImageEscaped}" />
+  <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="512" />
   <meta property="og:image:height" content="512" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${ogTitle}" />
   <meta name="twitter:description" content="${ogDescription}" />
-  <meta name="twitter:image" content="${ogImage}" />
+  <meta name="twitter:image" content="${ogImageEscaped}" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
@@ -182,10 +210,10 @@ Deno.serve(async (req) => {
   <div class="card">
     <p class="label">${isDE ? 'BADGE FREIGESCHALTET' : 'BADGE UNLOCKED'}</p>
     <div class="badge-ring">
-      <img src="${ogImage}" alt="${title}" />
+      <img src="${ogImageEscaped}" alt="${bodyTitle}" />
     </div>
-    <h1>${title}</h1>
-    <p class="share-text">"${shareText}"</p>
+    <h1>${bodyTitle}</h1>
+    <p class="share-text">"${bodyShareText}"</p>
     <a href="/" class="cta">${isDE ? 'Jetzt auch tracken!' : 'Start tracking too!'}</a>
     <p class="logo">NutrioTrack 🌱</p>
   </div>

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Share2, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { fireCenterBurst } from '@/lib/confetti';
-import { shareImageToFacebook, generateShareImage, shareImage } from '@/lib/share-image';
+import { shareImageToFacebook, generateShareImage, shareImage, uploadShareImageForFacebook } from '@/lib/share-image';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
@@ -249,7 +249,33 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
   const handleShareBadge = async (badge: Achievement) => {
     setSharingBadgeId(badge.id);
     try {
-      const openedFacebook = await shareImageToFacebook(badge.id, language as 'de' | 'en', badge.shareText);
+      let imageUrlOverride: string | undefined;
+
+      try {
+        const blob = await generateShareImage({
+          name: userName,
+          streak,
+          totalMeals,
+          unlockedAchievements: unlockedCount,
+          totalAchievements: achievements.length,
+          language: language as 'de' | 'en',
+          badgeTitle: badge.title,
+          badgeShareText: badge.shareText,
+          badgeImageUrl: badge.badgeImage,
+        });
+        imageUrlOverride = await uploadShareImageForFacebook(blob, badge.id);
+      } catch {
+        // Fallback to DB/default image if upload/generation fails
+      }
+
+      const openedFacebook = await shareImageToFacebook(
+        badge.id,
+        language as 'de' | 'en',
+        badge.shareText,
+        imageUrlOverride,
+        badge.title,
+      );
+
       if (!openedFacebook) {
         toast.error(de ? 'Popup blockiert – bitte Popups erlauben und erneut tippen.' : 'Popup blocked — allow popups and try again.');
       }

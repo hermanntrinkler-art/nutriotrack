@@ -1,3 +1,5 @@
+import { supabase } from '@/integrations/supabase/client';
+
 /**
  * Generates a shareable achievement image using Canvas API.
  * Returns a Blob of the PNG image.
@@ -409,12 +411,47 @@ export async function shareImage(blob: Blob, language: 'de' | 'en', customShareT
 }
 
 /**
+ * Uploads a generated Facebook share image and returns a public URL.
+ */
+export async function uploadShareImageForFacebook(blob: Blob, badgeId: string) {
+  const filePath = `facebook-shares/${badgeId}-${Date.now()}.png`;
+
+  const { error } = await supabase.storage
+    .from('badge-images')
+    .upload(filePath, blob, { contentType: 'image/png', upsert: false });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage.from('badge-images').getPublicUrl(filePath);
+  return data.publicUrl;
+}
+
+/**
  * Opens Facebook share dialog with a branded share page URL (professional preview).
  */
-export async function shareImageToFacebook(badgeId: string, language: 'de' | 'en', shareText: string) {
+export async function shareImageToFacebook(
+  badgeId: string,
+  language: 'de' | 'en',
+  shareText: string,
+  imageUrlOverride?: string,
+  badgeTitleOverride?: string,
+) {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const shareUrl = `${supabaseUrl}/functions/v1/share-badge?badge=${encodeURIComponent(badgeId)}&lang=${encodeURIComponent(language)}`;
-  const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+  const cacheBuster = Date.now();
+  const normalizedText = shareText.replace(/\s+/g, ' ').trim();
+
+  const params = new URLSearchParams({
+    badge: badgeId,
+    lang: language,
+    v: String(cacheBuster),
+  });
+
+  if (imageUrlOverride) params.set('img', imageUrlOverride);
+  if (normalizedText) params.set('text', normalizedText);
+  if (badgeTitleOverride) params.set('title', badgeTitleOverride);
+
+  const shareUrl = `${supabaseUrl}/functions/v1/share-badge?${params.toString()}`;
+  const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
 
   const popup = window.open(fbShareUrl, '_blank', 'noopener,noreferrer');
   if (!popup) {
