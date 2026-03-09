@@ -278,6 +278,20 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Mayonnaise', name_en: 'Mayonnaise', quantity: 15, unit: 'g', calories: 100, protein_g: 0, fat_g: 11, carbs_g: 0, category: 'sauces' },
   { name: 'Olivenöl', name_en: 'Olive Oil', quantity: 10, unit: 'ml', calories: 88, protein_g: 0, fat_g: 10, carbs_g: 0, category: 'sauces' },
   { name: 'Salatdressing', name_en: 'Salad Dressing', quantity: 30, unit: 'ml', calories: 70, protein_g: 0, fat_g: 6, carbs_g: 3, category: 'sauces' },
+  { name: 'Balsamico', name_en: 'Balsamic Vinegar', quantity: 15, unit: 'ml', calories: 14, protein_g: 0, fat_g: 0, carbs_g: 3, category: 'sauces' },
+  { name: 'Balsamico Creme', name_en: 'Balsamic Glaze', quantity: 15, unit: 'ml', calories: 20, protein_g: 0, fat_g: 0, carbs_g: 5, category: 'sauces' },
+  { name: 'Apfelessig', name_en: 'Apple Cider Vinegar', quantity: 15, unit: 'ml', calories: 3, protein_g: 0, fat_g: 0, carbs_g: 0, category: 'sauces' },
+  { name: 'Weißweinessig', name_en: 'White Wine Vinegar', quantity: 15, unit: 'ml', calories: 3, protein_g: 0, fat_g: 0, carbs_g: 0, category: 'sauces' },
+  { name: 'Essig', name_en: 'Vinegar', quantity: 15, unit: 'ml', calories: 3, protein_g: 0, fat_g: 0, carbs_g: 0, category: 'sauces' },
+  { name: 'Sojasauce', name_en: 'Soy Sauce', quantity: 15, unit: 'ml', calories: 8, protein_g: 1, fat_g: 0, carbs_g: 1, category: 'sauces' },
+  { name: 'Senf', name_en: 'Mustard', quantity: 10, unit: 'g', calories: 7, protein_g: 0, fat_g: 0, carbs_g: 0, category: 'sauces' },
+  { name: 'Rapsöl', name_en: 'Canola Oil', quantity: 10, unit: 'ml', calories: 88, protein_g: 0, fat_g: 10, carbs_g: 0, category: 'sauces' },
+  { name: 'Sonnenblumenöl', name_en: 'Sunflower Oil', quantity: 10, unit: 'ml', calories: 88, protein_g: 0, fat_g: 10, carbs_g: 0, category: 'sauces' },
+  { name: 'Kokosöl', name_en: 'Coconut Oil', quantity: 10, unit: 'g', calories: 86, protein_g: 0, fat_g: 10, carbs_g: 0, category: 'sauces' },
+  { name: 'Worcestersauce', name_en: 'Worcestershire Sauce', quantity: 5, unit: 'ml', calories: 4, protein_g: 0, fat_g: 0, carbs_g: 1, category: 'sauces' },
+  { name: 'Tabasco', name_en: 'Tabasco', quantity: 5, unit: 'ml', calories: 1, protein_g: 0, fat_g: 0, carbs_g: 0, category: 'sauces' },
+  { name: 'Sriracha', name_en: 'Sriracha', quantity: 10, unit: 'g', calories: 10, protein_g: 0, fat_g: 0, carbs_g: 2, category: 'sauces' },
+  { name: 'Pesto (Basilikum)', name_en: 'Basil Pesto', quantity: 15, unit: 'g', calories: 58, protein_g: 2, fat_g: 5, carbs_g: 1, category: 'sauces' },
 ];
 
 // Synonym / slang map: keys are normalized aliases, values are normalized canonical names
