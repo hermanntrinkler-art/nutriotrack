@@ -278,29 +278,13 @@ export default function DashboardPage() {
       {/* Weekly Summary Report (Sundays) */}
       <WeeklySummaryReport meals={allMeals} goals={goals} />
 
-      {/* Streak Counter */}
+      {/* Streak Flame */}
       <motion.div
         className="flex items-center gap-3 rounded-2xl p-3.5 border border-energy/30"
         style={{ background: 'linear-gradient(135deg, hsl(var(--energy) / 0.08), hsl(var(--energy) / 0.03))' }}
         variants={fadeUp}
       >
-        <motion.div
-          className="w-12 h-12 rounded-xl flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg, hsl(var(--energy) / 0.2), hsl(var(--energy) / 0.1))' }}
-          animate={streak > 0 ? { scale: [1, 1.1, 1] } : {}}
-          transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
-        >
-          <Flame className="h-6 w-6 text-energy" />
-        </motion.div>
-        <div className="flex-1">
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-foreground tabular-nums">{streak}</span>
-            <span className="text-sm font-bold text-muted-foreground">{t('dashboard.streak')}</span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {streak === 0 ? t('dashboard.streakEmpty') : '🔥'}
-          </p>
-        </div>
+        <StreakFlame streak={streak} />
       </motion.div>
 
       {/* Reminder Banner */}
