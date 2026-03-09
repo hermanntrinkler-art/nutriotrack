@@ -1,3 +1,5 @@
+import { supabase } from '@/integrations/supabase/client';
+
 /**
  * Generates a shareable achievement image using Canvas API.
  * Returns a Blob of the PNG image.
