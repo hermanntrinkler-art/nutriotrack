@@ -41,6 +41,7 @@ interface AchievementsBadgesProps {
   userName?: string;
   weightLostKg?: number;
   daysTracked?: number;
+  hasProfilePic?: boolean;
 }
 
 interface Achievement {
