@@ -435,32 +435,40 @@ export async function shareImageToFacebook(
   shareText: string,
   imageUrlOverride?: string,
   badgeTitleOverride?: string,
-  sourceOrigin?: string,
+  _sourceOrigin?: string,
 ) {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const cacheBuster = Date.now();
   const normalizedText = shareText.replace(/\s+/g, ' ').trim();
 
   const params = new URLSearchParams({
     badge: badgeId,
     lang: language,
-    v: String(cacheBuster),
   });
 
   if (imageUrlOverride) params.set('img', imageUrlOverride);
   if (normalizedText) params.set('text', normalizedText);
   if (badgeTitleOverride) params.set('title', badgeTitleOverride);
-  if (sourceOrigin) params.set('origin', sourceOrigin);
 
-  const shareUrl = `${supabaseUrl}/functions/v1/share-badge?${params.toString()}`;
-  const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
-
-  const popup = window.open(fbShareUrl, '_blank', 'noopener,noreferrer');
-  if (!popup) {
-    return false;
+  // Call edge function to generate & upload HTML to storage
+  try {
+    const res = await fetch(`${supabaseUrl}/functions/v1/share-badge?${params.toString()}`);
+    const data = await res.json();
+    
+    if (data.url) {
+      // Share the storage URL — this serves text/html correctly!
+      const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(data.url)}`;
+      const popup = window.open(fbShareUrl, '_blank', 'noopener,noreferrer');
+      return !!popup;
+    }
+  } catch (e) {
+    console.error('Share badge error:', e);
   }
 
-  return true;
+  // Fallback: share storage URL directly
+  const fallbackUrl = `${supabaseUrl}/storage/v1/object/public/badge-images/share-pages/${badgeId}_${language}.html`;
+  const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(fallbackUrl)}`;
+  const popup = window.open(fbShareUrl, '_blank', 'noopener,noreferrer');
+  return !!popup;
 }
 
 /**
