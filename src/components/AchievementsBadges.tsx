@@ -373,15 +373,6 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
             <h3 className="font-semibold text-sm">Badges</h3>
           </div>
           <div className="flex items-center gap-2">
-            <motion.button
-              onClick={handleShare}
-              disabled={sharing}
-              whileTap={{ scale: 0.9 }}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-colors disabled:opacity-50"
-            >
-              {sharing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Share2 className="h-3 w-3" />}
-              {de ? 'Teilen' : 'Share'}
-            </motion.button>
             <span className="text-xs font-bold text-muted-foreground">{unlockedCount}/{achievements.length}</span>
           </div>
         </div>
