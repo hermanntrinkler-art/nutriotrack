@@ -18,6 +18,7 @@ export default function EditableFoodItemsList({
   items,
   isAiResult,
   onUpdateItem,
+  onReplaceItem,
   onRemoveItem,
   onAddItem,
   onEditItem,
