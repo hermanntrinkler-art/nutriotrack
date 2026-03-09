@@ -47,13 +47,7 @@ export default function EditableFoodItemsList({
           isAiResult={isAiResult}
           onEdit={() => onEditItem(i)}
           onRemove={() => onRemoveItem(i)}
-          onQuantityChange={(newItem) => {
-            onUpdateItem(i, 'quantity', newItem.quantity);
-            onUpdateItem(i, 'calories', newItem.calories);
-            onUpdateItem(i, 'protein_g', newItem.protein_g);
-            onUpdateItem(i, 'fat_g', newItem.fat_g);
-            onUpdateItem(i, 'carbs_g', newItem.carbs_g);
-          }}
+          onQuantityChange={onReplaceItem ? (newItem) => onReplaceItem(i, newItem) : undefined}
         />
       ))}
 
