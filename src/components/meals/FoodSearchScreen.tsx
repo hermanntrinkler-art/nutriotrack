@@ -595,6 +595,18 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Community product form */}
+      {showCommunityForm && (
+        <CommunityProductForm
+          onClose={() => setShowCommunityForm(false)}
+          onSaved={() => {
+            setShowCommunityForm(false);
+            loadCommunityProducts();
+          }}
+          prefillName={query.trim()}
+        />
+      )}
     </div>
   );
 }
