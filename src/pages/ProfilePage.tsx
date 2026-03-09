@@ -273,6 +273,7 @@ export default function ProfilePage() {
               goalReached={goalReachedValue}
               weightLostKg={weightLostKgValue}
               daysTracked={daysTrackedValue}
+              hasProfilePic={!!profile?.avatar_url}
             />
           </TabsContent>
           <TabsContent value="timeline">

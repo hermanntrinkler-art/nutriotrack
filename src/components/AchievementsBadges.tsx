@@ -133,7 +133,8 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
     { id: 'month_1', badgeImage: getBadgeImage('month_1', badgeMonth1), title: 'First Month', desc: de ? '30 Tage dabei – Gewohnheit!' : '30 days in – it\'s a habit!', shareText: de ? 'Einen Monat dabei – es ist zur Gewohnheit geworden! ❤️' : 'One month in – it\'s become a habit! ❤️', unlocked: daysTracked >= 30, color: 'hsl(var(--destructive))', xp: 100, category: 'special' },
     { id: 'quarter', badgeImage: getBadgeImage('quarter', badgeQuarter), title: '3 Months', desc: de ? 'Vierteljahr! Lifestyle!' : 'Quarter year! Lifestyle!', shareText: de ? '3 Monate NutrioTrack – das ist jetzt Lifestyle! ✨' : '3 months on NutrioTrack – this is lifestyle now! ✨', unlocked: daysTracked >= 90, color: 'hsl(var(--primary))', xp: 250, category: 'special' },
     { id: 'month_6', badgeImage: getBadgeImage('month_6', badgeMonth6), title: '6 Months', desc: de ? 'Halbes Jahr! Unaufhaltbar!' : 'Half a year! Unstoppable!', shareText: de ? '6 Monate NutrioTrack – absolut unaufhaltbar! 🌟🏆' : '6 months on NutrioTrack – absolutely unstoppable! 🌟🏆', unlocked: daysTracked >= 180, color: 'hsl(var(--energy))', xp: 400, category: 'special' },
-  ], [totalMeals, streak, goalReached, weightLostKg, daysTracked, de, customBadgeImages]);
+    { id: 'profile_pic', badgeImage: getBadgeImage('profile_pic', badgeProfilePic), title: de ? 'Profilbild' : 'Profile Pic', desc: de ? 'Profilbild hochgeladen!' : 'Profile picture uploaded!', shareText: de ? 'Ich habe mein Profilbild bei NutrioTrack gesetzt! 📸' : 'I set my profile picture on NutrioTrack! 📸', unlocked: hasProfilePic, color: 'hsl(var(--primary))', xp: 25, category: 'special' },
+  ], [totalMeals, streak, goalReached, weightLostKg, daysTracked, hasProfilePic, de, customBadgeImages]);
 
   // XP & Level calculation
   const totalXP = useMemo(() => achievements.filter(a => a.unlocked).reduce((sum, a) => sum + a.xp, 0), [achievements]);
