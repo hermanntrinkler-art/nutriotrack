@@ -395,6 +395,37 @@ export default function MealsPage() {
             <span className="font-medium">{currentMealType?.label}</span>
           </div>
 
+          {/* Quick Favorites */}
+          {favorites.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 px-1">
+                <Star className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                  {language === 'de' ? 'Favoriten' : 'Favorites'}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {favorites.map(fav => (
+                  <button
+                    key={fav.id}
+                    onClick={() => handleSelectFavorite(fav)}
+                    className="nutri-card flex items-center gap-3 py-3 hover:border-primary/30 transition-all active:scale-[0.98]"
+                  >
+                    <span className="text-lg">{fav.emoji}</span>
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="text-sm font-semibold truncate">{fav.name}</p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Flame className="h-3 w-3 text-energy" />
+                      <span className="text-xs font-bold tabular-nums">{Math.round(fav.total_calories)}</span>
+                      <span className="text-[10px] text-muted-foreground">kcal</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
               <Camera className="h-6 w-6 text-primary" />
