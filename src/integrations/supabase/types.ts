@@ -41,6 +41,30 @@ export type Database = {
         }
         Relationships: []
       }
+      badge_share_translations: {
+        Row: {
+          badge_id: string
+          created_at: string
+          id: string
+          language: string
+          translated_text: string
+        }
+        Insert: {
+          badge_id: string
+          created_at?: string
+          id?: string
+          language: string
+          translated_text: string
+        }
+        Update: {
+          badge_id?: string
+          created_at?: string
+          id?: string
+          language?: string
+          translated_text?: string
+        }
+        Relationships: []
+      }
       community_products: {
         Row: {
           barcode: string | null
