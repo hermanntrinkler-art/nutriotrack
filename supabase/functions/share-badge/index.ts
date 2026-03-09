@@ -148,14 +148,16 @@ Deno.serve(async (req) => {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${ogTitle}</title>
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="NutrioTrack" />
+  <meta property="og:url" content="${ogCanonicalUrl}" />
+  <link rel="canonical" href="${ogCanonicalUrl}" />
   <meta property="og:title" content="${ogTitle}" />
   <meta property="og:description" content="${ogDescription}" />
   <meta property="og:image" content="${ogImageEscaped}" />
   <meta property="og:image:secure_url" content="${ogImageEscaped}" />
   <meta property="og:image:type" content="image/png" />
-  <meta property="og:image:width" content="512" />
-  <meta property="og:image:height" content="512" />
-  <meta name="twitter:card" content="summary_large_image" />
+  <meta property="og:image:width" content="1080" />
+  <meta property="og:image:height" content="1080" />
   <meta name="twitter:title" content="${ogTitle}" />
   <meta name="twitter:description" content="${ogDescription}" />
   <meta name="twitter:image" content="${ogImageEscaped}" />
