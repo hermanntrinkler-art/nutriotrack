@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import { analyzeFoodImage } from '@/lib/ai-analysis';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, PenLine, ScanBarcode, Search, BookOpen, BookmarkPlus } from 'lucide-react';
+import { Camera, Upload, PenLine, ScanBarcode, Search, BookOpen, BookmarkPlus, Star, Flame } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
