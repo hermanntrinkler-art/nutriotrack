@@ -247,30 +247,34 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
     }
   };
 
-  const handleShareBadge = async (badge: Achievement) => {
-    setSharingBadgeId(badge.id);
-    try {
-      const blob = await generateShareImage({
-        name: userName,
-        streak,
-        totalMeals,
-        unlockedAchievements: unlockedCount,
-        totalAchievements: achievements.length,
-        language: language as 'de' | 'en',
-        badgeTitle: badge.title,
-        badgeShareText: badge.shareText,
-        badgeImageUrl: badge.badgeImage,
-      });
+  const generateBadgeBlob = async (badge: Achievement) => {
+    return generateShareImage({
+      name: userName,
+      streak,
+      totalMeals,
+      unlockedAchievements: unlockedCount,
+      totalAchievements: achievements.length,
+      language: language as 'de' | 'en',
+      badgeTitle: badge.title,
+      badgeShareText: badge.shareText,
+      badgeImageUrl: badge.badgeImage,
+    });
+  };
 
-      // Always use native share with the image file — works on mobile (Android/iOS)
-      const shared = await shareImage(blob, language as 'de' | 'en', badge.shareText);
-      if (!shared) {
-        toast.success(de ? 'Bild heruntergeladen!' : 'Image downloaded!');
-      }
+  const handleShareBadgeTo = async (badge: Achievement, platform: 'facebook' | 'whatsapp' | 'instagram') => {
+    setSharingBadgeId(badge.id);
+    setSharingPlatform(platform);
+    try {
+      const blob = await generateBadgeBlob(badge);
+      const lang = language as 'de' | 'en';
+      if (platform === 'facebook') await shareToFacebook(blob, badge.shareText, lang);
+      else if (platform === 'whatsapp') await shareToWhatsApp(blob, badge.shareText, lang);
+      else await shareToInstagram(blob, lang);
     } catch {
       toast.error(de ? 'Teilen fehlgeschlagen' : 'Sharing failed');
     } finally {
       setSharingBadgeId(null);
+      setSharingPlatform(null);
     }
   };
 
