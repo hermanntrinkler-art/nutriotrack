@@ -47,7 +47,7 @@ function Flower({ x, y, color, size = 1, delay = 0 }: { x: number; y: number; co
 function Tree({ x, y, fruitLevel = 0, delay = 0 }: { x: number; y: number; fruitLevel?: number; delay?: number }) {
   return (
     <motion.g variants={pop} initial="hidden" animate="show" transition={{ delay }}>
-      <motion.g {...sway}>
+      <motion.g animate={swayAnim}>
         {/* Trunk */}
         <rect x={x - 5} y={y} width={10} height={30} rx={3} fill="hsl(25,50%,35%)" />
         {/* Canopy */}
