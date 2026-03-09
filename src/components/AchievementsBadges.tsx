@@ -83,6 +83,7 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
   const de = language === 'de';
   const [sharing, setSharing] = useState(false);
   const [sharingBadgeId, setSharingBadgeId] = useState<string | null>(null);
+  const [sharingPlatform, setSharingPlatform] = useState<string | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<Achievement | null>(null);
 
   const [customBadgeImages, setCustomBadgeImages] = useState<Record<string, string>>({});
