@@ -433,40 +433,16 @@ export async function shareImageToFacebook(
   badgeId: string,
   language: 'de' | 'en',
   shareText: string,
-  imageUrlOverride?: string,
-  badgeTitleOverride?: string,
+  _imageUrlOverride?: string,
+  _badgeTitleOverride?: string,
   _sourceOrigin?: string,
 ) {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const normalizedText = shareText.replace(/\s+/g, ' ').trim();
+  // Share the app URL - Facebook will crawl it and get OG tags from index.html
+  // This avoids the Supabase text/plain Content-Type issue entirely
+  const appUrl = window.location.origin;
+  const shareUrl = `${appUrl}/share/${badgeId}`;
+  const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
 
-  const params = new URLSearchParams({
-    badge: badgeId,
-    lang: language,
-  });
-
-  if (imageUrlOverride) params.set('img', imageUrlOverride);
-  if (normalizedText) params.set('text', normalizedText);
-  if (badgeTitleOverride) params.set('title', badgeTitleOverride);
-
-  // Call edge function to generate & upload HTML to storage
-  try {
-    const res = await fetch(`${supabaseUrl}/functions/v1/share-badge?${params.toString()}`);
-    const data = await res.json();
-    
-    if (data.url) {
-      // Share the storage URL — this serves text/html correctly!
-      const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(data.url)}`;
-      const popup = window.open(fbShareUrl, '_blank', 'noopener,noreferrer');
-      return !!popup;
-    }
-  } catch (e) {
-    console.error('Share badge error:', e);
-  }
-
-  // Fallback: share storage URL directly
-  const fallbackUrl = `${supabaseUrl}/storage/v1/object/public/badge-images/share-pages/${badgeId}_${language}.html`;
-  const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(fallbackUrl)}`;
   const popup = window.open(fbShareUrl, '_blank', 'noopener,noreferrer');
   return !!popup;
 }
