@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Share2, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { fireCenterBurst } from '@/lib/confetti';
-import { shareImageToFacebook, generateShareImage, shareImage } from '@/lib/share-image';
+import { generateShareImage, shareImage } from '@/lib/share-image';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
@@ -261,27 +261,10 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
         badgeImageUrl: badge.badgeImage,
       });
 
-      const canUseNativeShare =
-        typeof navigator !== 'undefined' &&
-        typeof navigator.share === 'function' &&
-        (!navigator.canShare || navigator.canShare({ files: [new File([blob], 'badge-share.png', { type: 'image/png' })] }));
-
-      if (canUseNativeShare) {
-        const shared = await shareImage(blob, language as 'de' | 'en', badge.shareText);
-        if (shared) return;
-      }
-
-      const openedFacebook = await shareImageToFacebook(
-        badge.id,
-        language as 'de' | 'en',
-        badge.shareText,
-        badge.badgeImage,
-        badge.title,
-        window.location.origin,
-      );
-
-      if (!openedFacebook) {
-        toast.error(de ? 'Popup blockiert – bitte Popups erlauben und erneut tippen.' : 'Popup blocked — allow popups and try again.');
+      // Always use native share with the image file — works on mobile (Android/iOS)
+      const shared = await shareImage(blob, language as 'de' | 'en', badge.shareText);
+      if (!shared) {
+        toast.success(de ? 'Bild heruntergeladen!' : 'Image downloaded!');
       }
     } catch {
       toast.error(de ? 'Teilen fehlgeschlagen' : 'Sharing failed');
