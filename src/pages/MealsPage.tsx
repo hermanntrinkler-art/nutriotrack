@@ -254,6 +254,7 @@ export default function MealsPage() {
     setItems(prev => prev.map((item, i) => i === index ? { ...newItem, confidence_score: 1 } : item));
   };
 
+  const removeItem = (index: number) => {
     setItems(prev => prev.filter((_, i) => i !== index));
   };
 
