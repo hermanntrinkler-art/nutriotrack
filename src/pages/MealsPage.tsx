@@ -650,7 +650,7 @@ export default function MealsPage() {
               <BookmarkPlus className="h-4 w-4 mr-1.5" />
               {savingRecipe
                 ? (language === 'de' ? 'Wird gespeichert...' : 'Saving...')
-                : (language === 'de' ? 'Als Rezept speichern' : 'Save as Recipe')}
+                : (language === 'de' ? '⭐ Als Favorit speichern' : '⭐ Save as Favorite')}
             </Button>
           )}
 
