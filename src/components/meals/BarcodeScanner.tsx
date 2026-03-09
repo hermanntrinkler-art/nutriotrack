@@ -85,6 +85,39 @@ async function lookupCustomProduct(code: string, userId: string): Promise<Analyz
   };
 }
 
+interface CommunityResult {
+  item: AnalyzedFoodItem;
+  contributorName: string;
+  contributorEmoji: string;
+}
+
+async function lookupCommunityProduct(code: string): Promise<CommunityResult | null> {
+  const { data } = await supabase
+    .from('community_products')
+    .select('food_name, quantity, unit, calories, protein_g, fat_g, carbs_g, contributor_display_name, contributor_avatar_emoji')
+    .eq('barcode', code)
+    .eq('is_hidden', false)
+    .limit(1)
+    .maybeSingle();
+
+  if (!data) return null;
+
+  return {
+    item: {
+      food_name: data.food_name,
+      quantity: Number(data.quantity) || 100,
+      unit: data.unit || 'g',
+      calories: Number(data.calories) || 0,
+      protein_g: Number(data.protein_g) || 0,
+      fat_g: Number(data.fat_g) || 0,
+      carbs_g: Number(data.carbs_g) || 0,
+      confidence_score: 1,
+    },
+    contributorName: data.contributor_display_name,
+    contributorEmoji: data.contributor_avatar_emoji || '😊',
+  };
+}
+
 export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -162,7 +195,19 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
       } catch {}
     }
 
-    // 2. Check Open Food Facts
+    // 2. Check community products DB
+    try {
+      const community = await lookupCommunityProduct(code);
+      if (community) {
+        toast.success(`${community.item.food_name} ${t('meals.barcodeFound')}`, {
+          description: `${community.contributorEmoji} ${community.contributorName}`,
+        });
+        onResult(community.item);
+        return;
+      }
+    } catch {}
+
+    // 3. Check Open Food Facts
     try {
       const offResult = await lookupOpenFoodFacts(code);
       if (offResult.item) {
@@ -171,7 +216,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
         return;
       }
 
-      // 3. Not found or no nutrition → offer manual creation
+      // 4. Not found or no nutrition → offer manual creation
       if (offResult.productName) {
         setCustomForm(f => ({ ...f, food_name: offResult.productName! }));
       }
@@ -190,31 +235,58 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     const prot = Number(customForm.protein_g) || 0;
     const fat = Number(customForm.fat_g) || 0;
     const carbs = Number(customForm.carbs_g) || 0;
+    const foodName = customForm.food_name.trim();
+    const unit = customForm.unit || 'g';
 
+    // Save to personal DB
     const { error } = await supabase.from('custom_products').insert({
       user_id: user.id,
       barcode: notFound,
-      food_name: customForm.food_name.trim(),
+      food_name: foodName,
       calories: cal,
       protein_g: prot,
       fat_g: fat,
       carbs_g: carbs,
       default_quantity: qty,
-      default_unit: customForm.unit || 'g',
+      default_unit: unit,
     } as any);
 
-    setSavingCustom(false);
-
     if (error) {
+      setSavingCustom(false);
       toast.error(t('common.error'));
       return;
     }
 
+    // Also save to community DB so other users can find it
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('display_name, avatar_emoji')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const displayName = profile?.display_name || profile?.avatar_emoji || 'Anonym';
+    const avatarEmoji = profile?.avatar_emoji || '😊';
+
+    await supabase.from('community_products').insert({
+      contributor_id: user.id,
+      contributor_display_name: displayName,
+      contributor_avatar_emoji: avatarEmoji,
+      barcode: notFound,
+      food_name: foodName,
+      calories: cal,
+      protein_g: prot,
+      fat_g: fat,
+      carbs_g: carbs,
+      quantity: qty,
+      unit,
+    });
+
+    setSavingCustom(false);
     toast.success(t('meals.customProductSaved'));
     onResult({
-      food_name: customForm.food_name.trim(),
+      food_name: foodName,
       quantity: qty,
-      unit: customForm.unit || 'g',
+      unit,
       calories: cal,
       protein_g: prot,
       fat_g: fat,
