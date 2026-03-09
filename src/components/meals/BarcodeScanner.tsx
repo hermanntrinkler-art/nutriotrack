@@ -90,6 +90,15 @@ async function lookupOpenFoodFacts(code: string): Promise<OFFResult> {
   }
 }
 
+// Auto-detect piece products: if stored quantity is very small in grams, treat as 1 piece
+function autoPieceDetect(item: AnalyzedFoodItem): AnalyzedFoodItem {
+  if (item.unit === 'g' && item.quantity > 0 && item.quantity < 15) {
+    // This is likely a per-piece value stored in grams — convert to 1 Stück
+    return { ...item, quantity: 1, unit: 'Stück' };
+  }
+  return item;
+}
+
 async function lookupCustomProduct(code: string, userId: string): Promise<AnalyzedFoodItem | null> {
   const { data } = await supabase
     .from('custom_products')
@@ -100,7 +109,7 @@ async function lookupCustomProduct(code: string, userId: string): Promise<Analyz
 
   if (!data) return null;
 
-  return {
+  return autoPieceDetect({
     food_name: (data as any).food_name,
     quantity: Number((data as any).default_quantity) || 100,
     unit: (data as any).default_unit || 'g',
@@ -109,7 +118,7 @@ async function lookupCustomProduct(code: string, userId: string): Promise<Analyz
     fat_g: Number((data as any).fat_g) || 0,
     carbs_g: Number((data as any).carbs_g) || 0,
     confidence_score: 1,
-  };
+  });
 }
 
 interface CommunityResult {
@@ -130,7 +139,7 @@ async function lookupCommunityProduct(code: string): Promise<CommunityResult | n
   if (!data) return null;
 
   return {
-    item: {
+    item: autoPieceDetect({
       food_name: data.food_name,
       quantity: Number(data.quantity) || 100,
       unit: data.unit || 'g',
@@ -139,7 +148,7 @@ async function lookupCommunityProduct(code: string): Promise<CommunityResult | n
       fat_g: Number(data.fat_g) || 0,
       carbs_g: Number(data.carbs_g) || 0,
       confidence_score: 1,
-    },
+    }),
     contributorName: data.contributor_display_name,
     contributorEmoji: data.contributor_avatar_emoji || '😊',
   };
