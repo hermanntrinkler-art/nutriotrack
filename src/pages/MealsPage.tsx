@@ -622,10 +622,9 @@ export default function MealsPage() {
             </div>
           </div>
 
-          {/* Save as Recipe button */}
+          {/* Save as Favorite button — prominent */}
           {items.length > 0 && items.some(i => i.food_name) && user && (
-            <Button
-              variant="outline"
+            <button
               onClick={async () => {
                 setSavingRecipe(true);
                 const recipeName = items.map(i => i.food_name).filter(Boolean).slice(0, 3).join(', ');
@@ -639,19 +638,19 @@ export default function MealsPage() {
                 setSavingRecipe(false);
                 if (success) {
                   hapticFeedback('success');
-                  toast.success(language === 'de' ? 'Als Favorit gespeichert!' : 'Saved as favorite!');
+                  toast.success(language === 'de' ? 'Als Favorit gespeichert! ⭐' : 'Saved as favorite! ⭐');
                 } else {
                   toast.error(language === 'de' ? 'Fehler beim Speichern' : 'Failed to save');
                 }
               }}
               disabled={savingRecipe}
-              className="w-full rounded-xl"
+              className="w-full flex items-center justify-center gap-2 rounded-xl py-3 px-4 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-700 dark:text-amber-400 font-semibold text-sm transition-all active:scale-[0.98] disabled:opacity-50"
             >
-              <BookmarkPlus className="h-4 w-4 mr-1.5" />
+              <Star className="h-4.5 w-4.5 fill-amber-500 text-amber-500" />
               {savingRecipe
                 ? (language === 'de' ? 'Wird gespeichert...' : 'Saving...')
-                : (language === 'de' ? '⭐ Als Favorit speichern' : '⭐ Save as Favorite')}
-            </Button>
+                : (language === 'de' ? 'Als Favorit speichern' : 'Save as Favorite')}
+            </button>
           )}
 
           <div className="flex gap-3">
@@ -667,15 +666,47 @@ export default function MealsPage() {
 
       {/* Step: Confirmation */}
       {step === 'confirm' && (
-        <SaveMealConfirmation
-          items={items}
-          mealTypeLabel={currentMealType?.label || ''}
-          mealEmoji={currentMealType?.emoji || ''}
-          imagePreview={imagePreview}
-          saving={saving}
-          onConfirm={handleSave}
-          onCancel={() => setStep('review')}
-        />
+        <div className="space-y-4 animate-fade-in">
+          <SaveMealConfirmation
+            items={items}
+            mealTypeLabel={currentMealType?.label || ''}
+            mealEmoji={currentMealType?.emoji || ''}
+            imagePreview={imagePreview}
+            saving={saving}
+            onConfirm={handleSave}
+            onCancel={() => setStep('review')}
+          />
+          {/* Favorite button also on confirmation screen */}
+          {user && items.length > 0 && (
+            <button
+              onClick={async () => {
+                setSavingRecipe(true);
+                const recipeName = items.map(i => i.food_name).filter(Boolean).slice(0, 3).join(', ');
+                const success = await saveAsRecipe({
+                  userId: user.id,
+                  name: recipeName || 'Rezept',
+                  emoji: currentMealType?.emoji || '🍽️',
+                  mealType,
+                  items,
+                });
+                setSavingRecipe(false);
+                if (success) {
+                  hapticFeedback('success');
+                  toast.success(language === 'de' ? 'Als Favorit gespeichert! ⭐' : 'Saved as favorite! ⭐');
+                } else {
+                  toast.error(language === 'de' ? 'Fehler beim Speichern' : 'Failed to save');
+                }
+              }}
+              disabled={savingRecipe || saving}
+              className="w-full flex items-center justify-center gap-2 rounded-xl py-3 px-4 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-700 dark:text-amber-400 font-semibold text-sm transition-all active:scale-[0.98] disabled:opacity-50"
+            >
+              <Star className="h-4.5 w-4.5 fill-amber-500 text-amber-500" />
+              {savingRecipe
+                ? (language === 'de' ? 'Wird gespeichert...' : 'Saving...')
+                : (language === 'de' ? 'Als Favorit speichern' : 'Save as Favorite')}
+            </button>
+          )}
+        </div>
       )}
 
       {/* Editor Modal */}
