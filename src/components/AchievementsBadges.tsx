@@ -249,31 +249,35 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
   const handleShareBadge = async (badge: Achievement) => {
     setSharingBadgeId(badge.id);
     try {
-      let imageUrlOverride: string | undefined;
+      const blob = await generateShareImage({
+        name: userName,
+        streak,
+        totalMeals,
+        unlockedAchievements: unlockedCount,
+        totalAchievements: achievements.length,
+        language: language as 'de' | 'en',
+        badgeTitle: badge.title,
+        badgeShareText: badge.shareText,
+        badgeImageUrl: badge.badgeImage,
+      });
 
-      try {
-        const blob = await generateShareImage({
-          name: userName,
-          streak,
-          totalMeals,
-          unlockedAchievements: unlockedCount,
-          totalAchievements: achievements.length,
-          language: language as 'de' | 'en',
-          badgeTitle: badge.title,
-          badgeShareText: badge.shareText,
-          badgeImageUrl: badge.badgeImage,
-        });
-        imageUrlOverride = await uploadShareImageForFacebook(blob, badge.id);
-      } catch {
-        // Fallback to DB/default image if upload/generation fails
+      const canUseNativeShare =
+        typeof navigator !== 'undefined' &&
+        typeof navigator.share === 'function' &&
+        (!navigator.canShare || navigator.canShare({ files: [new File([blob], 'badge-share.png', { type: 'image/png' })] }));
+
+      if (canUseNativeShare) {
+        const shared = await shareImage(blob, language as 'de' | 'en', badge.shareText);
+        if (shared) return;
       }
 
       const openedFacebook = await shareImageToFacebook(
         badge.id,
         language as 'de' | 'en',
         badge.shareText,
-        imageUrlOverride,
+        badge.badgeImage,
         badge.title,
+        window.location.origin,
       );
 
       if (!openedFacebook) {

@@ -435,6 +435,7 @@ export async function shareImageToFacebook(
   shareText: string,
   imageUrlOverride?: string,
   badgeTitleOverride?: string,
+  sourceOrigin?: string,
 ) {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const cacheBuster = Date.now();
@@ -449,6 +450,7 @@ export async function shareImageToFacebook(
   if (imageUrlOverride) params.set('img', imageUrlOverride);
   if (normalizedText) params.set('text', normalizedText);
   if (badgeTitleOverride) params.set('title', badgeTitleOverride);
+  if (sourceOrigin) params.set('origin', sourceOrigin);
 
   const shareUrl = `${supabaseUrl}/functions/v1/share-badge?${params.toString()}`;
   const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
