@@ -207,6 +207,16 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
 
   const unlockedCount = achievements.filter(a => a.unlocked).length;
 
+  // Keep selectedBadge in sync with updated achievement data
+  useEffect(() => {
+    if (selectedBadge) {
+      const updated = achievements.find(a => a.id === selectedBadge.id);
+      if (updated && (updated.shareText !== selectedBadge.shareText || updated.badgeImage !== selectedBadge.badgeImage)) {
+        setSelectedBadge(updated);
+      }
+    }
+  }, [achievements, selectedBadge]);
+
   // Confetti on new unlock
   const prevUnlocked = useRef<number | null>(null);
   useEffect(() => {
