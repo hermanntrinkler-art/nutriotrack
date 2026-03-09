@@ -556,7 +556,6 @@ export default function MealsPage() {
             setIsAiResult(false);
             setItems([item]);
             setStep('review');
-            setEditingIndex(0);
           }}
           onCancel={handleReset}
         />
