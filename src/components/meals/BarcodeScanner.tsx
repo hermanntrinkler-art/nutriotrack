@@ -132,39 +132,51 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     if (processedRef.current) return;
     processedRef.current = true;
     setLoading(true);
-    setScanning(false);
     setNotFound(null);
 
+    // Stop scanner FIRST, before any state changes that trigger effect cleanup
     try { 
       const s = scannerRef.current;
       if (s) {
-        const state = s.getState();
-        if (state === 2 || state === 3) await s.stop();
+        try {
+          const state = s.getState();
+          if (state === 2 || state === 3) await s.stop();
+        } catch {}
+        try { s.clear(); } catch {}
+        scannerRef.current = null;
       }
     } catch {}
 
+    // Now safe to change scanning state
+    setScanning(false);
+
     // 1. Check personal DB first
     if (user) {
-      const custom = await lookupCustomProduct(code, user.id);
-      if (custom) {
-        toast.success(`${custom.food_name} ${t('meals.barcodeFound')}`);
-        onResult(custom);
-        return;
-      }
+      try {
+        const custom = await lookupCustomProduct(code, user.id);
+        if (custom) {
+          toast.success(`${custom.food_name} ${t('meals.barcodeFound')}`);
+          onResult(custom);
+          return;
+        }
+      } catch {}
     }
 
     // 2. Check Open Food Facts
-    const offResult = await lookupOpenFoodFacts(code);
-    if (offResult.item) {
-      toast.success(`${offResult.item.food_name} ${t('meals.barcodeFound')}`);
-      onResult(offResult.item);
-      return;
-    }
+    try {
+      const offResult = await lookupOpenFoodFacts(code);
+      if (offResult.item) {
+        toast.success(`${offResult.item.food_name} ${t('meals.barcodeFound')}`);
+        onResult(offResult.item);
+        return;
+      }
 
-    // 3. Not found or no nutrition → offer manual creation, pre-fill name if available
-    if (offResult.productName) {
-      setCustomForm(f => ({ ...f, food_name: offResult.productName! }));
-    }
+      // 3. Not found or no nutrition → offer manual creation
+      if (offResult.productName) {
+        setCustomForm(f => ({ ...f, food_name: offResult.productName! }));
+      }
+    } catch {}
+
     setNotFound(code);
     setLoading(false);
   };
@@ -219,7 +231,6 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     let mounted = true;
 
     const startScanner = async () => {
-      // Wait for DOM element to be ready
       const el = document.getElementById(scannerId);
       if (!el || !mounted) return;
 
@@ -247,19 +258,19 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     return () => {
       mounted = false;
       clearTimeout(timer);
+      // Defensive cleanup — scanner may already be stopped/cleared by handleCode
       if (html5Qrcode) {
         try {
           const state = html5Qrcode.getState();
-          if (state === 2 || state === 3) { // SCANNING or PAUSED
-            html5Qrcode.stop().then(() => html5Qrcode?.clear()).catch(() => {});
-          } else {
-            html5Qrcode.clear();
+          if (state === 2 || state === 3) {
+            html5Qrcode.stop().catch(() => {});
           }
-        } catch {
-          // ignore
-        }
+        } catch {}
+        try { html5Qrcode.clear(); } catch {}
       }
-      scannerRef.current = null;
+      if (scannerRef.current === html5Qrcode) {
+        scannerRef.current = null;
+      }
     };
   }, [scanning, showManual, notFound]);
 
