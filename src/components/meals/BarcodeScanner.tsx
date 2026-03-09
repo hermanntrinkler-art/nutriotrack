@@ -139,7 +139,7 @@ async function lookupCommunityProduct(code: string): Promise<CommunityResult | n
   if (!data) return null;
 
   return {
-    item: {
+    item: autoPieceDetect({
       food_name: data.food_name,
       quantity: Number(data.quantity) || 100,
       unit: data.unit || 'g',
@@ -148,7 +148,7 @@ async function lookupCommunityProduct(code: string): Promise<CommunityResult | n
       fat_g: Number(data.fat_g) || 0,
       carbs_g: Number(data.carbs_g) || 0,
       confidence_score: 1,
-    },
+    }),
     contributorName: data.contributor_display_name,
     contributorEmoji: data.contributor_avatar_emoji || '😊',
   };
