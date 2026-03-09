@@ -128,12 +128,12 @@ export default function SavedRecipesScreen({ onSelect, onCancel }: SavedRecipesS
             <ChefHat className="h-8 w-8 text-primary" />
           </div>
           <p className="text-muted-foreground text-sm font-medium">
-            {language === 'de' ? 'Noch keine Rezepte gespeichert' : 'No saved recipes yet'}
+            {language === 'de' ? 'Noch keine Favoriten gespeichert' : 'No saved favorites yet'}
           </p>
           <p className="text-xs text-muted-foreground max-w-[250px] mx-auto">
             {language === 'de'
-              ? 'Speichere eine Mahlzeit als Rezept, um sie schnell erneut zu tracken.'
-              : 'Save a meal as a recipe to quickly re-track it.'}
+              ? 'Speichere eine Mahlzeit als Favorit, um sie schnell erneut zu tracken.'
+              : 'Save a meal as a favorite to quickly re-track it.'}
           </p>
         </div>
       ) : (
