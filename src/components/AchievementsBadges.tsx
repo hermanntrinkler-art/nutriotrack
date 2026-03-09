@@ -227,25 +227,6 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
     prevUnlocked.current = unlockedCount;
   }, [unlockedCount]);
 
-  const handleShare = async () => {
-    setSharing(true);
-    try {
-      const blob = await generateShareImage({
-        name: userName,
-        streak,
-        totalMeals,
-        unlockedAchievements: unlockedCount,
-        totalAchievements: achievements.length,
-        language: language as 'de' | 'en',
-      });
-      const shared = await shareImage(blob, language as 'de' | 'en');
-      if (!shared) toast.success(de ? 'Bild heruntergeladen!' : 'Image downloaded!');
-    } catch {
-      toast.error(de ? 'Teilen fehlgeschlagen' : 'Sharing failed');
-    } finally {
-      setSharing(false);
-    }
-  };
 
   const generateBadgeBlob = async (badge: Achievement) => {
     return generateShareImage({
