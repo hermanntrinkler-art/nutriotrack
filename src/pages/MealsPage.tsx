@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import { analyzeFoodImage } from '@/lib/ai-analysis';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, PenLine, ScanBarcode, Search, BookOpen, BookmarkPlus } from 'lucide-react';
+import { Camera, Upload, PenLine, ScanBarcode, Search, BookOpen, BookmarkPlus, Star, Flame } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
@@ -40,6 +40,7 @@ export default function MealsPage() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [savingRecipe, setSavingRecipe] = useState(false);
+  const [favorites, setFavorites] = useState<{id: string; name: string; emoji: string; meal_type: string; total_calories: number; total_protein_g: number; total_fat_g: number; total_carbs_g: number}[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -52,6 +53,51 @@ export default function MealsPage() {
   ];
 
   const currentMealType = mealTypes.find(m => m.value === mealType);
+
+  // Load favorites (top saved recipes)
+  const loadFavorites = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('saved_recipes')
+      .select('id, name, emoji, meal_type, total_calories, total_protein_g, total_fat_g, total_carbs_g')
+      .eq('user_id', user.id)
+      .order('use_count', { ascending: false })
+      .limit(5);
+    setFavorites((data || []) as any);
+  }, [user]);
+
+  useEffect(() => { loadFavorites(); }, [loadFavorites]);
+
+  const handleSelectFavorite = async (fav: typeof favorites[0]) => {
+    hapticFeedback('success');
+    const { data: itemsData } = await supabase
+      .from('saved_recipe_items')
+      .select('*')
+      .eq('recipe_id', fav.id);
+    if (!itemsData || itemsData.length === 0) {
+      toast.error(language === 'de' ? 'Favorit ist leer' : 'Favorite is empty');
+      return;
+    }
+    // Increment use count
+    await supabase.from('saved_recipes').update({ use_count: ((fav as any).use_count || 0) + 1 } as any).eq('id', fav.id);
+    
+    const analyzedItems: AnalyzedFoodItem[] = (itemsData as any[]).map(item => ({
+      food_name: item.food_name,
+      quantity: Number(item.quantity),
+      unit: item.unit,
+      calories: Number(item.calories),
+      protein_g: Number(item.protein_g),
+      fat_g: Number(item.fat_g),
+      carbs_g: Number(item.carbs_g),
+      confidence_score: 1,
+    }));
+    setIsAiResult(false);
+    setItems(analyzedItems);
+    if (['breakfast', 'lunch', 'dinner', 'snack'].includes(fav.meal_type)) {
+      setMealType(fav.meal_type as MealType);
+    }
+    setStep('review');
+  };
 
   const handleImageUpload = async (file: File) => {
     // Check scan limit for free users
@@ -349,6 +395,37 @@ export default function MealsPage() {
             <span className="font-medium">{currentMealType?.label}</span>
           </div>
 
+          {/* Quick Favorites */}
+          {favorites.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 px-1">
+                <Star className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                  {language === 'de' ? 'Favoriten' : 'Favorites'}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {favorites.map(fav => (
+                  <button
+                    key={fav.id}
+                    onClick={() => handleSelectFavorite(fav)}
+                    className="nutri-card flex items-center gap-3 py-3 hover:border-primary/30 transition-all active:scale-[0.98]"
+                  >
+                    <span className="text-lg">{fav.emoji}</span>
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="text-sm font-semibold truncate">{fav.name}</p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Flame className="h-3 w-3 text-energy" />
+                      <span className="text-xs font-bold tabular-nums">{Math.round(fav.total_calories)}</span>
+                      <span className="text-[10px] text-muted-foreground">kcal</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
               <Camera className="h-6 w-6 text-primary" />
@@ -437,11 +514,11 @@ export default function MealsPage() {
           {/* Saved Recipes */}
           <button onClick={() => setStep('recipes')} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <BookOpen className="h-6 w-6 text-primary" />
+              <Star className="h-6 w-6 text-primary" />
             </div>
             <div className="text-left flex-1">
-              <p className="font-medium">{language === 'de' ? 'Gespeicherte Rezepte' : 'Saved Recipes'}</p>
-              <p className="text-xs text-muted-foreground">{language === 'de' ? 'Häufige Mahlzeiten schnell erneut tracken' : 'Quickly re-track frequent meals'}</p>
+              <p className="font-medium">{language === 'de' ? 'Alle Favoriten' : 'All Favorites'}</p>
+              <p className="text-xs text-muted-foreground">{language === 'de' ? 'Häufige Mahlzeiten verwalten & tracken' : 'Manage & track frequent meals'}</p>
             </div>
           </button>
 
@@ -562,7 +639,7 @@ export default function MealsPage() {
                 setSavingRecipe(false);
                 if (success) {
                   hapticFeedback('success');
-                  toast.success(language === 'de' ? 'Als Rezept gespeichert!' : 'Saved as recipe!');
+                  toast.success(language === 'de' ? 'Als Favorit gespeichert!' : 'Saved as favorite!');
                 } else {
                   toast.error(language === 'de' ? 'Fehler beim Speichern' : 'Failed to save');
                 }
@@ -573,7 +650,7 @@ export default function MealsPage() {
               <BookmarkPlus className="h-4 w-4 mr-1.5" />
               {savingRecipe
                 ? (language === 'de' ? 'Wird gespeichert...' : 'Saving...')
-                : (language === 'de' ? 'Als Rezept speichern' : 'Save as Recipe')}
+                : (language === 'de' ? '⭐ Als Favorit speichern' : '⭐ Save as Favorite')}
             </Button>
           )}
 
