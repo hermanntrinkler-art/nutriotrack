@@ -360,53 +360,61 @@ export async function shareImage(blob: Blob, language: 'de' | 'en', customShareT
 
   const text = customShareText || defaultText;
 
+  // Try native share with file (works on mobile browsers, NOT in iframes)
   if (navigator.share) {
     try {
       const fileOnlyData: ShareData = { files: [file] };
       const canShareFiles = !navigator.canShare || navigator.canShare(fileOnlyData);
 
-      // Best compatibility for Facebook target: share file only first
       if (canShareFiles) {
         await navigator.share(fileOnlyData);
         return true;
       }
+    } catch (e) {
+      if ((e as Error)?.name === 'AbortError') return true;
+      // share failed (e.g. iframe restriction) — continue to fallback
+    }
 
-      // Fallback: text share if file share is not supported
-      await navigator.share({
-        title: 'NutrioTrack',
-        text,
-      });
+    // Try text-only share
+    try {
+      await navigator.share({ title: 'NutrioTrack 🏆', text });
       return true;
     } catch (e) {
       if ((e as Error)?.name === 'AbortError') return true;
     }
   }
 
-  // Fallback: save/open image
+  // Fallback: copy text to clipboard + download image
   const url = URL.createObjectURL(blob);
   try {
+    // Download the image
     const a = document.createElement('a');
     a.href = url;
     a.download = 'nutriotrack-achievement.png';
-    a.target = '_blank';
-    a.rel = 'noopener';
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 1000);
+    document.body.removeChild(a);
+
+    // Also copy share text to clipboard
+    try {
+      await navigator.clipboard.writeText(text);
+      const { toast } = await import('sonner');
+      toast.success(
+        language === 'de' 
+          ? '📋 Bild heruntergeladen & Text kopiert! Teile beides auf Facebook.' 
+          : '📋 Image downloaded & text copied! Share both on Facebook.'
+      );
+      return true;
+    } catch {
+      // clipboard failed, just downloaded
+    }
+
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
     return false;
   } catch {
-    const win = window.open(url, '_blank', 'noopener,noreferrer');
-    if (!win) {
-      // Keep URL alive briefly even if popup is blocked
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
-      return false;
-    }
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-    return true;
+    URL.revokeObjectURL(url);
+    return false;
   }
 }
 
