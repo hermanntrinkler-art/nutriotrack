@@ -349,6 +349,8 @@ export default function MealsPage() {
     setImagePreview(null);
     setIsAiResult(false);
     setEditingIndex(null);
+    setAddingToReview(false);
+    setShowFavoritePicker(false);
   };
 
   return (
