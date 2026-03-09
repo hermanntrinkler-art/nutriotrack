@@ -61,6 +61,7 @@ Deno.serve(async (req) => {
     const imageOverride = url.searchParams.get('img')
     const textOverride = url.searchParams.get('text')
     const titleOverride = url.searchParams.get('title')
+    const originOverride = url.searchParams.get('origin')
 
     if (!badgeId) {
       return new Response('Missing badge parameter', { status: 400, headers: corsHeaders })
@@ -134,6 +135,9 @@ Deno.serve(async (req) => {
     const ogTitle = escapeHtmlAttr(ogTitleRaw)
     const ogDescription = escapeHtmlAttr(ogDescriptionRaw)
     const ogImageEscaped = escapeHtmlAttr(ogImage)
+    const safeOrigin = originOverride && /^https?:\/\//i.test(originOverride) ? originOverride.replace(/\/$/, '') : null
+    const ogCanonicalUrlRaw = safeOrigin ? `${safeOrigin}/share/${badgeId}` : url.toString()
+    const ogCanonicalUrl = escapeHtmlAttr(ogCanonicalUrlRaw)
     const bodyTitle = escapeHtmlText(title)
     const bodyShareText = escapeHtmlText(shareText)
 
@@ -144,13 +148,16 @@ Deno.serve(async (req) => {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${ogTitle}</title>
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="NutrioTrack" />
+  <meta property="og:url" content="${ogCanonicalUrl}" />
+  <link rel="canonical" href="${ogCanonicalUrl}" />
   <meta property="og:title" content="${ogTitle}" />
   <meta property="og:description" content="${ogDescription}" />
   <meta property="og:image" content="${ogImageEscaped}" />
   <meta property="og:image:secure_url" content="${ogImageEscaped}" />
   <meta property="og:image:type" content="image/png" />
-  <meta property="og:image:width" content="512" />
-  <meta property="og:image:height" content="512" />
+  <meta property="og:image:width" content="1080" />
+  <meta property="og:image:height" content="1080" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${ogTitle}" />
   <meta name="twitter:description" content="${ogDescription}" />
