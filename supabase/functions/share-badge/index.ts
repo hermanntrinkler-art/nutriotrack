@@ -30,6 +30,7 @@ const BADGE_DEFAULTS: Record<string, { title_de: string; title_en: string; share
   month_1: { title_de: 'Erster Monat', title_en: 'First Month', shareText_de: 'Einen Monat dabei – es ist zur Gewohnheit geworden! ❤️', shareText_en: 'One month in – it\'s become a habit! ❤️' },
   quarter: { title_de: '3 Monate', title_en: '3 Months', shareText_de: '3 Monate NutrioTrack – das ist jetzt Lifestyle! ✨', shareText_en: '3 months on NutrioTrack – this is lifestyle now! ✨' },
   month_6: { title_de: '6 Monate', title_en: '6 Months', shareText_de: '6 Monate NutrioTrack – absolut unaufhaltbar! 🌟🏆', shareText_en: '6 months on NutrioTrack – absolutely unstoppable! 🌟🏆' },
+  profile_pic: { title_de: 'Profilbild', title_en: 'Profile Pic', shareText_de: 'Ich habe mein Profilbild bei NutrioTrack gesetzt! 📸', shareText_en: 'I set my profile picture on NutrioTrack! 📸' },
 }
 
 Deno.serve(async (req) => {
