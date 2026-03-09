@@ -112,7 +112,7 @@ export default function SavedRecipesScreen({ onSelect, onCancel }: SavedRecipesS
         <div className="flex items-center gap-2 flex-1">
           <BookOpen className="h-5 w-5 text-primary" />
           <h2 className="font-bold text-lg">
-            {language === 'de' ? 'Meine Rezepte' : 'My Recipes'}
+            {language === 'de' ? 'Meine Favoriten' : 'My Favorites'}
           </h2>
         </div>
         <span className="text-xs text-muted-foreground font-medium">{recipes.length}</span>
