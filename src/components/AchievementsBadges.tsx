@@ -87,56 +87,62 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
 
   const [customBadgeImages, setCustomBadgeImages] = useState<Record<string, string>>({});
   const [customShareTexts, setCustomShareTexts] = useState<Record<string, string>>({});
+  const [badgeDataLoaded, setBadgeDataLoaded] = useState(false);
 
-  // Load custom badge images and translated share texts from DB
+  // Load custom badge images and translated share texts from DB — single batch update
   useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       const { data } = await supabase.from('badge_images').select('badge_id, image_url, share_text');
-      if (data) {
-        const imgMap: Record<string, string> = {};
-        const txtMap: Record<string, string> = {};
-        (data as Array<{ badge_id: string; image_url: string; share_text: string | null }>).forEach(r => {
-          if (r.image_url) imgMap[r.badge_id] = r.image_url;
-          if (r.share_text) txtMap[r.badge_id] = r.share_text;
-        });
-        setCustomBadgeImages(imgMap);
+      if (cancelled || !data) return;
 
-        // If not German, fetch translations for custom texts
-        if (language !== 'de' && Object.keys(txtMap).length > 0) {
-          const badgeIds = Object.keys(txtMap);
-          const { data: translations } = await supabase
-            .from('badge_share_translations')
-            .select('badge_id, translated_text')
-            .eq('language', language)
-            .in('badge_id', badgeIds);
+      const imgMap: Record<string, string> = {};
+      const txtMap: Record<string, string> = {};
+      (data as Array<{ badge_id: string; image_url: string; share_text: string | null }>).forEach(r => {
+        if (r.image_url) imgMap[r.badge_id] = r.image_url;
+        if (r.share_text) txtMap[r.badge_id] = r.share_text;
+      });
 
-          if (translations) {
-            const translatedMap: Record<string, string> = {};
-            (translations as Array<{ badge_id: string; translated_text: string }>).forEach(t => {
-              translatedMap[t.badge_id] = t.translated_text;
-            });
-            // Use translated texts, fall back to German custom texts
-            badgeIds.forEach(id => {
-              txtMap[id] = translatedMap[id] || txtMap[id];
-            });
+      // If not German, fetch cached translations
+      if (language !== 'de' && Object.keys(txtMap).length > 0) {
+        const badgeIds = Object.keys(txtMap);
+        const { data: translations } = await supabase
+          .from('badge_share_translations')
+          .select('badge_id, translated_text')
+          .eq('language', language)
+          .in('badge_id', badgeIds);
 
-            // Trigger translation for uncached badges
-            const uncached = badgeIds.filter(id => !translatedMap[id]);
-            for (const badgeId of uncached) {
-              supabase.functions.invoke('translate-badge-text', {
-                body: { badge_id: badgeId, source_text: txtMap[badgeId], target_language: language },
-              }).then(({ data: result }) => {
-                if (result?.translated_text) {
-                  setCustomShareTexts(prev => ({ ...prev, [badgeId]: result.translated_text }));
-                }
-              }).catch(() => {});
-            }
+        if (!cancelled && translations) {
+          (translations as Array<{ badge_id: string; translated_text: string }>).forEach(t => {
+            txtMap[t.badge_id] = t.translated_text;
+          });
+
+          // Trigger translation for uncached badges in background (don't cause re-render flicker)
+          const translatedIds = new Set(translations.map((t: any) => t.badge_id));
+          const uncached = badgeIds.filter(id => !translatedIds.has(id));
+          for (const badgeId of uncached) {
+            const originalText = txtMap[badgeId];
+            supabase.functions.invoke('translate-badge-text', {
+              body: { badge_id: badgeId, source_text: originalText, target_language: language },
+            }).then(({ data: result }) => {
+              if (!cancelled && result?.translated_text) {
+                setCustomShareTexts(prev => ({ ...prev, [badgeId]: result.translated_text }));
+              }
+            }).catch(() => {});
           }
         }
-        setCustomShareTexts(prev => ({ ...prev, ...txtMap }));
+      }
+
+      if (!cancelled) {
+        setCustomBadgeImages(imgMap);
+        setCustomShareTexts(txtMap);
+        setBadgeDataLoaded(true);
       }
     };
     load();
+
+    return () => { cancelled = true; };
   }, [language]);
 
   const getBadgeImage = (id: string, fallback: string) => customBadgeImages[id] || fallback;
