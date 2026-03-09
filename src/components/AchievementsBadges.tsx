@@ -140,6 +140,7 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
   }, [language]);
 
   const getBadgeImage = (id: string, fallback: string) => customBadgeImages[id] || fallback;
+  const getShareText = (id: string, defaultText: string) => customShareTexts[id] || defaultText;
 
   const achievements: Achievement[] = useMemo(() => [
     // Streak badges
