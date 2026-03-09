@@ -253,6 +253,17 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Gurke', name_en: 'Cucumber', quantity: 100, unit: 'g', calories: 12, protein_g: 1, fat_g: 0, carbs_g: 2, category: 'vegetables' },
   { name: 'Paprika', name_en: 'Bell Pepper', quantity: 150, unit: 'g', calories: 42, protein_g: 1, fat_g: 0, carbs_g: 9, category: 'vegetables' },
   { name: 'Spinat', name_en: 'Spinach', quantity: 100, unit: 'g', calories: 23, protein_g: 3, fat_g: 0, carbs_g: 4, category: 'vegetables' },
+  { name: 'Schalotten', name_en: 'Shallots', quantity: 30, unit: 'g', calories: 22, protein_g: 1, fat_g: 0, carbs_g: 5, category: 'vegetables' },
+  { name: 'Zwiebel', name_en: 'Onion', quantity: 100, unit: 'g', calories: 40, protein_g: 1, fat_g: 0, carbs_g: 9, category: 'vegetables' },
+  { name: 'Knoblauch', name_en: 'Garlic', quantity: 5, unit: 'g', calories: 7, protein_g: 0, fat_g: 0, carbs_g: 2, category: 'vegetables' },
+  { name: 'Champignons', name_en: 'Mushrooms', quantity: 100, unit: 'g', calories: 22, protein_g: 3, fat_g: 0, carbs_g: 3, category: 'vegetables' },
+  { name: 'Zucchini', name_en: 'Zucchini', quantity: 150, unit: 'g', calories: 26, protein_g: 2, fat_g: 0, carbs_g: 5, category: 'vegetables' },
+  { name: 'Aubergine', name_en: 'Eggplant', quantity: 150, unit: 'g', calories: 38, protein_g: 1, fat_g: 0, carbs_g: 9, category: 'vegetables' },
+  { name: 'Karotten', name_en: 'Carrots', quantity: 100, unit: 'g', calories: 41, protein_g: 1, fat_g: 0, carbs_g: 10, category: 'vegetables' },
+  { name: 'Blumenkohl', name_en: 'Cauliflower', quantity: 150, unit: 'g', calories: 38, protein_g: 3, fat_g: 0, carbs_g: 8, category: 'vegetables' },
+  { name: 'Lauch', name_en: 'Leek', quantity: 100, unit: 'g', calories: 31, protein_g: 2, fat_g: 0, carbs_g: 6, category: 'vegetables' },
+  { name: 'Sellerie', name_en: 'Celery', quantity: 100, unit: 'g', calories: 16, protein_g: 1, fat_g: 0, carbs_g: 3, category: 'vegetables' },
+  { name: 'Fenchel', name_en: 'Fennel', quantity: 100, unit: 'g', calories: 31, protein_g: 1, fat_g: 0, carbs_g: 7, category: 'vegetables' },
 
   // Fertiggerichte / Prepared meals
   { name: 'Pizza Margherita', name_en: 'Pizza Margherita', quantity: 1, unit: 'Stück', calories: 800, protein_g: 30, fat_g: 28, carbs_g: 100, category: 'prepared' },
