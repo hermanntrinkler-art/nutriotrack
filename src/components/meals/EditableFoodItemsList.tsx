@@ -8,6 +8,7 @@ interface EditableFoodItemsListProps {
   items: AnalyzedFoodItem[];
   isAiResult: boolean;
   onUpdateItem: (index: number, field: keyof AnalyzedFoodItem, value: string | number) => void;
+  onReplaceItem?: (index: number, newItem: AnalyzedFoodItem) => void;
   onRemoveItem: (index: number) => void;
   onAddItem: () => void;
   onEditItem: (index: number) => void;
