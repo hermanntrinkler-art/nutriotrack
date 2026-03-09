@@ -1,9 +1,9 @@
 import { useMemo, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Share2, Loader2 } from 'lucide-react';
+import { Trophy, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 import { fireCenterBurst } from '@/lib/confetti';
-import { generateShareImage, shareImage } from '@/lib/share-image';
+import { generateShareImage, shareToFacebook, shareToWhatsApp, shareToInstagram } from '@/lib/share-image';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
@@ -83,6 +83,7 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
   const de = language === 'de';
   const [sharing, setSharing] = useState(false);
   const [sharingBadgeId, setSharingBadgeId] = useState<string | null>(null);
+  const [sharingPlatform, setSharingPlatform] = useState<string | null>(null);
   const [selectedBadge, setSelectedBadge] = useState<Achievement | null>(null);
 
   const [customBadgeImages, setCustomBadgeImages] = useState<Record<string, string>>({});
@@ -226,50 +227,35 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
     prevUnlocked.current = unlockedCount;
   }, [unlockedCount]);
 
-  const handleShare = async () => {
-    setSharing(true);
-    try {
-      const blob = await generateShareImage({
-        name: userName,
-        streak,
-        totalMeals,
-        unlockedAchievements: unlockedCount,
-        totalAchievements: achievements.length,
-        language: language as 'de' | 'en',
-      });
-      const shared = await shareImage(blob, language as 'de' | 'en');
-      if (!shared) toast.success(de ? 'Bild heruntergeladen!' : 'Image downloaded!');
-    } catch {
-      toast.error(de ? 'Teilen fehlgeschlagen' : 'Sharing failed');
-    } finally {
-      setSharing(false);
-    }
+
+  const generateBadgeBlob = async (badge: Achievement) => {
+    return generateShareImage({
+      name: userName,
+      streak,
+      totalMeals,
+      unlockedAchievements: unlockedCount,
+      totalAchievements: achievements.length,
+      language: language as 'de' | 'en',
+      badgeTitle: badge.title,
+      badgeShareText: badge.shareText,
+      badgeImageUrl: badge.badgeImage,
+    });
   };
 
-  const handleShareBadge = async (badge: Achievement) => {
+  const handleShareBadgeTo = async (badge: Achievement, platform: 'facebook' | 'whatsapp' | 'instagram') => {
     setSharingBadgeId(badge.id);
+    setSharingPlatform(platform);
     try {
-      const blob = await generateShareImage({
-        name: userName,
-        streak,
-        totalMeals,
-        unlockedAchievements: unlockedCount,
-        totalAchievements: achievements.length,
-        language: language as 'de' | 'en',
-        badgeTitle: badge.title,
-        badgeShareText: badge.shareText,
-        badgeImageUrl: badge.badgeImage,
-      });
-
-      // Always use native share with the image file — works on mobile (Android/iOS)
-      const shared = await shareImage(blob, language as 'de' | 'en', badge.shareText);
-      if (!shared) {
-        toast.success(de ? 'Bild heruntergeladen!' : 'Image downloaded!');
-      }
+      const blob = await generateBadgeBlob(badge);
+      const lang = language as 'de' | 'en';
+      if (platform === 'facebook') await shareToFacebook(blob, badge.shareText, lang);
+      else if (platform === 'whatsapp') await shareToWhatsApp(blob, badge.shareText, lang);
+      else await shareToInstagram(blob, lang);
     } catch {
       toast.error(de ? 'Teilen fehlgeschlagen' : 'Sharing failed');
     } finally {
       setSharingBadgeId(null);
+      setSharingPlatform(null);
     }
   };
 
@@ -368,15 +354,6 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
             <h3 className="font-semibold text-sm">Badges</h3>
           </div>
           <div className="flex items-center gap-2">
-            <motion.button
-              onClick={handleShare}
-              disabled={sharing}
-              whileTap={{ scale: 0.9 }}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-colors disabled:opacity-50"
-            >
-              {sharing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Share2 className="h-3 w-3" />}
-              {de ? 'Teilen' : 'Share'}
-            </motion.button>
             <span className="text-xs font-bold text-muted-foreground">{unlockedCount}/{achievements.length}</span>
           </div>
         </div>
@@ -420,16 +397,49 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
                 <p className="font-bold text-sm">{selectedBadge.title}</p>
                 <p className="text-xs text-muted-foreground">{selectedBadge.desc}</p>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex flex-col items-end gap-1 shrink-0">
                 {selectedBadge.unlocked && (
-                  <motion.button
-                    onClick={(e) => { e.stopPropagation(); handleShareBadge(selectedBadge); }}
-                    disabled={sharingBadgeId === selectedBadge.id}
-                    whileTap={{ scale: 0.9 }}
-                    className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors disabled:opacity-50"
-                  >
-                    {sharingBadgeId === selectedBadge.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Share2 className="h-3.5 w-3.5" />}
-                  </motion.button>
+                  <div className="flex items-center gap-1.5">
+                    {/* Facebook */}
+                    <motion.button
+                      onClick={(e) => { e.stopPropagation(); handleShareBadgeTo(selectedBadge, 'facebook'); }}
+                      disabled={sharingBadgeId === selectedBadge.id}
+                      whileTap={{ scale: 0.9 }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center transition-colors disabled:opacity-50"
+                      style={{ backgroundColor: 'rgba(24,119,242,0.15)' }}
+                    >
+                      {sharingBadgeId === selectedBadge.id && sharingPlatform === 'facebook'
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: '#1877F2' }} />
+                        : <svg className="h-4 w-4" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                      }
+                    </motion.button>
+                    {/* WhatsApp */}
+                    <motion.button
+                      onClick={(e) => { e.stopPropagation(); handleShareBadgeTo(selectedBadge, 'whatsapp'); }}
+                      disabled={sharingBadgeId === selectedBadge.id}
+                      whileTap={{ scale: 0.9 }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center transition-colors disabled:opacity-50"
+                      style={{ backgroundColor: 'rgba(37,211,102,0.15)' }}
+                    >
+                      {sharingBadgeId === selectedBadge.id && sharingPlatform === 'whatsapp'
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: '#25D366' }} />
+                        : <svg className="h-4 w-4" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                      }
+                    </motion.button>
+                    {/* Instagram */}
+                    <motion.button
+                      onClick={(e) => { e.stopPropagation(); handleShareBadgeTo(selectedBadge, 'instagram'); }}
+                      disabled={sharingBadgeId === selectedBadge.id}
+                      whileTap={{ scale: 0.9 }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center transition-colors disabled:opacity-50"
+                      style={{ backgroundColor: 'rgba(225,48,108,0.15)' }}
+                    >
+                      {sharingBadgeId === selectedBadge.id && sharingPlatform === 'instagram'
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: '#E1306C' }} />
+                        : <svg className="h-4 w-4" viewBox="0 0 24 24" fill="#E1306C"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                      }
+                    </motion.button>
+                  </div>
                 )}
                 <div className="text-right">
                   <span className="text-xs font-black text-primary">+{selectedBadge.xp} XP</span>
