@@ -710,16 +710,6 @@ export default function MealsPage() {
               </div>
             </div>
           </div>
-              <div>
-                <p className="font-bold text-fat">{Math.round(items.reduce((s, i) => s + Number(i.fat_g), 0))}g</p>
-                <p className="text-xs text-muted-foreground">{t('dashboard.fat')}</p>
-              </div>
-              <div>
-                <p className="font-bold text-carbs">{Math.round(items.reduce((s, i) => s + Number(i.carbs_g), 0))}g</p>
-                <p className="text-xs text-muted-foreground">{t('dashboard.carbs')}</p>
-              </div>
-            </div>
-          </div>
 
           {/* Save as Favorite button — prominent */}
           {items.length > 0 && items.some(i => i.food_name) && user && (
