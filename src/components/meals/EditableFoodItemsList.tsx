@@ -8,6 +8,7 @@ interface EditableFoodItemsListProps {
   items: AnalyzedFoodItem[];
   isAiResult: boolean;
   onUpdateItem: (index: number, field: keyof AnalyzedFoodItem, value: string | number) => void;
+  onReplaceItem?: (index: number, newItem: AnalyzedFoodItem) => void;
   onRemoveItem: (index: number) => void;
   onAddItem: () => void;
   onEditItem: (index: number) => void;
@@ -17,6 +18,7 @@ export default function EditableFoodItemsList({
   items,
   isAiResult,
   onUpdateItem,
+  onReplaceItem,
   onRemoveItem,
   onAddItem,
   onEditItem,
@@ -45,6 +47,7 @@ export default function EditableFoodItemsList({
           isAiResult={isAiResult}
           onEdit={() => onEditItem(i)}
           onRemove={() => onRemoveItem(i)}
+          onQuantityChange={onReplaceItem ? (newItem) => onReplaceItem(i, newItem) : undefined}
         />
       ))}
 

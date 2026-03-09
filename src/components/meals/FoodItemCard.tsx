@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { useTranslation } from '@/lib/i18n';
-import { Pencil, Trash2, Shield, ShieldAlert } from 'lucide-react';
+import { Pencil, Trash2, Shield, ShieldAlert, Minus, Plus } from 'lucide-react';
 
 interface FoodItemCardProps {
   item: AnalyzedFoodItem;
@@ -8,6 +9,7 @@ interface FoodItemCardProps {
   isAiResult: boolean;
   onEdit: () => void;
   onRemove: () => void;
+  onQuantityChange?: (newItem: AnalyzedFoodItem) => void;
 }
 
 function confidenceColor(score: number): string {
@@ -22,8 +24,30 @@ function confidenceLabel(score: number, t: (key: any) => string): string {
   return t('meals.confidenceLow');
 }
 
-export default function FoodItemCard({ item, index, isAiResult, onEdit, onRemove }: FoodItemCardProps) {
+function scaleItem(item: AnalyzedFoodItem, oldQty: number, newQty: number): AnalyzedFoodItem {
+  if (oldQty <= 0) return { ...item, quantity: newQty };
+  const factor = newQty / oldQty;
+  return {
+    ...item,
+    quantity: newQty,
+    calories: Math.round(item.calories * factor),
+    protein_g: Math.round(item.protein_g * factor * 10) / 10,
+    fat_g: Math.round(item.fat_g * factor * 10) / 10,
+    carbs_g: Math.round(item.carbs_g * factor * 10) / 10,
+  };
+}
+
+export default function FoodItemCard({ item, index, isAiResult, onEdit, onRemove, onQuantityChange }: FoodItemCardProps) {
   const { t } = useTranslation();
+
+  const step = item.unit === 'Stück' || item.unit === 'piece' ? 1 : item.quantity <= 10 ? 1 : item.quantity <= 50 ? 5 : 10;
+
+  const handleStep = (delta: number) => {
+    if (!onQuantityChange) return;
+    const oldQty = item.quantity;
+    const newQty = Math.max(step, oldQty + delta * step);
+    onQuantityChange(scaleItem(item, oldQty, newQty));
+  };
 
   return (
     <div className="nutri-card animate-fade-in">
@@ -31,9 +55,6 @@ export default function FoodItemCard({ item, index, isAiResult, onEdit, onRemove
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1 min-w-0">
           <h4 className="font-semibold text-sm truncate">{item.food_name || t('meals.foodName')}</h4>
-          <p className="text-xs text-muted-foreground">
-            {item.quantity} {item.unit}
-          </p>
         </div>
         <div className="flex items-center gap-1 ml-2">
           <button
@@ -52,6 +73,27 @@ export default function FoodItemCard({ item, index, isAiResult, onEdit, onRemove
           </button>
         </div>
       </div>
+
+      {/* Inline quantity stepper */}
+      {onQuantityChange && (
+        <div className="flex items-center gap-2 mb-2">
+          <button
+            onClick={() => handleStep(-1)}
+            className="w-7 h-7 rounded-full bg-muted hover:bg-accent flex items-center justify-center transition-colors active:scale-95"
+          >
+            <Minus className="h-3.5 w-3.5 text-foreground" />
+          </button>
+          <span className="text-sm font-medium min-w-[60px] text-center">
+            {item.quantity} {item.unit}
+          </span>
+          <button
+            onClick={() => handleStep(1)}
+            className="w-7 h-7 rounded-full bg-muted hover:bg-accent flex items-center justify-center transition-colors active:scale-95"
+          >
+            <Plus className="h-3.5 w-3.5 text-foreground" />
+          </button>
+        </div>
+      )}
 
       {/* Macros row */}
       <div className="grid grid-cols-4 gap-2 text-center">
