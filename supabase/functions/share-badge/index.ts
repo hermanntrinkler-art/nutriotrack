@@ -65,7 +65,43 @@ Deno.serve(async (req) => {
 
     const isDE = lang === 'de'
     const title = isDE ? defaults.title_de : defaults.title_en
-    const shareText = badgeData?.share_text || (isDE ? defaults.shareText_de : defaults.shareText_en)
+    
+    // Determine share text: custom (from admin, written in German) or default
+    let shareText: string
+    const customShareText = badgeData?.share_text
+    
+    if (customShareText && !isDE) {
+      // Check for cached translation
+      const { data: cached } = await supabase
+        .from('badge_share_translations')
+        .select('translated_text')
+        .eq('badge_id', badgeId)
+        .eq('language', lang)
+        .maybeSingle()
+      
+      if (cached) {
+        shareText = cached.translated_text
+      } else {
+        // Try to translate via edge function
+        try {
+          const translateUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/translate-badge-text`
+          const translateRes = await fetch(translateUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+            },
+            body: JSON.stringify({ badge_id: badgeId, source_text: customShareText, target_language: lang }),
+          })
+          const translateData = await translateRes.json()
+          shareText = translateData.translated_text || customShareText
+        } catch {
+          shareText = customShareText
+        }
+      }
+    } else {
+      shareText = customShareText || (isDE ? defaults.shareText_de : defaults.shareText_en)
+    }
     
     // Build OG image URL - use custom image or a default badge asset
     const ogImage = badgeData?.image_url || `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/badge-images/${badgeId}.png`
