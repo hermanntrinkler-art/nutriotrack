@@ -210,10 +210,10 @@ Deno.serve(async (req) => {
   <div class="card">
     <p class="label">${isDE ? 'BADGE FREIGESCHALTET' : 'BADGE UNLOCKED'}</p>
     <div class="badge-ring">
-      <img src="${ogImage}" alt="${title}" />
+      <img src="${ogImageEscaped}" alt="${bodyTitle}" />
     </div>
-    <h1>${title}</h1>
-    <p class="share-text">"${shareText}"</p>
+    <h1>${bodyTitle}</h1>
+    <p class="share-text">"${bodyShareText}"</p>
     <a href="/" class="cta">${isDE ? 'Jetzt auch tracken!' : 'Start tracking too!'}</a>
     <p class="logo">NutrioTrack 🌱</p>
   </div>
