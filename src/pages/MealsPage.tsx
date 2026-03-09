@@ -623,6 +623,72 @@ export default function MealsPage() {
             onEditItem={handleEditItem}
           />
 
+          {/* Add more items buttons */}
+          <div className="flex gap-2">
+            {allFavorites.length > 0 && (
+              <button
+                onClick={() => setShowFavoritePicker(!showFavoritePicker)}
+                className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 px-3 bg-primary/10 hover:bg-primary/15 border border-primary/20 text-primary font-medium text-xs transition-all active:scale-[0.98]"
+              >
+                <Star className="h-3.5 w-3.5" />
+                {language === 'de' ? 'Aus Favoriten' : 'From Favorites'}
+              </button>
+            )}
+            <button
+              onClick={() => { setAddingToReview(true); setStep('search'); }}
+              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 px-3 bg-muted hover:bg-muted/80 border border-border text-foreground font-medium text-xs transition-all active:scale-[0.98]"
+            >
+              <Search className="h-3.5 w-3.5" />
+              {language === 'de' ? 'Suche öffnen' : 'Search Food'}
+            </button>
+          </div>
+
+          {/* Inline Favorite Picker */}
+          {showFavoritePicker && (
+            <div className="space-y-1.5 animate-fade-in">
+              <p className="text-xs font-semibold text-muted-foreground px-1">
+                {language === 'de' ? 'Favorit hinzufügen:' : 'Add favorite:'}
+              </p>
+              {allFavorites.map(fav => (
+                <button
+                  key={fav.id}
+                  onClick={async () => {
+                    const { data: itemsData } = await supabase
+                      .from('saved_recipe_items')
+                      .select('*')
+                      .eq('recipe_id', fav.id);
+                    if (!itemsData || itemsData.length === 0) {
+                      toast.error(language === 'de' ? 'Favorit ist leer' : 'Favorite is empty');
+                      return;
+                    }
+                    const newItems: AnalyzedFoodItem[] = (itemsData as any[]).map(item => ({
+                      food_name: item.food_name,
+                      quantity: Number(item.quantity),
+                      unit: item.unit,
+                      calories: Number(item.calories),
+                      protein_g: Number(item.protein_g),
+                      fat_g: Number(item.fat_g),
+                      carbs_g: Number(item.carbs_g),
+                      confidence_score: 1,
+                    }));
+                    setItems(prev => [...prev.filter(i => i.food_name), ...newItems]);
+                    setShowFavoritePicker(false);
+                    hapticFeedback('success');
+                    toast.success(language === 'de' ? `${fav.name} hinzugefügt` : `Added ${fav.name}`);
+                  }}
+                  className="nutri-card w-full flex items-center gap-3 py-2.5 hover:border-primary/30 transition-all active:scale-[0.98]"
+                >
+                  <span className="text-base">{fav.emoji}</span>
+                  <span className="text-sm font-medium truncate flex-1 text-left">{fav.name}</span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Flame className="h-3 w-3 text-energy" />
+                    <span className="text-xs tabular-nums">{Math.round(fav.total_calories)}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Totals bar */}
           <div className="nutri-card-highlight">
             <div className="grid grid-cols-4 gap-2 text-center text-sm">
@@ -634,6 +700,16 @@ export default function MealsPage() {
                 <p className="font-bold text-protein">{Math.round(items.reduce((s, i) => s + Number(i.protein_g), 0))}g</p>
                 <p className="text-xs text-muted-foreground">{t('dashboard.protein')}</p>
               </div>
+              <div>
+                <p className="font-bold text-fat">{Math.round(items.reduce((s, i) => s + Number(i.fat_g), 0))}g</p>
+                <p className="text-xs text-muted-foreground">{t('dashboard.fat')}</p>
+              </div>
+              <div>
+                <p className="font-bold text-carbs">{Math.round(items.reduce((s, i) => s + Number(i.carbs_g), 0))}g</p>
+                <p className="text-xs text-muted-foreground">{t('dashboard.carbs')}</p>
+              </div>
+            </div>
+          </div>
               <div>
                 <p className="font-bold text-fat">{Math.round(items.reduce((s, i) => s + Number(i.fat_g), 0))}g</p>
                 <p className="text-xs text-muted-foreground">{t('dashboard.fat')}</p>
