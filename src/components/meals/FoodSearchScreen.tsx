@@ -7,13 +7,27 @@ import { searchOpenFoodFacts } from '@/lib/openfoodfacts-search';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Plus, Minus, Globe, Loader2, X, ArrowLeft, ChevronRight, Flame, Dumbbell, Droplets, Zap } from 'lucide-react';
+import { Search, Plus, Minus, Globe, Loader2, X, ArrowLeft, ChevronRight, Flame, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { hapticFeedback } from '@/lib/haptics';
+import { saveAsRecipe } from '@/components/meals/SavedRecipesScreen';
+import { toast } from 'sonner';
 
 interface FoodSearchScreenProps {
   onDone: (items: AnalyzedFoodItem[]) => void;
   onCancel: () => void;
+}
+
+interface SavedFavorite {
+  id: string;
+  name: string;
+  emoji: string;
+  meal_type: string;
+  total_calories: number;
+  total_protein_g: number;
+  total_fat_g: number;
+  total_carbs_g: number;
+  use_count: number;
 }
 
 const CATEGORIES = [
@@ -35,7 +49,6 @@ const CATEGORY_LABELS_EN: Record<string, string> = {
   dairy: 'Dairy', fruit: 'Fruit', snacks: 'Snacks',
 };
 
-// Map chip categories to food-database categories
 const CATEGORY_MAP: Record<string, string[]> = {
   drinks: ['drinks'],
   bread: ['bread', 'toppings'],
@@ -55,6 +68,10 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedItems, setSelectedItems] = useState<AnalyzedFoodItem[]>([]);
   const [customProducts, setCustomProducts] = useState<FoodEntry[]>([]);
+  const [favorites, setFavorites] = useState<SavedFavorite[]>([]);
+  const [savingFav, setSavingFav] = useState(false);
+  const [showSaveFavInput, setShowSaveFavInput] = useState(false);
+  const [favName, setFavName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const onlineTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onlineController = useRef<AbortController | null>(null);
@@ -62,7 +79,7 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
 
   const labels = language === 'de' ? CATEGORY_LABELS_DE : CATEGORY_LABELS_EN;
 
-  // Load custom products
+  // Load custom products + favorites
   useEffect(() => {
     if (!user) return;
     supabase
@@ -80,6 +97,15 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
           fat_g: Number(e.fat_g) || 0, carbs_g: Number(e.carbs_g) || 0,
           category: 'custom',
         })));
+      });
+    supabase
+      .from('saved_recipes')
+      .select('id, name, emoji, meal_type, total_calories, total_protein_g, total_fat_g, total_carbs_g, use_count')
+      .eq('user_id', user.id)
+      .order('use_count', { ascending: false })
+      .limit(50)
+      .then(({ data }) => {
+        setFavorites((data || []) as SavedFavorite[]);
       });
   }, [user]);
 
@@ -100,7 +126,6 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
 
     let dbResults = trimmed ? searchFoods(trimmed, language as 'de' | 'en') : [];
 
-    // If no text query but category selected, show popular items from that category
     if (!trimmed && category !== 'all') {
       const cats = CATEGORY_MAP[category] || [];
       dbResults = foodDatabase
@@ -108,19 +133,16 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
         .slice(0, 20);
     }
 
-    // Filter by category if text + category
     if (trimmed && category !== 'all') {
       const cats = CATEGORY_MAP[category] || [];
       dbResults = dbResults.filter(e => cats.some(c => e.category.toLowerCase().includes(c)));
     }
 
-    // Custom product matches
     const norm = trimmed.toLowerCase();
     const customMatches = norm
       ? customProducts.filter(e => e.name.toLowerCase().includes(norm) || e.name_en.toLowerCase().includes(norm))
       : [];
 
-    // Merge and dedupe
     const merged = [...customMatches, ...dbResults, ...online];
     const seen = new Set<string>();
     const deduped = merged.filter(e => {
@@ -133,7 +155,6 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
     setResults(deduped);
   }, [language, customProducts]);
 
-  // Trigger online search with debounce
   const triggerOnlineSearch = useCallback((q: string) => {
     if (onlineTimer.current) clearTimeout(onlineTimer.current);
     onlineController.current?.abort();
@@ -164,7 +185,6 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
     }, 400);
   }, [language, performSearch, selectedCategory]);
 
-  // Re-search when query or category changes
   useEffect(() => {
     performSearch(query, selectedCategory, onlineResults);
     if (query.trim().length >= 3) {
@@ -192,10 +212,73 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
     setSelectedItems(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleSelectFavorite = async (fav: SavedFavorite) => {
+    hapticFeedback('success');
+    const { data: itemsData } = await supabase
+      .from('saved_recipe_items')
+      .select('*')
+      .eq('recipe_id', fav.id);
+    if (!itemsData || itemsData.length === 0) {
+      toast.error(language === 'de' ? 'Favorit ist leer' : 'Favorite is empty');
+      return;
+    }
+    // Increment use count
+    await supabase.from('saved_recipes').update({ use_count: (fav.use_count || 0) + 1 } as any).eq('id', fav.id);
+    
+    const newItems: AnalyzedFoodItem[] = (itemsData as any[]).map(item => ({
+      food_name: item.food_name,
+      quantity: Number(item.quantity),
+      unit: item.unit,
+      calories: Number(item.calories),
+      protein_g: Number(item.protein_g),
+      fat_g: Number(item.fat_g),
+      carbs_g: Number(item.carbs_g),
+      confidence_score: 1,
+    }));
+    setSelectedItems(prev => [...prev, ...newItems]);
+  };
+
+  const handleSaveAsFavorite = async () => {
+    if (!user || selectedItems.length === 0) return;
+    setSavingFav(true);
+    const name = favName.trim() || selectedItems.map(i => i.food_name).filter(Boolean).slice(0, 3).join(', ') || 'Favorit';
+    const success = await saveAsRecipe({
+      userId: user.id,
+      name,
+      emoji: '⭐',
+      mealType: 'snack',
+      items: selectedItems,
+    });
+    setSavingFav(false);
+    setShowSaveFavInput(false);
+    setFavName('');
+    if (success) {
+      hapticFeedback('success');
+      toast.success(language === 'de' ? 'Als Favorit gespeichert! ⭐' : 'Saved as favorite! ⭐');
+      // Reload favorites
+      const { data } = await supabase
+        .from('saved_recipes')
+        .select('id, name, emoji, meal_type, total_calories, total_protein_g, total_fat_g, total_carbs_g, use_count')
+        .eq('user_id', user.id)
+        .order('use_count', { ascending: false })
+        .limit(50);
+      setFavorites((data || []) as SavedFavorite[]);
+    } else {
+      toast.error(language === 'de' ? 'Fehler beim Speichern' : 'Failed to save');
+    }
+  };
+
+  // Filter favorites by search query
+  const filteredFavorites = query.trim()
+    ? favorites.filter(f => f.name.toLowerCase().includes(query.trim().toLowerCase()))
+    : favorites;
+
   const totalCal = selectedItems.reduce((s, i) => s + i.calories, 0);
   const totalP = selectedItems.reduce((s, i) => s + i.protein_g, 0);
   const totalF = selectedItems.reduce((s, i) => s + i.fat_g, 0);
   const totalC = selectedItems.reduce((s, i) => s + i.carbs_g, 0);
+
+  const showFavorites = filteredFavorites.length > 0 && selectedCategory === 'all';
 
   return (
     <div className="space-y-3 animate-fade-in">
@@ -249,15 +332,56 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
         ))}
       </div>
 
+      {/* Favorites section */}
+      {showFavorites && (
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5 px-1">
+            <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+              {language === 'de' ? 'Favoriten' : 'Favorites'}
+            </span>
+          </div>
+          <div className="space-y-1.5">
+            {filteredFavorites.slice(0, query.trim() ? 10 : 3).map((fav) => (
+              <motion.button
+                key={fav.id}
+                type="button"
+                onClick={() => handleSelectFavorite(fav)}
+                className="w-full text-left px-3.5 py-3 rounded-xl bg-amber-500/5 border border-amber-500/20 hover:border-amber-500/40 hover:bg-amber-500/10 transition-all flex items-center gap-3 active:scale-[0.98]"
+                whileTap={{ scale: 0.98 }}
+              >
+                <span className="text-lg">{fav.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-semibold text-foreground truncate block">{fav.name}</span>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    <span className="text-protein">{Math.round(fav.total_protein_g)}P</span>{' '}
+                    <span className="text-fat">{Math.round(fav.total_fat_g)}F</span>{' '}
+                    <span className="text-carbs">{Math.round(fav.total_carbs_g)}C</span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Flame className="h-3 w-3 text-energy" />
+                  <span className="text-sm font-bold tabular-nums text-foreground">{Math.round(fav.total_calories)}</span>
+                  <span className="text-[10px] text-muted-foreground">kcal</span>
+                  <div className="w-7 h-7 rounded-full bg-amber-500/15 flex items-center justify-center ml-1">
+                    <Plus className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Results */}
       <div className="space-y-1.5 max-h-[40vh] overflow-y-auto rounded-2xl">
-        {results.length === 0 && !searchingOnline && query.trim().length > 0 && (
+        {results.length === 0 && !searchingOnline && query.trim().length > 0 && filteredFavorites.length === 0 && (
           <div className="text-center py-8 text-muted-foreground text-sm">
             {language === 'de' ? 'Keine Ergebnisse gefunden' : 'No results found'}
           </div>
         )}
 
-        {results.length === 0 && !query.trim() && selectedCategory === 'all' && (
+        {results.length === 0 && !query.trim() && selectedCategory === 'all' && favorites.length === 0 && (
           <div className="text-center py-8 text-muted-foreground text-sm">
             {language === 'de' ? 'Tippe einen Namen ein oder wähle eine Kategorie' : 'Type a name or select a category'}
           </div>
@@ -358,6 +482,55 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
                 </motion.div>
               ))}
             </div>
+
+            {/* Save as favorite inline */}
+            {selectedItems.length >= 1 && user && (
+              <AnimatePresence>
+                {showSaveFavInput ? (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex gap-2"
+                  >
+                    <Input
+                      value={favName}
+                      onChange={e => setFavName(e.target.value)}
+                      placeholder={language === 'de' ? 'Name z.B. Mein Kaffee' : 'Name e.g. My Coffee'}
+                      className="h-9 rounded-xl text-sm flex-1"
+                      autoFocus
+                      onKeyDown={e => e.key === 'Enter' && handleSaveAsFavorite()}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={handleSaveAsFavorite}
+                      disabled={savingFav}
+                      className="rounded-xl h-9 px-3 bg-amber-500 hover:bg-amber-600 text-white"
+                    >
+                      {savingFav ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Star className="h-3.5 w-3.5 fill-white" />}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => { setShowSaveFavInput(false); setFavName(''); }}
+                      className="rounded-xl h-9 px-2"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </motion.div>
+                ) : (
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    onClick={() => setShowSaveFavInput(true)}
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition-all active:scale-[0.98]"
+                  >
+                    <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+                    {language === 'de' ? 'Als Favorit speichern' : 'Save as Favorite'}
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            )}
 
             <Button
               onClick={() => onDone(selectedItems)}
