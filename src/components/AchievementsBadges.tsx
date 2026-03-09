@@ -32,6 +32,7 @@ import badgeWeek1 from '@/assets/badges/week-1.png';
 import badgeMonth1 from '@/assets/badges/month-1.png';
 import badgeQuarter from '@/assets/badges/quarter.png';
 import badgeMonth6 from '@/assets/badges/month-6.png';
+import badgeProfilePic from '@/assets/badges/profile-pic.png';
 
 interface AchievementsBadgesProps {
   totalMeals: number;
