@@ -61,6 +61,7 @@ Deno.serve(async (req) => {
     const imageOverride = url.searchParams.get('img')
     const textOverride = url.searchParams.get('text')
     const titleOverride = url.searchParams.get('title')
+    const originOverride = url.searchParams.get('origin')
 
     if (!badgeId) {
       return new Response('Missing badge parameter', { status: 400, headers: corsHeaders })
