@@ -195,7 +195,19 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
       } catch {}
     }
 
-    // 2. Check Open Food Facts
+    // 2. Check community products DB
+    try {
+      const community = await lookupCommunityProduct(code);
+      if (community) {
+        toast.success(`${community.item.food_name} ${t('meals.barcodeFound')}`, {
+          description: `${community.contributorEmoji} ${community.contributorName}`,
+        });
+        onResult(community.item);
+        return;
+      }
+    } catch {}
+
+    // 3. Check Open Food Facts
     try {
       const offResult = await lookupOpenFoodFacts(code);
       if (offResult.item) {
@@ -204,7 +216,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
         return;
       }
 
-      // 3. Not found or no nutrition → offer manual creation
+      // 4. Not found or no nutrition → offer manual creation
       if (offResult.productName) {
         setCustomForm(f => ({ ...f, food_name: offResult.productName! }));
       }
