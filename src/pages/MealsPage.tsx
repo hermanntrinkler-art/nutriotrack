@@ -40,7 +40,10 @@ export default function MealsPage() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [savingRecipe, setSavingRecipe] = useState(false);
+  const [addingToReview, setAddingToReview] = useState(false);
+  const [showFavoritePicker, setShowFavoritePicker] = useState(false);
   const [favorites, setFavorites] = useState<{id: string; name: string; emoji: string; meal_type: string; total_calories: number; total_protein_g: number; total_fat_g: number; total_carbs_g: number}[]>([]);
+  const [allFavorites, setAllFavorites] = useState<{id: string; name: string; emoji: string; meal_type: string; total_calories: number; total_protein_g: number; total_fat_g: number; total_carbs_g: number}[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
