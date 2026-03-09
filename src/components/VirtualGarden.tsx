@@ -8,14 +8,12 @@ interface VirtualGardenProps {
 
 const pop = {
   hidden: { opacity: 0, scale: 0 },
-  show: { opacity: 1, scale: 1, transition: { type: 'spring', stiffness: 300, damping: 20 } },
+  show: { opacity: 1, scale: 1, transition: { type: 'spring' as const, stiffness: 300, damping: 20 } },
 };
 
-const sway = {
-  animate: {
-    rotate: [0, 2, -2, 1, 0],
-    transition: { duration: 4, repeat: Infinity, ease: 'easeInOut' },
-  },
+const swayAnim = {
+  rotate: [0, 2, -2, 1, 0],
+  transition: { duration: 4, repeat: Infinity, ease: 'easeInOut' as const },
 };
 
 // Flower SVG helper
