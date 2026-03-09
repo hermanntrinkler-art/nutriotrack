@@ -33,16 +33,43 @@ async function lookupOpenFoodFacts(code: string): Promise<OFFResult> {
     if (!p) return { item: null, hasNutrition: false };
 
     const n = p.nutriments || {};
-    const calories = Math.round(n['energy-kcal_100g'] || 0);
-    const protein_g = Math.round((n.proteins_100g || 0) * 10) / 10;
-    const fat_g = Math.round((n.fat_100g || 0) * 10) / 10;
-    const carbs_g = Math.round((n.carbohydrates_100g || 0) * 10) / 10;
+    const calories100 = Math.round(n['energy-kcal_100g'] || 0);
+    const protein100 = Math.round((n.proteins_100g || 0) * 10) / 10;
+    const fat100 = Math.round((n.fat_100g || 0) * 10) / 10;
+    const carbs100 = Math.round((n.carbohydrates_100g || 0) * 10) / 10;
     const productName = p.product_name || p.product_name_de || p.product_name_en || '';
-    const hasNutrition = calories > 0 || protein_g > 0 || fat_g > 0 || carbs_g > 0;
+    const hasNutrition = calories100 > 0 || protein100 > 0 || fat100 > 0 || carbs100 > 0;
 
     if (!hasNutrition) {
-      // Product exists but no nutrition data → let user fill in manually
       return { item: null, productName: productName || undefined, hasNutrition: false };
+    }
+
+    // Detect per-piece products using serving_size from OFF
+    // e.g. serving_size = "1.4 g" or "14g (1 piece)" → piece weight
+    const servingSize = p.serving_size || '';
+    const servingMatch = servingSize.match(/^([\d.,]+)\s*g/i);
+    const servingGrams = servingMatch ? parseFloat(servingMatch[1].replace(',', '.')) : 0;
+    const servingQuantity = Number(p.serving_quantity) || 0;
+
+    // If a single serving is very small (< 15g), treat as piece product
+    const isPieceProduct = servingGrams > 0 && servingGrams < 15;
+
+    if (isPieceProduct) {
+      // Scale nutrition from per-100g to per-piece
+      const factor = servingGrams / 100;
+      return {
+        item: {
+          food_name: productName || code,
+          quantity: 1,
+          unit: 'Stück',
+          calories: Math.round(calories100 * factor),
+          protein_g: Math.round(protein100 * factor * 10) / 10,
+          fat_g: Math.round(fat100 * factor * 10) / 10,
+          carbs_g: Math.round(carbs100 * factor * 10) / 10,
+          confidence_score: 0.95,
+        },
+        hasNutrition: true,
+      };
     }
 
     return {
@@ -50,10 +77,10 @@ async function lookupOpenFoodFacts(code: string): Promise<OFFResult> {
         food_name: productName || code,
         quantity: 100,
         unit: 'g',
-        calories,
-        protein_g,
-        fat_g,
-        carbs_g,
+        calories: calories100,
+        protein_g: protein100,
+        fat_g: fat100,
+        carbs_g: carbs100,
         confidence_score: 0.95,
       },
       hasNutrition: true,
