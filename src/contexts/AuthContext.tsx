@@ -38,24 +38,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
-
-    const applySession = (nextSession: Session | null) => {
-      if (!isMounted) return;
-
-      setSession(nextSession);
-      setUser(nextSession?.user ?? null);
-
-      if (nextSession?.user) {
-        void fetchProfile(nextSession.user.id);
-      } else {
-        setProfile(null);
-      }
-    };
+    let initialized = false;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, nextSession) => {
-        applySession(nextSession);
-        if (isMounted) setLoading(false);
+      (event, nextSession) => {
+        if (!isMounted) return;
+
+        // During token refresh, ignore transient null sessions to prevent flicker
+        if (event === 'TOKEN_REFRESHED' && !nextSession) return;
+        // Don't process INITIAL_SESSION here — let getSession handle initialization
+        if (event === 'INITIAL_SESSION') return;
+
+        setSession(nextSession);
+        setUser(nextSession?.user ?? null);
+
+        if (nextSession?.user) {
+          void fetchProfile(nextSession.user.id);
+        } else if (event === 'SIGNED_OUT') {
+          setProfile(null);
+        }
+
+        if (!initialized) {
+          initialized = true;
+          setLoading(false);
+        }
       }
     );
 
@@ -63,7 +69,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: { session } } = await supabase.auth.getSession();
       if (!isMounted) return;
 
-      applySession(session);
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        void fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
+      }
+
+      initialized = true;
       setLoading(false);
     };
 
