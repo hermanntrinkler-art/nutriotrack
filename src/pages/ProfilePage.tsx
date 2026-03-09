@@ -295,12 +295,15 @@ export default function ProfilePage() {
       {/* Achievements & Milestones Tab */}
       <motion.div variants={fadeUp}>
         <Tabs defaultValue="badges">
-          <TabsList className="w-full grid grid-cols-2 mb-3">
+          <TabsList className="w-full grid grid-cols-3 mb-3">
             <TabsTrigger value="badges" className="text-xs font-bold">
-              🏆 {language === 'de' ? 'Badges & Level' : 'Badges & Level'}
+              🏆 {language === 'de' ? 'Badges' : 'Badges'}
+            </TabsTrigger>
+            <TabsTrigger value="garden" className="text-xs font-bold">
+              🌱 {language === 'de' ? 'Garten' : 'Garden'}
             </TabsTrigger>
             <TabsTrigger value="timeline" className="text-xs font-bold">
-              📅 {language === 'de' ? 'Timeline' : 'Timeline'}
+              📅 Timeline
             </TabsTrigger>
           </TabsList>
           <TabsContent value="badges">
@@ -319,6 +322,9 @@ export default function ProfilePage() {
                 <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent" />
               </div>
             )}
+          </TabsContent>
+          <TabsContent value="garden">
+            <VirtualGarden level={gardenLevel} streak={streakValue} />
           </TabsContent>
           <TabsContent value="timeline">
             <MilestoneTimeline
