@@ -592,6 +592,7 @@ export default function MealsPage() {
             items={items}
             isAiResult={isAiResult}
             onUpdateItem={updateItem}
+            onReplaceItem={replaceItem}
             onRemoveItem={removeItem}
             onAddItem={addItem}
             onEditItem={handleEditItem}
