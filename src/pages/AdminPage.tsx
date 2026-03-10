@@ -587,6 +587,53 @@ function ReportCard({ report, onUpdateStatus, onDelete, onUpdate }: {
   const [editReason, setEditReason] = useState(report.reason || '');
   const [editSource, setEditSource] = useState(report.food_source);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [productData, setProductData] = useState<{
+    calories: number; protein_g: number; fat_g: number; carbs_g: number;
+    quantity: number; unit: string; brand?: string; store?: string;
+  } | null>(null);
+  const [loadingProduct, setLoadingProduct] = useState(false);
+
+  // Load product data when expanded
+  useEffect(() => {
+    if (!expanded || productData) return;
+    
+    const loadProduct = async () => {
+      setLoadingProduct(true);
+      
+      // Try community product first
+      if (report.community_product_id) {
+        const { data } = await supabase
+          .from('community_products')
+          .select('calories, protein_g, fat_g, carbs_g, quantity, unit, brand, store')
+          .eq('id', report.community_product_id)
+          .single();
+        if (data) {
+          setProductData(data as any);
+          setLoadingProduct(false);
+          return;
+        }
+      }
+      
+      // Try local food database
+      const results = searchFoods(report.food_name, 'de');
+      if (results.length > 0) {
+        const f = results[0];
+        setProductData({ calories: f.calories, protein_g: f.protein_g, fat_g: f.fat_g, carbs_g: f.carbs_g, quantity: f.quantity, unit: f.unit });
+        setLoadingProduct(false);
+        return;
+      }
+
+      setLoadingProduct(false);
+    };
+    
+    loadProduct();
+  }, [expanded]);
+
+  const micros = useMemo(() => {
+    if (!productData) return null;
+    const grams = productData.unit === 'g' || productData.unit === 'ml' ? productData.quantity : 100;
+    return estimateMicronutrients(report.food_name, grams);
+  }, [productData, report.food_name]);
 
   const handleSave = async () => {
     const ok = await onUpdate(report.id, {
@@ -597,9 +644,16 @@ function ReportCard({ report, onUpdateStatus, onDelete, onUpdate }: {
     if (ok) setEditing(false);
   };
 
+  const NutritionRow = ({ label, value, unit }: { label: string; value: number | string; unit: string }) => (
+    <div className="flex justify-between text-[11px]">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium">{value} {unit}</span>
+    </div>
+  );
+
   return (
     <div className={`border rounded-xl bg-card transition-colors ${isOpen ? 'border-destructive/30' : 'border-border opacity-70'}`}>
-      {/* Header - always visible, clickable */}
+      {/* Header */}
       <button
         onClick={() => { setExpanded(!expanded); setConfirmDelete(false); }}
         className="w-full p-3 flex items-center justify-between gap-2 text-left"
@@ -621,57 +675,29 @@ function ReportCard({ report, onUpdateStatus, onDelete, onUpdate }: {
             <div className="space-y-2">
               <div>
                 <label className="text-[10px] font-bold text-muted-foreground uppercase">Produktname</label>
-                <input
-                  value={editName}
-                  onChange={e => setEditName(e.target.value)}
-                  className="w-full mt-0.5 text-sm p-2 rounded-lg border border-border bg-background"
-                />
+                <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full mt-0.5 text-sm p-2 rounded-lg border border-border bg-background" />
               </div>
               <div>
                 <label className="text-[10px] font-bold text-muted-foreground uppercase">Quelle</label>
-                <input
-                  value={editSource}
-                  onChange={e => setEditSource(e.target.value)}
-                  className="w-full mt-0.5 text-sm p-2 rounded-lg border border-border bg-background"
-                />
+                <input value={editSource} onChange={e => setEditSource(e.target.value)} className="w-full mt-0.5 text-sm p-2 rounded-lg border border-border bg-background" />
               </div>
               <div>
                 <label className="text-[10px] font-bold text-muted-foreground uppercase">Grund / Notiz</label>
-                <textarea
-                  value={editReason}
-                  onChange={e => setEditReason(e.target.value)}
-                  className="w-full mt-0.5 text-sm p-2 rounded-lg border border-border bg-background resize-none"
-                  rows={3}
-                  placeholder="Grund der Meldung..."
-                />
+                <textarea value={editReason} onChange={e => setEditReason(e.target.value)} className="w-full mt-0.5 text-sm p-2 rounded-lg border border-border bg-background resize-none" rows={3} placeholder="Grund der Meldung..." />
               </div>
               <div className="flex gap-2">
-                <button
-                  onClick={handleSave}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors"
-                >
+                <button onClick={handleSave} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors">
                   <Save className="h-3.5 w-3.5" /> Speichern
                 </button>
-                <button
-                  onClick={() => { setEditing(false); setEditName(report.food_name); setEditReason(report.reason || ''); setEditSource(report.food_source); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-muted/80 transition-colors"
-                >
+                <button onClick={() => { setEditing(false); setEditName(report.food_name); setEditReason(report.reason || ''); setEditSource(report.food_source); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-muted/80 transition-colors">
                   <X className="h-3.5 w-3.5" /> Abbrechen
                 </button>
               </div>
             </div>
           ) : (
             <>
-              {/* Full details view */}
+              {/* Report info */}
               <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Produkt</span>
-                  <span className="font-medium">{report.food_name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Quelle</span>
-                  <span className="font-medium">{report.food_source}</span>
-                </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Status</span>
                   <span className={`font-bold ${isOpen ? 'text-destructive' : 'text-primary'}`}>
@@ -706,49 +732,81 @@ function ReportCard({ report, onUpdateStatus, onDelete, onUpdate }: {
                 )}
               </div>
 
+              {/* Product nutritional data */}
+              {loadingProduct ? (
+                <div className="flex justify-center py-3"><Loader2 className="h-4 w-4 animate-spin text-primary" /></div>
+              ) : productData ? (
+                <div className="space-y-2">
+                  <div className="rounded-lg bg-muted/50 p-3 space-y-1">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1.5">
+                      Nährwerte pro {productData.quantity} {productData.unit}
+                    </p>
+                    {productData.brand && <NutritionRow label="Marke" value={productData.brand} unit="" />}
+                    {productData.store && <NutritionRow label="Geschäft" value={productData.store} unit="" />}
+                    <NutritionRow label="Kalorien" value={Number(productData.calories).toFixed(0)} unit="kcal" />
+                    <NutritionRow label="Protein" value={Number(productData.protein_g).toFixed(1)} unit="g" />
+                    <NutritionRow label="Fett" value={Number(productData.fat_g).toFixed(1)} unit="g" />
+                    <NutritionRow label="Kohlenhydrate" value={Number(productData.carbs_g).toFixed(1)} unit="g" />
+                  </div>
+
+                  {micros && (
+                    <>
+                      <div className="rounded-lg bg-muted/50 p-3 space-y-1">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Vitamine (geschätzt)</p>
+                        <NutritionRow label="Vitamin A" value={micros.vitaminA_ug} unit="µg" />
+                        <NutritionRow label="Vitamin B1" value={micros.vitaminB1_mg} unit="mg" />
+                        <NutritionRow label="Vitamin B2" value={micros.vitaminB2_mg} unit="mg" />
+                        <NutritionRow label="Vitamin B6" value={micros.vitaminB6_mg} unit="mg" />
+                        <NutritionRow label="Vitamin B12" value={micros.vitaminB12_ug} unit="µg" />
+                        <NutritionRow label="Vitamin C" value={micros.vitaminC_mg} unit="mg" />
+                        <NutritionRow label="Vitamin D" value={micros.vitaminD_ug} unit="µg" />
+                        <NutritionRow label="Vitamin E" value={micros.vitaminE_mg} unit="mg" />
+                        <NutritionRow label="Vitamin K" value={micros.vitaminK_ug} unit="µg" />
+                        <NutritionRow label="Folsäure" value={micros.folate_ug} unit="µg" />
+                      </div>
+
+                      <div className="rounded-lg bg-muted/50 p-3 space-y-1">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Mineralstoffe (geschätzt)</p>
+                        <NutritionRow label="Eisen" value={micros.iron_mg} unit="mg" />
+                        <NutritionRow label="Kalzium" value={micros.calcium_mg} unit="mg" />
+                        <NutritionRow label="Magnesium" value={micros.magnesium_mg} unit="mg" />
+                        <NutritionRow label="Zink" value={micros.zinc_mg} unit="mg" />
+                        <NutritionRow label="Kalium" value={micros.potassium_mg} unit="mg" />
+                        <NutritionRow label="Natrium" value={micros.sodium_mg} unit="mg" />
+                        <NutritionRow label="Phosphor" value={micros.phosphorus_mg} unit="mg" />
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted-foreground italic">Keine Produktdaten gefunden</p>
+              )}
+
               {/* Action buttons */}
               <div className="flex flex-wrap gap-2 pt-1">
                 {isOpen ? (
                   <>
-                    <button
-                      onClick={() => onUpdateStatus(report.id, 'resolved')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-colors"
-                    >
+                    <button onClick={() => onUpdateStatus(report.id, 'resolved')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-colors">
                       <CheckCircle className="h-3.5 w-3.5" /> Erledigt
                     </button>
-                    <button
-                      onClick={() => onUpdateStatus(report.id, 'dismissed')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-muted/80 transition-colors"
-                    >
+                    <button onClick={() => onUpdateStatus(report.id, 'dismissed')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-muted/80 transition-colors">
                       <XCircle className="h-3.5 w-3.5" /> Verwerfen
                     </button>
                   </>
                 ) : (
-                  <button
-                    onClick={() => onUpdateStatus(report.id, 'open')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-muted/80 transition-colors"
-                  >
+                  <button onClick={() => onUpdateStatus(report.id, 'open')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-muted/80 transition-colors">
                     <Flag className="h-3.5 w-3.5" /> Wieder öffnen
                   </button>
                 )}
-                <button
-                  onClick={() => setEditing(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-accent-foreground text-xs font-bold hover:bg-accent/80 transition-colors"
-                >
+                <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-accent-foreground text-xs font-bold hover:bg-accent/80 transition-colors">
                   <Pencil className="h-3.5 w-3.5" /> Bearbeiten
                 </button>
                 {confirmDelete ? (
-                  <button
-                    onClick={() => onDelete(report.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-bold hover:bg-destructive/90 transition-colors animate-pulse"
-                  >
+                  <button onClick={() => onDelete(report.id)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-bold hover:bg-destructive/90 transition-colors animate-pulse">
                     <Trash2 className="h-3.5 w-3.5" /> Wirklich löschen?
                   </button>
                 ) : (
-                  <button
-                    onClick={() => setConfirmDelete(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-bold hover:bg-destructive/20 transition-colors"
-                  >
+                  <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-bold hover:bg-destructive/20 transition-colors">
                     <Trash2 className="h-3.5 w-3.5" /> Löschen
                   </button>
                 )}
