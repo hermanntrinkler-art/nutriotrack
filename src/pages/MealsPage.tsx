@@ -422,9 +422,9 @@ export default function MealsPage() {
             </button>
           </div>
 
-          {/* Goal Header: Ziel - Gegessen = Übrig */}
+          {/* Goal Header: Ziel - Gegessen + Verbrannt = Übrig */}
           <div className="nutri-card-highlight">
-            <div className="grid grid-cols-3 text-center gap-2">
+            <div className={`grid ${totalBurned > 0 ? 'grid-cols-4' : 'grid-cols-3'} text-center gap-2`}>
               <div>
                 <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
                   {language === 'de' ? 'Ziel' : 'Goal'}
@@ -437,6 +437,15 @@ export default function MealsPage() {
                 </p>
                 <p className="text-lg font-black tabular-nums text-foreground">{Math.round(totals.calories)}</p>
               </div>
+              {totalBurned > 0 && (
+                <div>
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide flex items-center justify-center gap-0.5">
+                    <Flame className="h-3 w-3 text-energy" />
+                    {language === 'de' ? 'Verbrannt' : 'Burned'}
+                  </p>
+                  <p className="text-lg font-black tabular-nums text-energy">+{Math.round(totalBurned)}</p>
+                </div>
+              )}
               <div>
                 <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
                   {language === 'de' ? 'Übrig' : 'Remaining'}
