@@ -415,6 +415,29 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Tilsiter', name_en: 'Tilsit Cheese', quantity: 30, unit: 'g', calories: 110, protein_g: 8, fat_g: 9, carbs_g: 0, category: 'dairy' },
   { name: 'Bergkäse', name_en: 'Mountain Cheese', quantity: 30, unit: 'g', calories: 120, protein_g: 8, fat_g: 10, carbs_g: 0, category: 'dairy' },
   { name: 'Sbrinz', name_en: 'Sbrinz Cheese', quantity: 10, unit: 'g', calories: 45, protein_g: 5, fat_g: 3, carbs_g: 0, category: 'dairy' },
+
+  // Schweizer Gerichte / Swiss Dishes
+  { name: 'Rösti', name_en: 'Rösti (Swiss Hash Browns)', quantity: 200, unit: 'g', calories: 280, protein_g: 4, fat_g: 14, carbs_g: 34, category: 'swiss' },
+  { name: 'Rösti mit Käse', name_en: 'Rösti with Cheese', quantity: 250, unit: 'g', calories: 420, protein_g: 14, fat_g: 24, carbs_g: 36, category: 'swiss' },
+  { name: 'Züpfe (Zopf)', name_en: 'Swiss Braided Bread', quantity: 60, unit: 'g', calories: 190, protein_g: 6, fat_g: 5, carbs_g: 30, gram_per_piece: 60, category: 'bread' },
+  { name: 'Bündnerfleisch', name_en: 'Bündnerfleisch (Air-Dried Beef)', quantity: 30, unit: 'g', calories: 55, protein_g: 12, fat_g: 1, carbs_g: 0, category: 'meat' },
+  { name: 'Cervelat', name_en: 'Cervelat (Swiss Sausage)', quantity: 100, unit: 'g', calories: 270, protein_g: 12, fat_g: 24, carbs_g: 1, category: 'meat' },
+  { name: 'Birchermüesli', name_en: 'Bircher Muesli', quantity: 200, unit: 'g', calories: 230, protein_g: 7, fat_g: 7, carbs_g: 34, category: 'breakfast' },
+  { name: 'Älplermagronen', name_en: 'Alpine Macaroni', quantity: 300, unit: 'g', calories: 510, protein_g: 18, fat_g: 22, carbs_g: 58, category: 'swiss' },
+  { name: 'Capuns', name_en: 'Capuns (Graubünden Rolls)', quantity: 250, unit: 'g', calories: 380, protein_g: 16, fat_g: 18, carbs_g: 38, category: 'swiss' },
+  { name: 'Ghackets mit Hörnli', name_en: 'Minced Meat with Pasta', quantity: 300, unit: 'g', calories: 450, protein_g: 25, fat_g: 18, carbs_g: 45, category: 'swiss' },
+  { name: 'Zürcher Geschnetzeltes', name_en: 'Zurich-Style Sliced Meat', quantity: 250, unit: 'g', calories: 380, protein_g: 30, fat_g: 22, carbs_g: 10, category: 'swiss' },
+  { name: 'Berner Platte', name_en: 'Bernese Platter', quantity: 350, unit: 'g', calories: 650, protein_g: 40, fat_g: 38, carbs_g: 35, category: 'swiss' },
+  { name: 'Raclette (Portion)', name_en: 'Raclette (Serving)', quantity: 250, unit: 'g', calories: 550, protein_g: 25, fat_g: 30, carbs_g: 40, category: 'swiss' },
+  { name: 'Fondue (Portion)', name_en: 'Fondue (Serving)', quantity: 250, unit: 'g', calories: 580, protein_g: 30, fat_g: 35, carbs_g: 15, category: 'swiss' },
+  { name: 'Weggli', name_en: 'Swiss Bread Roll', quantity: 50, unit: 'g', calories: 145, protein_g: 5, fat_g: 3, carbs_g: 25, gram_per_piece: 50, category: 'bread' },
+  { name: 'Nussgipfel', name_en: 'Nut Croissant', quantity: 80, unit: 'g', calories: 340, protein_g: 7, fat_g: 18, carbs_g: 38, gram_per_piece: 80, category: 'snacks' },
+  { name: 'Luxemburgerli', name_en: 'Luxemburgerli (Mini Macaron)', quantity: 12, unit: 'g', calories: 45, protein_g: 1, fat_g: 2, carbs_g: 6, gram_per_piece: 12, category: 'sweets' },
+  { name: 'Rivella', name_en: 'Rivella', quantity: 330, unit: 'ml', calories: 115, protein_g: 0, fat_g: 0, carbs_g: 29, category: 'drinks' },
+  { name: 'Ovomaltine (Getränk)', name_en: 'Ovaltine Drink', quantity: 200, unit: 'ml', calories: 160, protein_g: 6, fat_g: 3, carbs_g: 28, category: 'drinks' },
+  { name: 'Landjäger', name_en: 'Landjäger (Dried Sausage)', quantity: 60, unit: 'g', calories: 200, protein_g: 14, fat_g: 16, carbs_g: 1, gram_per_piece: 60, category: 'meat' },
+  { name: 'Biberli', name_en: 'Biberli (Appenzell Gingerbread)', quantity: 45, unit: 'g', calories: 155, protein_g: 2, fat_g: 3, carbs_g: 30, gram_per_piece: 45, category: 'sweets' },
+  { name: 'Basler Läckerli', name_en: 'Basel Läckerli', quantity: 30, unit: 'g', calories: 105, protein_g: 2, fat_g: 2, carbs_g: 22, category: 'sweets' },
 ];
 
 // Synonym / slang map: keys are normalized aliases, values are normalized canonical names
