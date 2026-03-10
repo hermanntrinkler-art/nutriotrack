@@ -129,6 +129,8 @@ export interface AnalyzedFoodItem {
   fat_g: number;
   carbs_g: number;
   confidence_score: number;
+  was_user_edited?: boolean;
+  barcode?: string;
 }
 
 export interface NutritionCalculation {

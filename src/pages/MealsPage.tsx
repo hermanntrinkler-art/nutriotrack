@@ -340,8 +340,24 @@ export default function MealsPage() {
       meal_entry_id: (mealData as any).id,
       food_name: item.food_name, quantity: item.quantity, unit: item.unit,
       calories: item.calories, protein_g: item.protein_g, fat_g: item.fat_g, carbs_g: item.carbs_g,
-      confidence_score: item.confidence_score, was_user_edited: true,
+      confidence_score: item.confidence_score, was_user_edited: item.was_user_edited || false,
     })) as any);
+
+    // Upsert edited items with barcode into custom_products
+    const editedWithBarcode = items.filter(i => i.was_user_edited && i.barcode);
+    for (const item of editedWithBarcode) {
+      await supabase.from('custom_products').upsert({
+        user_id: user.id,
+        barcode: item.barcode!,
+        food_name: item.food_name,
+        calories: item.calories,
+        protein_g: item.protein_g,
+        fat_g: item.fat_g,
+        carbs_g: item.carbs_g,
+        default_quantity: item.quantity,
+        default_unit: item.unit,
+      } as any, { onConflict: 'user_id,barcode' });
+    }
 
     hapticFeedback('success');
     toast.success(t('meals.saved'));

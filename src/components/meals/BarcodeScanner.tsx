@@ -67,6 +67,7 @@ async function lookupOpenFoodFacts(code: string): Promise<OFFResult> {
           fat_g: Math.round(fat100 * factor * 10) / 10,
           carbs_g: Math.round(carbs100 * factor * 10) / 10,
           confidence_score: 0.95,
+          barcode: code,
         },
         hasNutrition: true,
       };
@@ -82,6 +83,7 @@ async function lookupOpenFoodFacts(code: string): Promise<OFFResult> {
         fat_g: fat100,
         carbs_g: carbs100,
         confidence_score: 0.95,
+        barcode: code,
       },
       hasNutrition: true,
     };
@@ -118,6 +120,7 @@ async function lookupCustomProduct(code: string, userId: string): Promise<Analyz
     fat_g: Number((data as any).fat_g) || 0,
     carbs_g: Number((data as any).carbs_g) || 0,
     confidence_score: 1,
+    barcode: code,
   });
 }
 
