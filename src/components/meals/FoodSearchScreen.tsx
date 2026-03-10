@@ -61,7 +61,7 @@ const CATEGORY_MAP: Record<string, string[]> = {
   snacks: ['snacks', 'sweets', 'brands'],
 };
 
-export default function FoodSearchScreen({ onDone, onCancel, hideHeader }: FoodSearchScreenProps) {
+export default function FoodSearchScreen({ onDone, onCancel, hideHeader, onBarcodeScan }: FoodSearchScreenProps) {
   const { t, language } = useTranslation();
   const { user } = useAuth();
   const [query, setQuery] = useState('');
