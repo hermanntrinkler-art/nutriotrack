@@ -99,6 +99,7 @@ export default function MealsPage() {
   const [goals, setGoals] = useState<UserGoals | null>(null);
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
   const [activityForm, setActivityForm] = useState({ name: '', duration: 30, calories: 0, emoji: '🏃' });
+  const [initialSearchItem, setInitialSearchItem] = useState<AnalyzedFoodItem | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -624,7 +625,10 @@ export default function MealsPage() {
           {diaryTab === 'search' && (
             <div className="space-y-3">
               <FoodSearchScreen
-                onSave={(items) => handleSave(items)}
+                onSave={(items) => {
+                  handleSave(items);
+                  setInitialSearchItem(null);
+                }}
                 saving={saving}
                 initialItems={pendingItems}
                 isAiResult={isAiResult}
@@ -635,6 +639,7 @@ export default function MealsPage() {
                 onCancel={handleReset}
                 hideHeader
                 onBarcodeScan={() => setStep('barcode')}
+                initialItem={initialSearchItem}
               />
 
               {/* Photo & Upload secondary options */}
@@ -774,9 +779,11 @@ export default function MealsPage() {
       {step === 'barcode' && (
         <BarcodeScanner
           onResult={(item) => {
-            // Auto-save barcode result immediately
+            // Show in FoodDetailDrawer so user can adjust quantity before saving
             setIsAiResult(false);
-            handleSave([item]);
+            setInitialSearchItem(item);
+            setStep('diary-entry');
+            setDiaryTab('search');
           }}
           onCancel={handleReset}
         />

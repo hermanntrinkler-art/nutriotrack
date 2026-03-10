@@ -29,6 +29,8 @@ interface FoodSearchScreenProps {
   onEditItem?: (index: number, items: AnalyzedFoodItem[]) => void;
   /** When true, each added item immediately triggers onSave([item]) and closes */
   singleAddMode?: boolean;
+  /** Pre-selected item (e.g. from barcode scan) — opens FoodDetailDrawer automatically */
+  initialItem?: AnalyzedFoodItem | null;
 }
 
 interface SavedFavorite {
@@ -81,6 +83,7 @@ export default function FoodSearchScreen({
   isAiResult,
   onEditItem,
   singleAddMode,
+  initialItem,
 }: FoodSearchScreenProps) {
   const { t, language } = useTranslation();
   const { user } = useAuth();
@@ -114,6 +117,24 @@ export default function FoodSearchScreen({
       setCartExpanded(true);
     }
   }, [initialItems]);
+
+  // Auto-open FoodDetailDrawer for barcode scan results
+  useEffect(() => {
+    if (initialItem) {
+      const foodEntry: FoodEntry = {
+        name: initialItem.food_name,
+        name_en: initialItem.food_name,
+        quantity: initialItem.quantity,
+        unit: initialItem.unit,
+        calories: initialItem.calories,
+        protein_g: initialItem.protein_g,
+        fat_g: initialItem.fat_g,
+        carbs_g: initialItem.carbs_g,
+        category: 'barcode',
+      };
+      setDetailFood(foodEntry);
+    }
+  }, [initialItem]);
 
   const loadCommunityProducts = useCallback(async () => {
     const { data } = await supabase
