@@ -304,6 +304,8 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Nüsse (gemischt)', name_en: 'Mixed Nuts', quantity: 30, unit: 'g', calories: 180, protein_g: 5, fat_g: 16, carbs_g: 5, category: 'snacks' },
   { name: 'Mandeln', name_en: 'Almonds', quantity: 30, unit: 'g', calories: 175, protein_g: 6, fat_g: 15, carbs_g: 2, category: 'snacks' },
   { name: 'Müsliriegel', name_en: 'Granola Bar', quantity: 1, unit: 'Stück', calories: 140, protein_g: 3, fat_g: 5, carbs_g: 21, category: 'snacks', gram_per_piece: 30 },
+  { name: 'Proteinriegel', name_en: 'Protein Bar', quantity: 1, unit: 'Stück', calories: 200, protein_g: 20, fat_g: 7, carbs_g: 18, category: 'snacks', gram_per_piece: 45, gram_per_portion: 45 },
+  { name: 'Energieriegel', name_en: 'Energy Bar', quantity: 1, unit: 'Stück', calories: 200, protein_g: 3, fat_g: 6, carbs_g: 32, category: 'snacks', gram_per_piece: 45, gram_per_portion: 45 },
   { name: 'Keks', name_en: 'Cookie', quantity: 1, unit: 'Stück', calories: 80, protein_g: 1, fat_g: 3, carbs_g: 12, category: 'snacks', gram_per_piece: 15 },
   { name: 'Eis (Kugel)', name_en: 'Ice Cream (scoop)', quantity: 1, unit: 'Kugel', calories: 130, protein_g: 2, fat_g: 6, carbs_g: 17, category: 'snacks', gram_per_piece: 70 },
   { name: 'Kuchen', name_en: 'Cake', quantity: 1, unit: 'Stück', calories: 350, protein_g: 5, fat_g: 15, carbs_g: 48, category: 'snacks', gram_per_piece: 120 },
