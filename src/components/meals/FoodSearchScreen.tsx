@@ -1,3 +1,4 @@
+// Favoriten-Drawer FDDB-Style
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/contexts/AuthContext';
