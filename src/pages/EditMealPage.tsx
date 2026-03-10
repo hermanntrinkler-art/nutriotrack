@@ -118,6 +118,23 @@ export default function EditMealPage() {
       fat_g: item.fat_g,
       carbs_g: item.carbs_g,
       barcode: item.barcode || null,
+      vitamin_a_ug: item.vitamin_a_ug || 0,
+      vitamin_b1_mg: item.vitamin_b1_mg || 0,
+      vitamin_b2_mg: item.vitamin_b2_mg || 0,
+      vitamin_b6_mg: item.vitamin_b6_mg || 0,
+      vitamin_b12_ug: item.vitamin_b12_ug || 0,
+      vitamin_c_mg: item.vitamin_c_mg || 0,
+      vitamin_d_ug: item.vitamin_d_ug || 0,
+      vitamin_e_mg: item.vitamin_e_mg || 0,
+      vitamin_k_ug: item.vitamin_k_ug || 0,
+      folate_ug: item.folate_ug || 0,
+      iron_mg: item.iron_mg || 0,
+      potassium_mg: item.potassium_mg || 0,
+      calcium_mg: item.calcium_mg || 0,
+      magnesium_mg: item.magnesium_mg || 0,
+      sodium_mg: item.sodium_mg || 0,
+      phosphorus_mg: item.phosphorus_mg || 0,
+      zinc_mg: item.zinc_mg || 0,
     });
 
     if (error) {

@@ -580,6 +580,72 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
               </div>
             </div>
           </div>
+
+          {/* Micronutrients collapsible */}
+          <Collapsible>
+            <CollapsibleTrigger className="flex items-center justify-between w-full rounded-xl border border-accent bg-accent/30 px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-foreground hover:bg-accent/50 transition-colors">
+              <span>💊 {language === 'de' ? 'Vitamine & Mineralstoffe' : 'Vitamins & Minerals'}</span>
+              <ChevronDown className="h-4 w-4 transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-2 space-y-3">
+              {/* Vitamins */}
+              <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">
+                {language === 'de' ? 'Vitamine' : 'Vitamins'}
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  ['vitamin_a_ug', 'Vitamin A (µg)'],
+                  ['vitamin_b1_mg', 'Vitamin B1 (mg)'],
+                  ['vitamin_b2_mg', 'Vitamin B2 (mg)'],
+                  ['vitamin_b6_mg', 'Vitamin B6 (mg)'],
+                  ['vitamin_b12_ug', 'Vitamin B12 (µg)'],
+                  ['vitamin_c_mg', 'Vitamin C (mg)'],
+                  ['vitamin_d_ug', 'Vitamin D (µg)'],
+                  ['vitamin_e_mg', 'Vitamin E (mg)'],
+                  ['vitamin_k_ug', 'Vitamin K (µg)'],
+                  ['folate_ug', language === 'de' ? 'Folsäure (µg)' : 'Folate (µg)'],
+                ] as const).map(([key, label]) => (
+                  <div key={key} className="space-y-1">
+                    <Label className="text-[10px] font-medium">{label}</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={form[key] || 0}
+                      onChange={e => setForm(prev => ({ ...prev, [key]: Number(e.target.value) }))}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Minerals */}
+              <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider pt-1">
+                {language === 'de' ? 'Mineralstoffe' : 'Minerals'}
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  ['iron_mg', language === 'de' ? 'Eisen (mg)' : 'Iron (mg)'],
+                  ['potassium_mg', language === 'de' ? 'Kalium (mg)' : 'Potassium (mg)'],
+                  ['calcium_mg', language === 'de' ? 'Kalzium (mg)' : 'Calcium (mg)'],
+                  ['magnesium_mg', 'Magnesium (mg)'],
+                  ['sodium_mg', language === 'de' ? 'Natrium (mg)' : 'Sodium (mg)'],
+                  ['phosphorus_mg', language === 'de' ? 'Phosphor (mg)' : 'Phosphorus (mg)'],
+                  ['zinc_mg', language === 'de' ? 'Zink (mg)' : 'Zinc (mg)'],
+                ] as const).map(([key, label]) => (
+                  <div key={key} className="space-y-1">
+                    <Label className="text-[10px] font-medium">{label}</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={form[key] || 0}
+                      onChange={e => setForm(prev => ({ ...prev, [key]: Number(e.target.value) }))}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
 
         <DialogFooter className="flex gap-2 pt-2">
