@@ -250,8 +250,8 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Rindfleisch', name_en: 'Beef', quantity: 150, unit: 'g', calories: 250, protein_g: 26, fat_g: 15, carbs_g: 0, category: 'meat' },
   { name: 'Hackfleisch (gemischt)', name_en: 'Mixed Ground Meat', quantity: 150, unit: 'g', calories: 340, protein_g: 23, fat_g: 27, carbs_g: 0, category: 'meat' },
   { name: 'Schweinefilet', name_en: 'Pork Tenderloin', quantity: 150, unit: 'g', calories: 185, protein_g: 30, fat_g: 6, carbs_g: 0, category: 'meat' },
-  { name: 'Bratwurst', name_en: 'Bratwurst', quantity: 1, unit: 'Stück', calories: 310, protein_g: 14, fat_g: 27, carbs_g: 2, category: 'meat' },
-  { name: 'Frikadelle', name_en: 'Meatball', quantity: 1, unit: 'Stück', calories: 220, protein_g: 15, fat_g: 15, carbs_g: 8, category: 'meat' },
+  { name: 'Bratwurst', name_en: 'Bratwurst', quantity: 1, unit: 'Stück', calories: 310, protein_g: 14, fat_g: 27, carbs_g: 2, category: 'meat', gram_per_piece: 120 },
+  { name: 'Frikadelle', name_en: 'Meatball', quantity: 1, unit: 'Stück', calories: 220, protein_g: 15, fat_g: 15, carbs_g: 8, category: 'meat', gram_per_piece: 100 },
 
   // Fisch / Fish
   { name: 'Lachs', name_en: 'Salmon', quantity: 150, unit: 'g', calories: 310, protein_g: 30, fat_g: 20, carbs_g: 0, category: 'fish' },
