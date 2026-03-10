@@ -501,8 +501,6 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
               </div>
             </div>
           )}
-            </div>
-          )}
         </div>
       </DrawerContent>
     </Drawer>
