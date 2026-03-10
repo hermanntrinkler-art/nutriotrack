@@ -139,45 +139,7 @@ export default function BottomCart({
                 {/* Items list */}
                 <div className="space-y-2">
                   {items.map((item, i) => (
-                    <div key={i} className="rounded-xl bg-muted/50 p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold truncate flex-1">{item.food_name || (language === 'de' ? 'Lebensmittel' : 'Food item')}</span>
-                        <div className="flex items-center gap-1 ml-2">
-                          <button onClick={() => onEditItem(i)} className="p-1.5 rounded-lg hover:bg-accent transition-colors">
-                            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                          </button>
-                          <button onClick={() => onRemoveItem(i)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors">
-                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                          </button>
-                        </div>
-                      </div>
-                      {/* Quantity stepper */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleStep(i, -1)}
-                          className="w-7 h-7 rounded-full bg-background hover:bg-accent flex items-center justify-center transition-colors active:scale-95"
-                        >
-                          <Minus className="h-3.5 w-3.5 text-foreground" />
-                        </button>
-                        <span className="text-sm font-medium min-w-[60px] text-center">
-                          {item.quantity} {item.unit}
-                        </span>
-                        <button
-                          onClick={() => handleStep(i, 1)}
-                          className="w-7 h-7 rounded-full bg-background hover:bg-accent flex items-center justify-center transition-colors active:scale-95"
-                        >
-                          <Plus className="h-3.5 w-3.5 text-foreground" />
-                        </button>
-                        <div className="flex-1" />
-                        <span className="text-xs font-bold tabular-nums">{Math.round(item.calories)} kcal</span>
-                      </div>
-                      {/* Macros */}
-                      <div className="flex gap-3 text-[11px]">
-                        <span className="text-protein font-semibold">P {Math.round(item.protein_g)}g</span>
-                        <span className="text-fat font-semibold">F {Math.round(item.fat_g)}g</span>
-                        <span className="text-carbs font-semibold">K {Math.round(item.carbs_g)}g</span>
-                      </div>
-                    </div>
+                    <CartItemWithMicros key={i} item={item} index={i} language={language} onEditItem={onEditItem} onRemoveItem={onRemoveItem} onReplaceItem={onReplaceItem} handleStep={handleStep} />
                   ))}
                 </div>
 
