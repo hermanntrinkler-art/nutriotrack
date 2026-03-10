@@ -29,6 +29,8 @@ interface FoodSearchScreenProps {
   onEditItem?: (index: number, items: AnalyzedFoodItem[]) => void;
   /** When true, each added item immediately triggers onSave([item]) and closes */
   singleAddMode?: boolean;
+  /** Pre-selected item (e.g. from barcode scan) — opens FoodDetailDrawer automatically */
+  initialItem?: AnalyzedFoodItem | null;
 }
 
 interface SavedFavorite {
