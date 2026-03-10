@@ -500,7 +500,7 @@ export default function MealsPage() {
                   {slotMeals.length > 0 && (
                     <div className="mt-2 pt-2 border-t border-border/40 space-y-1">
                       {slotMeals.map(meal => (
-                        <div key={meal.id} className="flex items-center gap-2 text-xs py-1 px-1 rounded-lg hover:bg-muted/50 transition-colors">
+                        <div key={meal.id} className="flex items-center gap-2 text-xs py-1 px-1 rounded-lg hover:bg-muted/50 transition-colors group">
                           <div className="flex-1 min-w-0">
                             <p className="font-medium truncate">{meal.notes || slotLabel(slot)}</p>
                           </div>
@@ -508,6 +508,19 @@ export default function MealsPage() {
                           <span className="text-[10px] text-muted-foreground">
                             P{Math.round(Number(meal.total_protein_g))} F{Math.round(Number(meal.total_fat_g))} K{Math.round(Number(meal.total_carbs_g))}
                           </span>
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              await supabase.from('meal_food_items').delete().eq('meal_entry_id', meal.id);
+                              await supabase.from('meal_entries').delete().eq('id', meal.id);
+                              hapticFeedback('light');
+                              toast.success(language === 'de' ? 'Gelöscht' : 'Deleted');
+                              loadDayMeals();
+                            }}
+                            className="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-all sm:opacity-100"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </button>
                         </div>
                       ))}
                       <button
