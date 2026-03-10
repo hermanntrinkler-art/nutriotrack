@@ -506,13 +506,15 @@ const SYNONYMS: Record<string, string[]> = {
   // === Käse brands ===
   'leerdammer': ['kaese (gouda)', 'gouda cheese', 'leerdammer'],
   'babybel': ['kaese (gouda)', 'gouda cheese'],
-  'tilsiter': ['kaese (gouda)', 'gouda cheese'],
-  'edamer': ['kaese (gouda)', 'gouda cheese'],
-  'cheddar': ['kaese (gouda)', 'gouda cheese'],
-  'parmesan': ['kaese (gouda)', 'gouda cheese'],
-  'feta': ['kaese (gouda)', 'gouda cheese'],
-  'camembert': ['kaese (gouda)', 'gouda cheese'],
-  'brie': ['kaese (gouda)', 'gouda cheese'],
+  'tilsiter': ['tilsiter', 'tilsit cheese'],
+  'edamer': ['edamer', 'edam cheese'],
+  'cheddar': ['cheddar', 'cheddar cheese'],
+  'parmesan': ['parmesan'],
+  'feta': ['feta', 'feta cheese'],
+  'camembert': ['camembert'],
+  'brie': ['brie', 'brie cheese'],
+  'bergkaese': ['bergkaese', 'mountain cheese'],
+  'sbrinz': ['sbrinz', 'sbrinz cheese'],
 
   // === Wurst / Aufschnitt ===
   'fleischwurst': ['salami'],
