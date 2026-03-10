@@ -12,7 +12,7 @@ import FoodItemEditorModal from '@/components/meals/FoodItemEditorModal';
 
 export default function EditMealPage() {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
 
