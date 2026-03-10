@@ -29,7 +29,7 @@ interface DailyViewProps {
 }
 
 export default function DailyView({ meals, selectedDate, goals }: DailyViewProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { user } = useAuth();
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
 
