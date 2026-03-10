@@ -864,20 +864,6 @@ export default function MealsPage() {
         </div>
       )}
 
-      {/* Confirm */}
-      {step === 'confirm' && (
-        <div className="space-y-4 animate-fade-in">
-          <SaveMealConfirmation
-            items={items}
-            mealTypeLabel={slotLabel(currentSlotInfo)}
-            mealEmoji={currentSlotInfo.emoji}
-            imagePreview={imagePreview}
-            saving={saving}
-            onConfirm={handleSave}
-            onCancel={() => setStep('review')}
-          />
-        </div>
-      )}
 
       {/* Editor Modal */}
       <FoodItemEditorModal
