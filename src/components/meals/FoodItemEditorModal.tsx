@@ -86,16 +86,37 @@ const PIECE_WEIGHTS: Record<string, number> = {
 
 // Average weight per portion/scoop in grams for common foods
 const PORTION_WEIGHTS: Record<string, number> = {
+  // Flavour powders
   'chunky': 3,
   'chunky flavour': 3,
   'flavour': 3,
   'geschmackspulver': 3,
+  // Protein
   'proteinpulver': 30,
   'protein powder': 30,
+  'proteinshake': 30,
   'whey': 30,
   'casein': 30,
   'kreatin': 5,
   'creatine': 5,
+  // Cereal / Müsli
+  'haferflocken': 40,
+  'oats': 40,
+  'müsli': 60,
+  'muesli': 60,
+  'granola': 50,
+  'protein müsli': 60,
+  'porridge': 250,
+  'overnight oats': 200,
+  // Bars
+  'proteinriegel': 45,
+  'protein bar': 45,
+  'riegel': 40,
+  'energieriegel': 45,
+  'energy bar': 45,
+  'müsliriegel': 25,
+  'granola bar': 25,
+  'farmer riegel': 35,
 };
 
 function getPieceWeight(foodName: string): number {
