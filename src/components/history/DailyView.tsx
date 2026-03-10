@@ -119,7 +119,7 @@ export default function DailyView({ meals, selectedDate, goals }: DailyViewProps
         <div className="nutri-card">
           <div className="flex items-center gap-2 mb-2">
             <Flame className="h-4 w-4 text-energy" />
-            <h3 className="font-semibold text-sm">{t('dashboard.burned') || 'Verbrannt'}</h3>
+            <h3 className="font-semibold text-sm">{language === 'de' ? 'Verbrannt' : 'Burned'}</h3>
             <span className="ml-auto text-sm font-bold text-energy">+{Math.round(totalBurned)} kcal</span>
           </div>
           <div className="space-y-1">
