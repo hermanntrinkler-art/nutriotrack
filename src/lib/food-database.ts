@@ -438,6 +438,14 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Landjäger', name_en: 'Landjäger (Dried Sausage)', quantity: 60, unit: 'g', calories: 200, protein_g: 14, fat_g: 16, carbs_g: 1, gram_per_piece: 60, category: 'meat' },
   { name: 'Biberli', name_en: 'Biberli (Appenzell Gingerbread)', quantity: 45, unit: 'g', calories: 155, protein_g: 2, fat_g: 3, carbs_g: 30, gram_per_piece: 45, category: 'sweets' },
   { name: 'Basler Läckerli', name_en: 'Basel Läckerli', quantity: 30, unit: 'g', calories: 105, protein_g: 2, fat_g: 2, carbs_g: 22, category: 'sweets' },
+
+  // Flavour Pulver / Flavour Powders
+  { name: 'Chunky Flavour', name_en: 'Chunky Flavour Powder', quantity: 6, unit: 'g', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands' },
+  { name: 'Chunky Flavour (Vanille)', name_en: 'Chunky Flavour Vanilla', quantity: 6, unit: 'g', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands' },
+  { name: 'Chunky Flavour (Schoko)', name_en: 'Chunky Flavour Chocolate', quantity: 6, unit: 'g', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands' },
+  { name: 'Chunky Flavour (Zimt)', name_en: 'Chunky Flavour Cinnamon', quantity: 6, unit: 'g', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands' },
+  { name: 'Chunky Flavour (Erdbeere)', name_en: 'Chunky Flavour Strawberry', quantity: 6, unit: 'g', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands' },
+  { name: 'Chunky Flavour (Karamell)', name_en: 'Chunky Flavour Caramel', quantity: 6, unit: 'g', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands' },
 ];
 
 // Synonym / slang map: keys are normalized aliases, values are normalized canonical names
