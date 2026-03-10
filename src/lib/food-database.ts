@@ -527,6 +527,11 @@ const SYNONYMS: Record<string, string[]> = {
   'landjaeger': ['landjäger'],
   'biberli': ['biberli'],
   'laeckerli': ['basler läckerli'],
+  'chunky': ['chunky flavour'],
+  'chunky flavour': ['chunky flavour'],
+  'chunky flavor': ['chunky flavour'],
+  'geschmackspulver': ['chunky flavour'],
+  'flavour pulver': ['chunky flavour'],
 
   // === Frischkäse / Cream Cheese brands ===
   'philadelphia': ['frischkaese', 'cream cheese', 'philadelphia'],
