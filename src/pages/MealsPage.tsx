@@ -126,7 +126,18 @@ export default function MealsPage() {
     setDayMeals((data || []) as any as MealEntry[]);
   }, [user, dateStr]);
 
-  useEffect(() => { loadDayMeals(); }, [loadDayMeals]);
+  const loadActivities = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('activity_entries')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('entry_date', dateStr)
+      .order('created_at', { ascending: true });
+    setActivities((data || []) as any as ActivityEntry[]);
+  }, [user, dateStr]);
+
+  useEffect(() => { loadDayMeals(); loadActivities(); }, [loadDayMeals, loadActivities]);
 
   // Compute totals
   const totals = useMemo(() => ({
@@ -136,8 +147,51 @@ export default function MealsPage() {
     carbs: dayMeals.reduce((s, m) => s + Number(m.total_carbs_g), 0),
   }), [dayMeals]);
 
+  const totalBurned = useMemo(() => activities.reduce((s, a) => s + Number(a.calories_burned), 0), [activities]);
+
   const calTarget = goals?.calorie_target || 2000;
-  const remaining = calTarget - totals.calories;
+  const remaining = calTarget - totals.calories + totalBurned;
+
+  // Preset activities
+  const PRESET_ACTIVITIES = [
+    { name: 'Gehen', nameEn: 'Walking', kcalPerMin: 4, emoji: '🚶' },
+    { name: 'Laufen', nameEn: 'Running', kcalPerMin: 10, emoji: '🏃' },
+    { name: 'Radfahren', nameEn: 'Cycling', kcalPerMin: 7, emoji: '🚴' },
+    { name: 'Krafttraining', nameEn: 'Strength', kcalPerMin: 6, emoji: '🏋️' },
+    { name: 'Schwimmen', nameEn: 'Swimming', kcalPerMin: 8, emoji: '🏊' },
+    { name: 'Yoga', nameEn: 'Yoga', kcalPerMin: 3, emoji: '🧘' },
+  ];
+
+  const selectPresetActivity = (preset: typeof PRESET_ACTIVITIES[0]) => {
+    const dur = activityForm.duration || 30;
+    setActivityForm({
+      name: language === 'de' ? preset.name : preset.nameEn,
+      duration: dur,
+      calories: dur * preset.kcalPerMin,
+      emoji: preset.emoji,
+    });
+  };
+
+  const saveActivity = async () => {
+    if (!user || !activityForm.name || activityForm.calories <= 0) return;
+    await supabase.from('activity_entries').insert({
+      user_id: user.id,
+      entry_date: dateStr,
+      activity_name: activityForm.name,
+      duration_minutes: activityForm.duration || null,
+      calories_burned: activityForm.calories,
+      emoji: activityForm.emoji,
+    } as any);
+    setActivityForm({ name: '', duration: 30, calories: 0, emoji: '🏃' });
+    setActivitySheetOpen(false);
+    loadActivities();
+    toast.success(language === 'de' ? 'Aktivität gespeichert!' : 'Activity saved!');
+  };
+
+  const deleteActivity = async (id: string) => {
+    await supabase.from('activity_entries').delete().eq('id', id);
+    loadActivities();
+  };
 
   // Group meals into slots
   const mealsBySlot = useMemo(() => {
