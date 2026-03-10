@@ -288,7 +288,7 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
     // quantity changes scale from the corrected values (e.g. packaging values)
     if (['calories', 'protein_g', 'fat_g', 'carbs_g'].includes(field as string) && typeof value === 'number') {
       setForm(prev => {
-        const updated = { ...prev, [field]: value };
+        const updated = { ...prev, [field]: value, was_user_edited: true };
         // Reset base nutrition to current quantity + corrected values
         setBaseNutrition({
           baseQuantity: updated.quantity,
