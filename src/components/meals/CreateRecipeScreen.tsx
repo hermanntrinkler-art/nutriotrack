@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { hapticFeedback } from '@/lib/haptics';
 import { saveAsRecipe } from './SavedRecipesScreen';
 import FoodSearchScreen from './FoodSearchScreen';
+import BarcodeScanner from './BarcodeScanner';
 
 const EMOJI_OPTIONS = ['🥛', '🥣', '🍲', '🥗', '🍳', '🥤', '🍜', '🥘', '🍱', '🧆', '🥙', '🌮'];
 
@@ -24,6 +25,7 @@ export default function CreateRecipeScreen({ onClose, onCreated }: CreateRecipeS
   const [emoji, setEmoji] = useState('🍽️');
   const [saving, setSaving] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showBarcode, setShowBarcode] = useState(false);
   const [items, setItems] = useState<AnalyzedFoodItem[]>([]);
 
   const handleSaveFromSearch = (searchItems: AnalyzedFoodItem[]) => {
@@ -51,6 +53,18 @@ export default function CreateRecipeScreen({ onClose, onCreated }: CreateRecipeS
     }
   };
 
+  if (showBarcode) {
+    return (
+      <BarcodeScanner
+        onResult={(item) => {
+          setItems(prev => [...prev, item]);
+          setShowBarcode(false);
+        }}
+        onCancel={() => setShowBarcode(false)}
+      />
+    );
+  }
+
   if (showSearch) {
     return (
       <FoodSearchScreen
@@ -59,6 +73,10 @@ export default function CreateRecipeScreen({ onClose, onCreated }: CreateRecipeS
         saving={false}
         initialItems={[]}
         singleAddMode
+        onBarcodeScan={() => {
+          setShowSearch(false);
+          setShowBarcode(true);
+        }}
       />
     );
   }
