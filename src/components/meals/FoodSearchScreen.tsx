@@ -18,6 +18,7 @@ interface FoodSearchScreenProps {
   onDone: (items: AnalyzedFoodItem[]) => void;
   onCancel: () => void;
   hideHeader?: boolean;
+  onBarcodeScan?: () => void;
 }
 
 interface SavedFavorite {
