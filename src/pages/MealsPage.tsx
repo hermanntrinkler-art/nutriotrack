@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Camera, Upload, ScanBarcode, Search, Star, Flame, Plus, ChevronLeft, ChevronRight, X, Trash2, BookOpen } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { toast } from 'sonner';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
 import { hapticFeedback } from '@/lib/haptics';
