@@ -13,6 +13,7 @@ import { hapticFeedback } from '@/lib/haptics';
 import { toast } from 'sonner';
 import CommunityProductForm from '@/components/CommunityProductForm';
 import BottomCart from './BottomCart';
+import FoodDetailDrawer from './FoodDetailDrawer';
 
 interface FoodSearchScreenProps {
   onCancel: () => void;
@@ -89,6 +90,7 @@ export default function FoodSearchScreen({
   const [favorites, setFavorites] = useState<SavedFavorite[]>([]);
   const [showCommunityForm, setShowCommunityForm] = useState(false);
   const [cartExpanded, setCartExpanded] = useState((initialItems?.length || 0) > 0);
+  const [detailFood, setDetailFood] = useState<FoodEntry | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const onlineTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onlineController = useRef<AbortController | null>(null);
@@ -442,7 +444,7 @@ export default function FoodSearchScreen({
               <motion.button
                 key={`${name}-${food.unit}-${i}`}
                 type="button"
-                onClick={() => addItem(food)}
+                onClick={() => setDetailFood(food)}
                 className="w-full text-left px-3.5 py-3 rounded-xl bg-card border border-border hover:border-primary/30 hover:bg-accent/30 transition-all flex items-center gap-3 active:scale-[0.98]"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -507,6 +509,18 @@ export default function FoodSearchScreen({
           />
         )}
       </AnimatePresence>
+
+      {/* Food detail drawer */}
+      <FoodDetailDrawer
+        food={detailFood}
+        open={detailFood !== null}
+        onClose={() => setDetailFood(null)}
+        onAdd={(item) => {
+          hapticFeedback('light');
+          setSelectedItems(prev => [...prev, item]);
+        }}
+        onShowCommunityForm={() => setShowCommunityForm(true)}
+      />
 
       {/* Community product form */}
       {showCommunityForm && (
