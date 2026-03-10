@@ -325,7 +325,8 @@ export default function FoodSearchScreen({
       carbs_g: Math.round(Number(item.carbs_g) * scale * 10) / 10,
       confidence_score: 1,
     }));
-    setSelectedItems(prev => [...prev, ...newItems]);
+    // Auto-save immediately
+    onSave(newItems);
   };
 
   const filteredFavorites = query.trim()
