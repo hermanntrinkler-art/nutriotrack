@@ -1,5 +1,9 @@
 import { useTranslation } from '@/lib/i18n';
-import type { MealEntry, UserGoals } from '@/lib/types';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import type { MealEntry, UserGoals, ActivityEntry } from '@/lib/types';
+import { Flame } from 'lucide-react';
 
 function MacroProgress({ label, current, target, color }: { label: string; current: number; target: number; color: string }) {
   const pct = target > 0 ? Math.min((current / target) * 100, 100) : 0;
