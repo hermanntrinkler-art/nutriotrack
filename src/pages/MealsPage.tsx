@@ -774,9 +774,11 @@ export default function MealsPage() {
       {step === 'barcode' && (
         <BarcodeScanner
           onResult={(item) => {
-            // Auto-save barcode result immediately
+            // Show in FoodDetailDrawer so user can adjust quantity before saving
             setIsAiResult(false);
-            handleSave([item]);
+            setInitialSearchItem(item);
+            setStep('diary-entry');
+            setDiaryTab('search');
           }}
           onCancel={handleReset}
         />
