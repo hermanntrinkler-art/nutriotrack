@@ -39,7 +39,7 @@ interface SavedRecipesScreenProps {
   hideHeader?: boolean;
 }
 
-export default function SavedRecipesScreen({ onSelect, onCancel }: SavedRecipesScreenProps) {
+export default function SavedRecipesScreen({ onSelect, onCancel, hideHeader }: SavedRecipesScreenProps) {
   const { user } = useAuth();
   const { language } = useTranslation();
   const [recipes, setRecipes] = useState<SavedRecipe[]>([]);
