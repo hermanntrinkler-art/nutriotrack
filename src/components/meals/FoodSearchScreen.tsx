@@ -544,6 +544,67 @@ export default function FoodSearchScreen({
         onShowCommunityForm={() => setShowCommunityForm(true)}
       />
 
+      {/* Favorite portion picker */}
+      <Dialog open={portionFav !== null} onOpenChange={v => { if (!v) setPortionFav(null); }}>
+        <DialogContent className="max-w-xs mx-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base flex items-center gap-2">
+              <span>{portionFav?.emoji || '⭐'}</span>
+              <span className="truncate">{portionFav?.name}</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              {language === 'de' ? 'Portionsgrösse anpassen:' : 'Adjust portion size:'}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {[0.5, 0.75, 1, 1.5, 2].map(scale => (
+                <button
+                  key={scale}
+                  onClick={() => setPortionScale(scale)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    portionScale === scale
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted hover:bg-accent text-foreground'
+                  }`}
+                >
+                  {scale === 1 ? (language === 'de' ? '1× Original' : '1× Original') : `${scale}×`}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                step="0.1"
+                min="0.1"
+                value={portionScale}
+                onChange={e => setPortionScale(Math.max(0.1, Number(e.target.value)))}
+                className="w-20 text-center"
+              />
+              <span className="text-sm text-muted-foreground">
+                {language === 'de' ? '× Menge' : '× amount'}
+              </span>
+            </div>
+            {portionFav && (
+              <p className="text-xs text-muted-foreground">
+                ≈ {Math.round((portionFav.total_calories || 0) * portionScale)} kcal · 
+                P:{Math.round((portionFav.total_protein_g || 0) * portionScale)}g 
+                F:{Math.round((portionFav.total_fat_g || 0) * portionScale)}g 
+                C:{Math.round((portionFav.total_carbs_g || 0) * portionScale)}g
+              </p>
+            )}
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setPortionFav(null)} className="flex-1">
+              {language === 'de' ? 'Abbrechen' : 'Cancel'}
+            </Button>
+            <Button onClick={confirmFavoritePortion} className="flex-1">
+              {language === 'de' ? 'Hinzufügen' : 'Add'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Community product form */}
       {showCommunityForm && (
         <CommunityProductForm
