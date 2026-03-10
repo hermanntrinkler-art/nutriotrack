@@ -100,7 +100,6 @@ export default function MealsPage() {
   const [dayMeals, setDayMeals] = useState<MealEntry[]>([]);
   const [goals, setGoals] = useState<UserGoals | null>(null);
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
-  const [activitySheetOpen, setActivitySheetOpen] = useState(false);
   const [activityForm, setActivityForm] = useState({ name: '', duration: 30, calories: 0, emoji: '🏃' });
   const videoRef = useRef<HTMLVideoElement>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
