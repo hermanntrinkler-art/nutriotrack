@@ -5,14 +5,14 @@ import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Loader2, Users, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import EditableFoodItemsList from '@/components/meals/EditableFoodItemsList';
 import FoodItemEditorModal from '@/components/meals/FoodItemEditorModal';
 
 export default function EditMealPage() {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -22,6 +22,8 @@ export default function EditMealPage() {
   const [mealType, setMealType] = useState('');
   const [items, setItems] = useState<AnalyzedFoodItem[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [sharedIndices, setSharedIndices] = useState<Set<number>>(new Set());
+  const [sharingIndex, setSharingIndex] = useState<number | null>(null);
 
   const mealEmojis: Record<string, string> = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍎' };
 
@@ -98,6 +100,35 @@ export default function EditMealPage() {
     navigate('/dashboard');
   };
 
+  const handleShareToCommunity = async (index: number) => {
+    if (!user || !profile) return;
+    const item = items[index];
+    if (!item.food_name) return;
+    setSharingIndex(index);
+
+    const { error } = await supabase.from('community_products').insert({
+      contributor_id: user.id,
+      contributor_display_name: profile.display_name || profile.name || 'Anonym',
+      contributor_avatar_emoji: profile.avatar_emoji || '😊',
+      food_name: item.food_name,
+      quantity: item.quantity,
+      unit: item.unit,
+      calories: item.calories,
+      protein_g: item.protein_g,
+      fat_g: item.fat_g,
+      carbs_g: item.carbs_g,
+      barcode: item.barcode || null,
+    });
+
+    if (error) {
+      toast.error(t('common.error'));
+    } else {
+      toast.success('👥 Zur Community geteilt!');
+      setSharedIndices(prev => new Set(prev).add(index));
+    }
+    setSharingIndex(null);
+  };
+
   const mealTypeLabel = (type: string) => {
     const map: Record<string, string> = {
       breakfast: t('meals.breakfast'), lunch: t('meals.lunch'),
@@ -148,7 +179,29 @@ export default function EditMealPage() {
         onEditItem={(index) => setEditingIndex(index)}
       />
 
-      {/* Totals */}
+      {/* Share to Community buttons */}
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground font-medium">👥 Zur Community teilen</p>
+        {items.map((item, index) => (
+          <div key={index} className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2">
+            <span className="text-sm truncate flex-1">{item.food_name || '—'}</span>
+            <button
+              onClick={() => handleShareToCommunity(index)}
+              disabled={sharedIndices.has(index) || sharingIndex === index || !item.food_name}
+              className="ml-2 p-1.5 rounded-md hover:bg-accent transition-colors disabled:opacity-50"
+            >
+              {sharingIndex === index ? (
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              ) : sharedIndices.has(index) ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <Users className="h-4 w-4 text-primary" />
+              )}
+            </button>
+          </div>
+        ))}
+      </div>
+
       <div className="nutri-card-highlight">
         <div className="grid grid-cols-4 gap-2 text-center text-sm">
           <div>
