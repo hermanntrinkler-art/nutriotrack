@@ -78,6 +78,7 @@ export default function FoodSearchScreen({
   initialItems,
   isAiResult,
   onEditItem,
+  singleAddMode,
 }: FoodSearchScreenProps) {
   const { t, language } = useTranslation();
   const { user } = useAuth();
