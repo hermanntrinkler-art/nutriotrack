@@ -73,6 +73,7 @@ function formatDateStr(d: Date): string {
 
 export default function MealsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { t, language } = useTranslation();
   const subscription = useSubscription();
 
