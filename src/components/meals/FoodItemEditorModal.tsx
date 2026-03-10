@@ -100,13 +100,20 @@ const PORTION_WEIGHTS: Record<string, number> = {
 
 function getPieceWeight(foodName: string): number {
   const normalized = foodName.trim().toLowerCase();
-  // Direct match
   if (PIECE_WEIGHTS[normalized]) return PIECE_WEIGHTS[normalized];
-  // Partial match: check if any key is contained in the food name
   for (const [key, weight] of Object.entries(PIECE_WEIGHTS)) {
     if (normalized.includes(key) || key.includes(normalized)) return weight;
   }
-  return 0; // unknown
+  return 0;
+}
+
+function getPortionWeight(foodName: string): number {
+  const normalized = foodName.trim().toLowerCase();
+  if (PORTION_WEIGHTS[normalized]) return PORTION_WEIGHTS[normalized];
+  for (const [key, weight] of Object.entries(PORTION_WEIGHTS)) {
+    if (normalized.includes(key) || key.includes(normalized)) return weight;
+  }
+  return 0;
 }
 
 const UNIT_OPTIONS_DE = [
