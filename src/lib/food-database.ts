@@ -220,15 +220,15 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Hacendado Jamón Cocido', name_en: 'Hacendado Cooked Ham', quantity: 30, unit: 'g', calories: 35, protein_g: 6, fat_g: 1, carbs_g: 0, category: 'brands' },
 
   // Eier / Eggs
-  { name: 'Ei gekocht', name_en: 'Boiled Egg', quantity: 1, unit: 'Stück', calories: 78, protein_g: 6, fat_g: 5, carbs_g: 1, category: 'eggs' },
-  { name: 'Spiegelei', name_en: 'Fried Egg', quantity: 1, unit: 'Stück', calories: 95, protein_g: 6, fat_g: 7, carbs_g: 1, category: 'eggs' },
-  { name: 'Rührei (2 Eier)', name_en: 'Scrambled Eggs (2)', quantity: 2, unit: 'Stück', calories: 200, protein_g: 14, fat_g: 15, carbs_g: 2, category: 'eggs' },
-  { name: 'Omelette', name_en: 'Omelette', quantity: 1, unit: 'Stück', calories: 180, protein_g: 12, fat_g: 14, carbs_g: 1, category: 'eggs' },
+  { name: 'Ei gekocht', name_en: 'Boiled Egg', quantity: 1, unit: 'Stück', calories: 78, protein_g: 6, fat_g: 5, carbs_g: 1, category: 'eggs', gram_per_piece: 60 },
+  { name: 'Spiegelei', name_en: 'Fried Egg', quantity: 1, unit: 'Stück', calories: 95, protein_g: 6, fat_g: 7, carbs_g: 1, category: 'eggs', gram_per_piece: 60 },
+  { name: 'Rührei (2 Eier)', name_en: 'Scrambled Eggs (2)', quantity: 2, unit: 'Stück', calories: 200, protein_g: 14, fat_g: 15, carbs_g: 2, category: 'eggs', gram_per_piece: 60 },
+  { name: 'Omelette', name_en: 'Omelette', quantity: 1, unit: 'Stück', calories: 180, protein_g: 12, fat_g: 14, carbs_g: 1, category: 'eggs', gram_per_piece: 120 },
 
   // Obst / Fruit
-  { name: 'Apfel', name_en: 'Apple', quantity: 1, unit: 'Stück', calories: 72, protein_g: 0, fat_g: 0, carbs_g: 19, category: 'fruit' },
-  { name: 'Banane', name_en: 'Banana', quantity: 1, unit: 'Stück', calories: 105, protein_g: 1, fat_g: 0, carbs_g: 27, category: 'fruit' },
-  { name: 'Orange', name_en: 'Orange', quantity: 1, unit: 'Stück', calories: 62, protein_g: 1, fat_g: 0, carbs_g: 15, category: 'fruit' },
+  { name: 'Apfel', name_en: 'Apple', quantity: 1, unit: 'Stück', calories: 72, protein_g: 0, fat_g: 0, carbs_g: 19, category: 'fruit', gram_per_piece: 150 },
+  { name: 'Banane', name_en: 'Banana', quantity: 1, unit: 'Stück', calories: 105, protein_g: 1, fat_g: 0, carbs_g: 27, category: 'fruit', gram_per_piece: 120 },
+  { name: 'Orange', name_en: 'Orange', quantity: 1, unit: 'Stück', calories: 62, protein_g: 1, fat_g: 0, carbs_g: 15, category: 'fruit', gram_per_piece: 130 },
   { name: 'Erdbeeren', name_en: 'Strawberries', quantity: 150, unit: 'g', calories: 48, protein_g: 1, fat_g: 0, carbs_g: 11, category: 'fruit' },
   { name: 'Weintrauben', name_en: 'Grapes', quantity: 100, unit: 'g', calories: 67, protein_g: 1, fat_g: 0, carbs_g: 17, category: 'fruit' },
   { name: 'Blaubeeren', name_en: 'Blueberries', quantity: 100, unit: 'g', calories: 57, protein_g: 1, fat_g: 0, carbs_g: 14, category: 'fruit' },
