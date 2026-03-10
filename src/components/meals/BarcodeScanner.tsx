@@ -43,7 +43,22 @@ async function lookupOpenFoodFacts(code: string): Promise<OFFResult> {
     const hasNutrition = calories100 > 0 || protein100 > 0 || fat100 > 0 || carbs100 > 0;
 
     if (!hasNutrition) {
-      return { item: null, productName: productName || undefined, hasNutrition: false };
+      // Still return the product with 0 values so user can correct in the drawer
+      return {
+        item: {
+          food_name: productName || code,
+          quantity: 100,
+          unit: 'g',
+          calories: 0,
+          protein_g: 0,
+          fat_g: 0,
+          carbs_g: 0,
+          confidence_score: 0.5,
+          barcode: code,
+        },
+        productName: productName || undefined,
+        hasNutrition: false,
+      };
     }
 
     // Detect per-piece products using serving_size from OFF
