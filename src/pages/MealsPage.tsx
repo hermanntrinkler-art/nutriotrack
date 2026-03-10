@@ -847,7 +847,7 @@ export default function MealsPage() {
           )}
 
           <div className="flex items-center gap-2">
-            <button onClick={() => setStep('select-method')} className="p-1.5 rounded-lg hover:bg-muted">
+            <button onClick={() => setStep('diary-entry')} className="p-1.5 rounded-lg hover:bg-muted">
               <ChevronLeft className="h-4 w-4" />
             </button>
             <span className="text-xl">{currentSlotInfo.emoji}</span>
