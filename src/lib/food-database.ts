@@ -13,6 +13,7 @@ export interface FoodEntry {
   communityContributor?: string;
   communityBrand?: string;
   communityStore?: string;
+  communityProductId?: string;
 }
 
 // Common foods with typical portion sizes and nutritional values
