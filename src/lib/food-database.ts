@@ -8,6 +8,7 @@ export interface FoodEntry {
   fat_g: number;
   carbs_g: number;
   category: string;
+  gram_per_piece?: number; // grams per Scheibe/Stück for unit conversion
   matchedAlias?: string;
   communityContributor?: string;
   communityBrand?: string;
