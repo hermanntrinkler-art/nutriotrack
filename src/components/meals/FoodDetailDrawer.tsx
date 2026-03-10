@@ -435,45 +435,60 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
             </div>
           </div>
 
-          {/* Makronährstoffe (collapsible) */}
-          <CollapsibleSection title={language === 'de' ? 'Makronährstoffe' : 'Macronutrients'} defaultOpen={false}>
-            <div className="text-[11px] text-muted-foreground flex justify-between px-4 py-1.5 bg-muted/50">
-              <span>{language === 'de' ? 'Werte pro' : 'Values per'}</span>
-              <span>100 g</span>
-            </div>
-            <NutritionRow label={language === 'de' ? 'Brennwert' : 'Calories'} value={`${per100.calories} kcal`} />
-            <NutritionRow label={language === 'de' ? 'Fett' : 'Fat'} value={`${per100.fat_g} g`} />
-            <NutritionRow label={language === 'de' ? 'Gesättigte Fettsäuren' : 'Saturated Fat'} value={`${saturatedFat100} g`} sub />
-            <NutritionRow label={language === 'de' ? 'Kohlenhydrate' : 'Carbohydrates'} value={`${per100.carbs_g} g`} />
-            <NutritionRow label={language === 'de' ? 'Zucker' : 'Sugar'} value={`${sugar100} g`} sub />
-            <NutritionRow label={language === 'de' ? 'Ballaststoffe' : 'Fiber'} value={`${fiber100} g`} />
-            <NutritionRow label="Protein" value={`${per100.protein_g} g`} />
-          </CollapsibleSection>
-
-          {/* Vitamine (collapsible) */}
-          {microsPer100 && (
-            <CollapsibleSection title={language === 'de' ? 'Vitamine' : 'Vitamins'} defaultOpen={false}>
+          {/* Makronährstoffe */}
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+              {language === 'de' ? 'Makronährstoffe' : 'Macronutrients'}
+            </p>
+            <div className="rounded-xl border border-border overflow-hidden">
               <div className="text-[11px] text-muted-foreground flex justify-between px-4 py-1.5 bg-muted/50">
                 <span>{language === 'de' ? 'Werte pro' : 'Values per'}</span>
                 <span>100 g</span>
               </div>
-              <NutritionRow label="Vitamin C" value={`${microsPer100.vitaminC_mg} mg`} />
-              <NutritionRow label="Vitamin D" value={`${microsPer100.vitaminD_ug} µg`} />
-            </CollapsibleSection>
+              <NutritionRow label={language === 'de' ? 'Brennwert' : 'Calories'} value={`${per100.calories} kcal`} />
+              <NutritionRow label={language === 'de' ? 'Fett' : 'Fat'} value={`${per100.fat_g} g`} />
+              <NutritionRow label={language === 'de' ? 'Gesättigte Fettsäuren' : 'Saturated Fat'} value={`${saturatedFat100} g`} sub />
+              <NutritionRow label={language === 'de' ? 'Kohlenhydrate' : 'Carbohydrates'} value={`${per100.carbs_g} g`} />
+              <NutritionRow label={language === 'de' ? 'Zucker' : 'Sugar'} value={`${sugar100} g`} sub />
+              <NutritionRow label={language === 'de' ? 'Ballaststoffe' : 'Fiber'} value={`${fiber100} g`} />
+              <NutritionRow label="Protein" value={`${per100.protein_g} g`} />
+            </div>
+          </div>
+
+          {/* Vitamine */}
+          {microsPer100 && (
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                {language === 'de' ? 'Vitamine' : 'Vitamins'}
+              </p>
+              <div className="rounded-xl border border-border overflow-hidden">
+                <div className="text-[11px] text-muted-foreground flex justify-between px-4 py-1.5 bg-muted/50">
+                  <span>{language === 'de' ? 'Werte pro' : 'Values per'}</span>
+                  <span>100 g</span>
+                </div>
+                <NutritionRow label="Vitamin C" value={`${microsPer100.vitaminC_mg} mg`} />
+                <NutritionRow label="Vitamin D" value={`${microsPer100.vitaminD_ug} µg`} />
+              </div>
+            </div>
           )}
 
-          {/* Mineralstoffe (collapsible) */}
+          {/* Mineralstoffe */}
           {microsPer100 && (
-            <CollapsibleSection title={language === 'de' ? 'Mineralstoffe' : 'Minerals'} defaultOpen={false}>
-              <div className="text-[11px] text-muted-foreground flex justify-between px-4 py-1.5 bg-muted/50">
-                <span>{language === 'de' ? 'Werte pro' : 'Values per'}</span>
-                <span>100 g</span>
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                {language === 'de' ? 'Mineralstoffe' : 'Minerals'}
+              </p>
+              <div className="rounded-xl border border-border overflow-hidden">
+                <div className="text-[11px] text-muted-foreground flex justify-between px-4 py-1.5 bg-muted/50">
+                  <span>{language === 'de' ? 'Werte pro' : 'Values per'}</span>
+                  <span>100 g</span>
+                </div>
+                <NutritionRow label={language === 'de' ? 'Eisen' : 'Iron'} value={`${microsPer100.iron_mg} mg`} />
+                <NutritionRow label={language === 'de' ? 'Kalzium' : 'Calcium'} value={`${microsPer100.calcium_mg} mg`} />
+                <NutritionRow label="Magnesium" value={`${microsPer100.magnesium_mg} mg`} />
+                <NutritionRow label={language === 'de' ? 'Zink' : 'Zinc'} value={`${microsPer100.zinc_mg} mg`} />
               </div>
-              <NutritionRow label={language === 'de' ? 'Eisen' : 'Iron'} value={`${microsPer100.iron_mg} mg`} />
-              <NutritionRow label={language === 'de' ? 'Kalzium' : 'Calcium'} value={`${microsPer100.calcium_mg} mg`} />
-              <NutritionRow label="Magnesium" value={`${microsPer100.magnesium_mg} mg`} />
-              <NutritionRow label={language === 'de' ? 'Zink' : 'Zinc'} value={`${microsPer100.zinc_mg} mg`} />
-            </CollapsibleSection>
+            </div>
           )}
         </div>
       </DrawerContent>
