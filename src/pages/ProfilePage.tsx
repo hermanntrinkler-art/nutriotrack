@@ -503,6 +503,57 @@ export default function ProfilePage() {
   );
 }
 
+type WidgetKey = 'yesterdayComparison' | '7dayTrend' | '30dayHeatmap' | 'weeklyReport' | 'micronutrients';
+
+const WIDGET_OPTIONS: { key: WidgetKey; labelDe: string; labelEn: string }[] = [
+  { key: 'yesterdayComparison', labelDe: 'Vergleich zu gestern', labelEn: 'Yesterday Comparison' },
+  { key: '7dayTrend', labelDe: '7-Tage Trend', labelEn: '7-Day Trend' },
+  { key: '30dayHeatmap', labelDe: '30-Tage Heatmap', labelEn: '30-Day Heatmap' },
+  { key: 'weeklyReport', labelDe: 'Wochenreport', labelEn: 'Weekly Report' },
+  { key: 'micronutrients', labelDe: 'Mikronährstoffe', labelEn: 'Micronutrients' },
+];
+
+function DashboardWidgetSettings() {
+  const { language } = useTranslation();
+  const [hidden, setHidden] = useState<Set<WidgetKey>>(() => {
+    try {
+      const raw = localStorage.getItem('dashboard_hidden_widgets');
+      if (raw) return new Set(JSON.parse(raw));
+    } catch {}
+    return new Set();
+  });
+
+  const toggle = (key: WidgetKey) => {
+    setHidden(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      localStorage.setItem('dashboard_hidden_widgets', JSON.stringify([...next]));
+      return next;
+    });
+    hapticFeedback('light');
+  };
+
+  return (
+    <div className="nutri-card space-y-3">
+      <div className="flex items-center gap-3">
+        <BarChart3 className="h-5 w-5 text-muted-foreground" />
+        <span className="font-medium text-sm">{language === 'de' ? 'Dashboard-Widgets' : 'Dashboard Widgets'}</span>
+      </div>
+      <div className="space-y-2">
+        {WIDGET_OPTIONS.map(opt => (
+          <label key={opt.key} className="flex items-center gap-3 cursor-pointer">
+            <Checkbox
+              checked={!hidden.has(opt.key)}
+              onCheckedChange={() => toggle(opt.key)}
+            />
+            <span className="text-sm text-foreground">{language === 'de' ? opt.labelDe : opt.labelEn}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function AdminLink() {
   const { isAdmin, loading } = useAdmin();
   const navigate = useNavigate();
