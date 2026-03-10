@@ -135,7 +135,23 @@ export default function SavedRecipesScreen({ onSelect, onCancel, hideHeader }: S
         </div>
       )}
 
-      {loading ? (
+      {/* Create recipe button */}
+      <button
+        onClick={() => setShowCreate(true)}
+        className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/50 hover:bg-primary/5 transition-all active:scale-[0.98]"
+      >
+        <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Plus className="h-5 w-5 text-primary" />
+        </div>
+        <div className="text-left">
+          <p className="font-semibold text-sm text-foreground">
+            {language === 'de' ? 'Neues Rezept erstellen' : 'Create new recipe'}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {language === 'de' ? 'Zutaten zusammenstellen & speichern' : 'Combine ingredients & save'}
+          </p>
+        </div>
+      </button>
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
