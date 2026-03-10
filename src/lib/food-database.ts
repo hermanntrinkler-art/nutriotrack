@@ -9,6 +9,7 @@ export interface FoodEntry {
   carbs_g: number;
   category: string;
   gram_per_piece?: number; // grams per Scheibe/Stück for unit conversion
+  gram_per_portion?: number; // grams per Portion/Messlöffel for unit conversion
   matchedAlias?: string;
   communityContributor?: string;
   communityBrand?: string;
