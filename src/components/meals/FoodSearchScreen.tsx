@@ -7,6 +7,7 @@ import { searchOpenFoodFacts } from '@/lib/openfoodfacts-search';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Search, Plus, Minus, Globe, Loader2, X, ArrowLeft, ChevronRight, Flame, Star, Users, ScanBarcode } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { hapticFeedback } from '@/lib/haptics';
@@ -94,6 +95,8 @@ export default function FoodSearchScreen({
   const [showCommunityForm, setShowCommunityForm] = useState(false);
   const [cartExpanded, setCartExpanded] = useState((initialItems?.length || 0) > 0);
   const [detailFood, setDetailFood] = useState<FoodEntry | null>(null);
+  const [portionFav, setPortionFav] = useState<SavedFavorite | null>(null);
+  const [portionScale, setPortionScale] = useState(1);
   const inputRef = useRef<HTMLInputElement>(null);
   const onlineTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onlineController = useRef<AbortController | null>(null);
@@ -275,8 +278,18 @@ export default function FoodSearchScreen({
     setSelectedItems(prev => prev.map((item, i) => i === index ? { ...newItem, confidence_score: 1 } : item));
   };
 
-  const handleSelectFavorite = async (fav: SavedFavorite) => {
+  const handleSelectFavorite = (fav: SavedFavorite) => {
+    hapticFeedback('light');
+    setPortionScale(1);
+    setPortionFav(fav);
+  };
+
+  const confirmFavoritePortion = async () => {
+    if (!portionFav) return;
+    const fav = portionFav;
+    setPortionFav(null);
     hapticFeedback('success');
+
     const { data: itemsData } = await supabase
       .from('saved_recipe_items')
       .select('*')
@@ -287,14 +300,15 @@ export default function FoodSearchScreen({
     }
     await supabase.from('saved_recipes').update({ use_count: (fav.use_count || 0) + 1 } as any).eq('id', fav.id);
     
+    const scale = portionScale;
     const newItems: AnalyzedFoodItem[] = (itemsData as any[]).map(item => ({
       food_name: item.food_name,
-      quantity: Number(item.quantity),
+      quantity: Math.round(Number(item.quantity) * scale * 10) / 10,
       unit: item.unit,
-      calories: Number(item.calories),
-      protein_g: Number(item.protein_g),
-      fat_g: Number(item.fat_g),
-      carbs_g: Number(item.carbs_g),
+      calories: Math.round(Number(item.calories) * scale),
+      protein_g: Math.round(Number(item.protein_g) * scale * 10) / 10,
+      fat_g: Math.round(Number(item.fat_g) * scale * 10) / 10,
+      carbs_g: Math.round(Number(item.carbs_g) * scale * 10) / 10,
       confidence_score: 1,
     }));
     setSelectedItems(prev => [...prev, ...newItems]);
@@ -529,6 +543,67 @@ export default function FoodSearchScreen({
         }}
         onShowCommunityForm={() => setShowCommunityForm(true)}
       />
+
+      {/* Favorite portion picker */}
+      <Dialog open={portionFav !== null} onOpenChange={v => { if (!v) setPortionFav(null); }}>
+        <DialogContent className="max-w-xs mx-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base flex items-center gap-2">
+              <span>{portionFav?.emoji || '⭐'}</span>
+              <span className="truncate">{portionFav?.name}</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              {language === 'de' ? 'Portionsgrösse anpassen:' : 'Adjust portion size:'}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {[0.5, 0.75, 1, 1.5, 2].map(scale => (
+                <button
+                  key={scale}
+                  onClick={() => setPortionScale(scale)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    portionScale === scale
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted hover:bg-accent text-foreground'
+                  }`}
+                >
+                  {scale === 1 ? (language === 'de' ? '1× Original' : '1× Original') : `${scale}×`}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                step="0.1"
+                min="0.1"
+                value={portionScale}
+                onChange={e => setPortionScale(Math.max(0.1, Number(e.target.value)))}
+                className="w-20 text-center"
+              />
+              <span className="text-sm text-muted-foreground">
+                {language === 'de' ? '× Menge' : '× amount'}
+              </span>
+            </div>
+            {portionFav && (
+              <p className="text-xs text-muted-foreground">
+                ≈ {Math.round((portionFav.total_calories || 0) * portionScale)} kcal · 
+                P:{Math.round((portionFav.total_protein_g || 0) * portionScale)}g 
+                F:{Math.round((portionFav.total_fat_g || 0) * portionScale)}g 
+                C:{Math.round((portionFav.total_carbs_g || 0) * portionScale)}g
+              </p>
+            )}
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setPortionFav(null)} className="flex-1">
+              {language === 'de' ? 'Abbrechen' : 'Cancel'}
+            </Button>
+            <Button onClick={confirmFavoritePortion} className="flex-1">
+              {language === 'de' ? 'Hinzufügen' : 'Add'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Community product form */}
       {showCommunityForm && (
