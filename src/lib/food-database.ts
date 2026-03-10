@@ -69,10 +69,10 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Croissant', name_en: 'Croissant', quantity: 1, unit: 'Stück', calories: 230, protein_g: 5, fat_g: 12, carbs_g: 26, category: 'bread', gram_per_piece: 60 },
   { name: 'Toast', name_en: 'Toast', quantity: 1, unit: 'Scheibe', calories: 65, protein_g: 2, fat_g: 1, carbs_g: 12, category: 'bread', gram_per_piece: 25 },
   { name: 'Laugenstange', name_en: 'Pretzel Stick', quantity: 1, unit: 'Stück', calories: 190, protein_g: 6, fat_g: 2, carbs_g: 35, category: 'bread', gram_per_piece: 75 },
-  { name: 'Laugenbrötchen', name_en: 'Pretzel Roll', quantity: 1, unit: 'Stück', calories: 175, protein_g: 6, fat_g: 2, carbs_g: 32, category: 'bread' },
+  { name: 'Laugenbrötchen', name_en: 'Pretzel Roll', quantity: 1, unit: 'Stück', calories: 175, protein_g: 6, fat_g: 2, carbs_g: 32, category: 'bread', gram_per_piece: 70 },
   { name: 'Baguette', name_en: 'Baguette', quantity: 100, unit: 'g', calories: 270, protein_g: 9, fat_g: 1, carbs_g: 54, category: 'bread' },
   { name: 'Fladenbrot', name_en: 'Flatbread', quantity: 100, unit: 'g', calories: 275, protein_g: 8, fat_g: 3, carbs_g: 52, category: 'bread' },
-  { name: 'Tortilla Wrap', name_en: 'Tortilla Wrap', quantity: 1, unit: 'Stück', calories: 130, protein_g: 3, fat_g: 3, carbs_g: 22, category: 'bread' },
+  { name: 'Tortilla Wrap', name_en: 'Tortilla Wrap', quantity: 1, unit: 'Stück', calories: 130, protein_g: 3, fat_g: 3, carbs_g: 22, category: 'bread', gram_per_piece: 60 },
 
   // Aufschnitt / Toppings
   { name: 'Butter', name_en: 'Butter', quantity: 10, unit: 'g', calories: 74, protein_g: 0, fat_g: 8, carbs_g: 0, category: 'toppings' },
