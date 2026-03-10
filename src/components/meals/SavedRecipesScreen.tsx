@@ -46,6 +46,7 @@ export default function SavedRecipesScreen({ onSelect, onCancel, hideHeader }: S
   const [recipes, setRecipes] = useState<SavedRecipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
 
   const loadRecipes = async () => {
     if (!user) return;
@@ -60,6 +61,18 @@ export default function SavedRecipesScreen({ onSelect, onCancel, hideHeader }: S
   };
 
   useEffect(() => { loadRecipes(); }, [user]);
+
+  if (showCreate) {
+    return (
+      <CreateRecipeScreen
+        onClose={() => setShowCreate(false)}
+        onCreated={() => {
+          setShowCreate(false);
+          loadRecipes();
+        }}
+      />
+    );
+  }
 
   const handleSelect = async (recipe: SavedRecipe) => {
     if (!user) return;
