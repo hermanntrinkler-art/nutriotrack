@@ -284,6 +284,25 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
       return;
     }
 
+    // When user manually edits a nutrition field, update baseNutrition so future
+    // quantity changes scale from the corrected values (e.g. packaging values)
+    if (['calories', 'protein_g', 'fat_g', 'carbs_g'].includes(field as string) && typeof value === 'number') {
+      setForm(prev => {
+        const updated = { ...prev, [field]: value };
+        // Reset base nutrition to current quantity + corrected values
+        setBaseNutrition({
+          baseQuantity: updated.quantity,
+          baseUnit: updated.unit,
+          calories: updated.calories,
+          protein_g: updated.protein_g,
+          fat_g: updated.fat_g,
+          carbs_g: updated.carbs_g,
+        });
+        return updated;
+      });
+      return;
+    }
+
     setForm(prev => ({ ...prev, [field]: value }));
 
     if (field === 'food_name' && typeof value === 'string') {
