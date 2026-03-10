@@ -555,44 +555,127 @@ export default function FoodSearchScreen({
         onShowCommunityForm={() => setShowCommunityForm(true)}
       />
 
-      {/* Favorite portion picker */}
-      <Dialog open={portionFav !== null} onOpenChange={v => { if (!v) { setPortionFav(null); setPortionFavItems(null); } }}>
-        <DialogContent className="max-w-xs mx-auto">
-          <DialogHeader>
-            <DialogTitle className="text-base flex items-center gap-2">
+      {/* Favorite portion picker — FDDB style */}
+      <Drawer open={portionFav !== null} onOpenChange={v => { if (!v) { setPortionFav(null); setPortionFavItems(null); } }}>
+        <DrawerContent className="max-h-[90vh]">
+          <DrawerHeader className="pb-2">
+            <DrawerTitle className="text-left text-lg flex items-center gap-2">
               <span>{portionFav?.emoji || '⭐'}</span>
               <span className="truncate">{portionFav?.name}</span>
-            </DialogTitle>
-          </DialogHeader>
-          {portionFav && (
-            <div className="space-y-4 py-2">
-              <div className="flex items-center gap-3">
-                <Input
-                  type="number"
-                  step="10"
-                  min="1"
-                  value={portionAmount}
-                  onChange={e => setPortionAmount(Math.max(1, Number(e.target.value)))}
-                  className="w-24 text-center text-lg font-medium"
-                  autoFocus
-                />
-                <span className="text-base text-muted-foreground">
-                  {(portionFav as any)._unit || 'g'}
-                </span>
+            </DrawerTitle>
+          </DrawerHeader>
+          {portionFav && (() => {
+            const favUnit = (portionFav as any)._unit || 'g';
+            const scale = portionOriginalTotal > 0 ? portionAmount / portionOriginalTotal : 1;
+            const scaledCal = Math.round((portionFav.total_calories || 0) * scale);
+            const scaledP = Math.round((portionFav.total_protein_g || 0) * scale * 10) / 10;
+            const scaledF = Math.round((portionFav.total_fat_g || 0) * scale * 10) / 10;
+            const scaledC = Math.round((portionFav.total_carbs_g || 0) * scale * 10) / 10;
+
+            const step = portionAmount <= 20 ? 1 : portionAmount <= 100 ? 5 : 10;
+
+            const presets: { label: string; qty: number }[] = [
+              { label: `100 ${favUnit}`, qty: 100 },
+              { label: `${language === 'de' ? 'Originalrezept' : 'Original recipe'} (${Math.round(portionOriginalTotal)} ${favUnit})`, qty: Math.round(portionOriginalTotal) },
+            ];
+            if (favUnit === 'ml') {
+              presets.push({ label: `${language === 'de' ? 'Glas' : 'Glass'} (200 ml)`, qty: 200 });
+              presets.push({ label: `${language === 'de' ? 'Portion' : 'Portion'} (250 ml)`, qty: 250 });
+            } else {
+              presets.push({ label: `${language === 'de' ? 'Portion' : 'Portion'} (150 g)`, qty: 150 });
+              presets.push({ label: `${language === 'de' ? 'Große Portion' : 'Large portion'} (250 g)`, qty: 250 });
+            }
+
+            return (
+              <div className="px-4 pb-6 space-y-4">
+                {/* Macro grid */}
+                <div className="grid grid-cols-4 gap-3 text-center">
+                  <div className="py-3 rounded-xl bg-muted">
+                    <p className="text-xl font-black tabular-nums text-foreground">{scaledCal}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium mt-0.5">kcal</p>
+                  </div>
+                  <div className="py-3 rounded-xl bg-muted">
+                    <p className="text-xl font-black tabular-nums text-fat">{scaledF}g</p>
+                    <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{language === 'de' ? 'Fett' : 'Fat'}</p>
+                  </div>
+                  <div className="py-3 rounded-xl bg-muted">
+                    <p className="text-xl font-black tabular-nums text-carbs">{scaledC}g</p>
+                    <p className="text-[10px] text-muted-foreground font-medium mt-0.5">{language === 'de' ? 'KH' : 'Carbs'}</p>
+                  </div>
+                  <div className="py-3 rounded-xl bg-muted">
+                    <p className="text-xl font-black tabular-nums text-protein">{scaledP}g</p>
+                    <p className="text-[10px] text-muted-foreground font-medium mt-0.5">Protein</p>
+                  </div>
+                </div>
+
+                {/* Quantity stepper */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPortionAmount(prev => Math.max(step, prev - step))}
+                    className="w-10 h-10 rounded-full bg-muted hover:bg-accent flex items-center justify-center transition-colors active:scale-95 shrink-0"
+                  >
+                    <Minus className="h-4 w-4 text-foreground" />
+                  </button>
+                  <Input
+                    type="number"
+                    value={portionAmount}
+                    onChange={e => setPortionAmount(Math.max(1, Number(e.target.value)))}
+                    className="h-11 text-center text-lg font-bold rounded-xl flex-1"
+                    min={1}
+                    autoFocus
+                  />
+                  <span className="text-sm font-medium text-muted-foreground min-w-[30px] text-center shrink-0">{favUnit}</span>
+                  <button
+                    onClick={() => setPortionAmount(prev => prev + step)}
+                    className="w-10 h-10 rounded-full bg-muted hover:bg-accent flex items-center justify-center transition-colors active:scale-95 shrink-0"
+                  >
+                    <Plus className="h-4 w-4 text-foreground" />
+                  </button>
+                </div>
+
+                {/* Add button */}
+                <Button onClick={confirmFavoritePortion} className="w-full h-12 rounded-xl font-bold text-base" disabled={portionAmount <= 0}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  {language === 'de' ? 'Eintragen' : 'Add'}
+                </Button>
+
+                {/* Quick presets */}
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                    {language === 'de' ? 'Schneller Eintrag' : 'Quick Entry'}
+                  </p>
+                  <div className="space-y-1.5">
+                    {presets.map((preset, i) => {
+                      const pScale = portionOriginalTotal > 0 ? preset.qty / portionOriginalTotal : 1;
+                      const pCal = Math.round((portionFav.total_calories || 0) * pScale);
+                      const pF = Math.round((portionFav.total_fat_g || 0) * pScale * 10) / 10;
+                      const pC = Math.round((portionFav.total_carbs_g || 0) * pScale * 10) / 10;
+                      const pP = Math.round((portionFav.total_protein_g || 0) * pScale * 10) / 10;
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => setPortionAmount(preset.qty)}
+                          className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-card border border-border hover:border-primary/30 hover:bg-accent/30 transition-all active:scale-[0.98]"
+                        >
+                          <div className="text-left">
+                            <span className="text-sm font-semibold text-foreground">{preset.label}</span>
+                            <p className="text-[11px] text-muted-foreground">
+                              {pCal} kcal · {pF}g F · {pC}g KH · {pP}g P
+                            </p>
+                          </div>
+                          <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Plus className="h-3.5 w-3.5 text-primary" />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {(() => {
-                  const scale = portionOriginalTotal > 0 ? portionAmount / portionOriginalTotal : 1;
-                  return `≈ ${Math.round((portionFav.total_calories || 0) * scale)} kcal · P:${Math.round((portionFav.total_protein_g || 0) * scale)}g F:${Math.round((portionFav.total_fat_g || 0) * scale)}g C:${Math.round((portionFav.total_carbs_g || 0) * scale)}g`;
-                })()}
-              </p>
-              <Button onClick={confirmFavoritePortion} className="w-full">
-                {language === 'de' ? 'Hinzufügen' : 'Add'}
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+            );
+          })()}
+        </DrawerContent>
+      </Drawer>
 
       {/* Community product form */}
       {showCommunityForm && (
