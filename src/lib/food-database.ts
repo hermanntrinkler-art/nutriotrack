@@ -285,12 +285,12 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Fenchel', name_en: 'Fennel', quantity: 100, unit: 'g', calories: 31, protein_g: 1, fat_g: 0, carbs_g: 7, category: 'vegetables' },
 
   // Fertiggerichte / Prepared meals
-  { name: 'Pizza Margherita', name_en: 'Pizza Margherita', quantity: 1, unit: 'Stück', calories: 800, protein_g: 30, fat_g: 28, carbs_g: 100, category: 'prepared' },
-  { name: 'Döner Kebab', name_en: 'Döner Kebab', quantity: 1, unit: 'Stück', calories: 650, protein_g: 30, fat_g: 30, carbs_g: 60, category: 'prepared' },
-  { name: 'Burger', name_en: 'Burger', quantity: 1, unit: 'Stück', calories: 550, protein_g: 25, fat_g: 30, carbs_g: 40, category: 'prepared' },
-  { name: 'Schnitzel', name_en: 'Schnitzel', quantity: 1, unit: 'Stück', calories: 400, protein_g: 30, fat_g: 20, carbs_g: 20, category: 'prepared' },
-  { name: 'Sushi (8 Stück)', name_en: 'Sushi (8 pcs)', quantity: 8, unit: 'Stück', calories: 320, protein_g: 14, fat_g: 4, carbs_g: 56, category: 'prepared' },
-  { name: 'Wrap', name_en: 'Wrap', quantity: 1, unit: 'Stück', calories: 350, protein_g: 18, fat_g: 12, carbs_g: 40, category: 'prepared' },
+  { name: 'Pizza Margherita', name_en: 'Pizza Margherita', quantity: 1, unit: 'Stück', calories: 800, protein_g: 30, fat_g: 28, carbs_g: 100, category: 'prepared', gram_per_piece: 350 },
+  { name: 'Döner Kebab', name_en: 'Döner Kebab', quantity: 1, unit: 'Stück', calories: 650, protein_g: 30, fat_g: 30, carbs_g: 60, category: 'prepared', gram_per_piece: 350 },
+  { name: 'Burger', name_en: 'Burger', quantity: 1, unit: 'Stück', calories: 550, protein_g: 25, fat_g: 30, carbs_g: 40, category: 'prepared', gram_per_piece: 250 },
+  { name: 'Schnitzel', name_en: 'Schnitzel', quantity: 1, unit: 'Stück', calories: 400, protein_g: 30, fat_g: 20, carbs_g: 20, category: 'prepared', gram_per_piece: 200 },
+  { name: 'Sushi (8 Stück)', name_en: 'Sushi (8 pcs)', quantity: 8, unit: 'Stück', calories: 320, protein_g: 14, fat_g: 4, carbs_g: 56, category: 'prepared', gram_per_piece: 30 },
+  { name: 'Wrap', name_en: 'Wrap', quantity: 1, unit: 'Stück', calories: 350, protein_g: 18, fat_g: 12, carbs_g: 40, category: 'prepared', gram_per_piece: 200 },
 
   // Snacks / Sweets
   { name: 'Schokolade (Milch)', name_en: 'Milk Chocolate', quantity: 25, unit: 'g', calories: 135, protein_g: 2, fat_g: 8, carbs_g: 14, category: 'snacks' },
