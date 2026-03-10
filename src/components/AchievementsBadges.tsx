@@ -248,7 +248,7 @@ export default function AchievementsBadges({ totalMeals, streak, goalReached, us
     try {
       const blob = await generateBadgeBlob(badge);
       const lang = language as 'de' | 'en';
-      if (platform === 'facebook') await shareToFacebook(blob, badge.shareText, lang);
+      if (platform === 'facebook') await shareToFacebook(blob, badge.shareText, lang, badge.id);
       else if (platform === 'whatsapp') await shareToWhatsApp(blob, badge.shareText, lang);
       else await shareToInstagram(blob, lang);
     } catch {
