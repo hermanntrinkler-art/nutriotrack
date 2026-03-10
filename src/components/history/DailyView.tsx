@@ -30,8 +30,17 @@ interface DailyViewProps {
 
 export default function DailyView({ meals, selectedDate, goals }: DailyViewProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const [activities, setActivities] = useState<ActivityEntry[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('activity_entries').select('*').eq('user_id', user.id).eq('entry_date', selectedDate)
+      .then(({ data }) => setActivities((data || []) as any as ActivityEntry[]));
+  }, [user, selectedDate]);
 
   const dayMeals = meals.filter(m => m.entry_date === selectedDate);
+  const totalBurned = activities.reduce((s, a) => s + Number(a.calories_burned), 0);
 
   const totals = {
     calories: dayMeals.reduce((s, m) => s + Number(m.total_calories), 0),
