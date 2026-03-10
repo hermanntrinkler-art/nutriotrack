@@ -146,6 +146,8 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
   const { language } = useTranslation();
   const [quantity, setQuantity] = useState<number>(food?.quantity || 100);
   const [unit, setUnit] = useState<string>(food?.unit === 'Scheibe' || food?.unit === 'Stück' || food?.unit === 'piece' ? food.unit : 'g');
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [reported, setReported] = useState(false);
 
   // Reset when food changes
   const foodKey = food ? `${food.name}-${food.unit}` : '';
