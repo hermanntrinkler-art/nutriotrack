@@ -131,6 +131,7 @@ export interface AnalyzedFoodItem {
   confidence_score: number;
   was_user_edited?: boolean;
   barcode?: string;
+  gram_per_piece?: number;
 }
 
 export interface NutritionCalculation {

@@ -131,6 +131,7 @@ export default function FoodSearchScreen({
         fat_g: initialItem.fat_g,
         carbs_g: initialItem.carbs_g,
         category: 'barcode',
+        gram_per_piece: initialItem.gram_per_piece,
       };
       setDetailFood(foodEntry);
     }

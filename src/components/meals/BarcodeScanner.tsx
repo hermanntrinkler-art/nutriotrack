@@ -62,18 +62,24 @@ async function lookupOpenFoodFacts(code: string): Promise<OFFResult> {
     }
 
     // Detect per-piece products using serving_size from OFF
-    // e.g. serving_size = "1.4 g" or "14g (1 piece)" → piece weight
     const servingSize = p.serving_size || '';
-    const servingMatch = servingSize.match(/^([\d.,]+)\s*g/i);
+    const servingMatch = servingSize.match(/([\d.,]+)\s*g/i);
     const servingGrams = servingMatch ? parseFloat(servingMatch[1].replace(',', '.')) : 0;
     const servingQuantity = Number(p.serving_quantity) || 0;
 
-    // If a single serving is very small (< 15g), treat as piece product
-    const isPieceProduct = servingGrams > 0 && servingGrams < 15;
+    // Calculate gram_per_piece from serving data
+    let gramPerPiece: number | undefined;
+    if (servingGrams > 0 && servingGrams < 100) {
+      gramPerPiece = servingGrams;
+    } else if (servingQuantity > 0 && servingQuantity < 100) {
+      gramPerPiece = servingQuantity;
+    }
+
+    // If a single serving is very small (< 15g), default to piece display
+    const isPieceProduct = gramPerPiece !== undefined && gramPerPiece < 15;
 
     if (isPieceProduct) {
-      // Scale nutrition from per-100g to per-piece
-      const factor = servingGrams / 100;
+      const factor = gramPerPiece! / 100;
       return {
         item: {
           food_name: productName || code,
@@ -85,6 +91,7 @@ async function lookupOpenFoodFacts(code: string): Promise<OFFResult> {
           carbs_g: Math.round(carbs100 * factor * 10) / 10,
           confidence_score: 0.95,
           barcode: code,
+          gram_per_piece: gramPerPiece,
         },
         hasNutrition: true,
       };
@@ -101,6 +108,7 @@ async function lookupOpenFoodFacts(code: string): Promise<OFFResult> {
         carbs_g: carbs100,
         confidence_score: 0.95,
         barcode: code,
+        gram_per_piece: gramPerPiece,
       },
       hasNutrition: true,
     };

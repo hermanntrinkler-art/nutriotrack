@@ -99,7 +99,7 @@ function getPortionPresets(food: FoodEntry): { label: string; qty: number; unit:
 
   if (isPiece && food.gram_per_piece) {
     presets.push({
-      label: `${food.unit} (${food.gram_per_piece} g)`,
+      label: `1 ${food.unit} (${food.gram_per_piece} g)`,
       qty: 1,
       unit: food.unit,
       gramLabel: `${food.gram_per_piece} g`,
@@ -111,6 +111,14 @@ function getPortionPresets(food: FoodEntry): { label: string; qty: number; unit:
         unit: 'g',
       });
     }
+  } else if (!isPiece && food.gram_per_piece) {
+    // Non-piece unit (e.g. scanned as 100g) but has gram_per_piece info → offer "1 Stück"
+    presets.push({
+      label: `1 Stück (${food.gram_per_piece} g)`,
+      qty: 1,
+      unit: 'Stück',
+      gramLabel: `${food.gram_per_piece} g`,
+    });
   } else if (!isPiece && food.quantity !== 100) {
     presets.push({
       label: `${food.quantity} ${food.unit}`,
