@@ -297,7 +297,7 @@ export default function FoodSearchScreen({
     const hasMl = units.some((u: string) => u === 'ml');
     setPortionFavItems(itemsData);
     setPortionOriginalTotal(totalQty);
-    setPortionAmount(totalQty);
+    setPortionAmount(100);
     setPortionFav({ ...fav, _unit: hasMl ? 'ml' : 'g' } as any);
   };
 
