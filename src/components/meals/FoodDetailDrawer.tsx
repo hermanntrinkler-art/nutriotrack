@@ -269,30 +269,32 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
             </div>
           )}
 
-          {/* Per 100g reference */}
-          <div className="space-y-2">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
-              {language === 'de' ? 'Nährwerte pro 100 g' : 'Nutrition per 100 g'}
-            </p>
-            <div className="rounded-xl border border-border overflow-hidden">
-              {[
-                { label: language === 'de' ? 'Brennwert' : 'Calories', value: `${per100.calories} kcal` },
-                { label: language === 'de' ? 'Fett' : 'Fat', value: `${per100.fat_g} g` },
-                { label: language === 'de' ? 'Kohlenhydrate' : 'Carbs', value: `${per100.carbs_g} g` },
-                { label: 'Protein', value: `${per100.protein_g} g` },
-              ].map((row, i) => (
-                <div
-                  key={row.label}
-                  className={`flex items-center justify-between px-3.5 py-2.5 text-sm ${
-                    i < 3 ? 'border-b border-border' : ''
-                  }`}
-                >
-                  <span className="text-foreground font-medium">{row.label}</span>
-                  <span className="font-bold tabular-nums text-foreground">{row.value}</span>
-                </div>
-              ))}
+          {/* Per 100g reference - only show for gram/ml based items */}
+          {!isPiece && (
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                {language === 'de' ? 'Nährwerte pro 100 g' : 'Nutrition per 100 g'}
+              </p>
+              <div className="rounded-xl border border-border overflow-hidden">
+                {[
+                  { label: language === 'de' ? 'Brennwert' : 'Calories', value: `${per100.calories} kcal` },
+                  { label: language === 'de' ? 'Fett' : 'Fat', value: `${per100.fat_g} g` },
+                  { label: language === 'de' ? 'Kohlenhydrate' : 'Carbs', value: `${per100.carbs_g} g` },
+                  { label: 'Protein', value: `${per100.protein_g} g` },
+                ].map((row, i) => (
+                  <div
+                    key={row.label}
+                    className={`flex items-center justify-between px-3.5 py-2.5 text-sm ${
+                      i < 3 ? 'border-b border-border' : ''
+                    }`}
+                  >
+                    <span className="text-foreground font-medium">{row.label}</span>
+                    <span className="font-bold tabular-nums text-foreground">{row.value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </DrawerContent>
     </Drawer>
