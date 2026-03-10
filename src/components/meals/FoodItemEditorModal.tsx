@@ -122,6 +122,7 @@ const UNIT_OPTIONS_DE = [
   { value: 'TL', label: 'TL (Teelöffel ≈ 5g)' },
   { value: 'EL', label: 'EL (Esslöffel ≈ 15g)' },
   { value: 'Stück', label: 'Stück' },
+  { value: 'Portion', label: 'Portion (Messlöffel)' },
 ];
 
 const UNIT_OPTIONS_EN = [
@@ -130,6 +131,7 @@ const UNIT_OPTIONS_EN = [
   { value: 'TL', label: 'tsp (teaspoon ≈ 5g)' },
   { value: 'EL', label: 'tbsp (tablespoon ≈ 15g)' },
   { value: 'Stück', label: 'piece' },
+  { value: 'Portion', label: 'portion (scoop)' },
 ];
 
 function getGramsEquivalent(quantity: number, unit: string, foodName?: string): number {
