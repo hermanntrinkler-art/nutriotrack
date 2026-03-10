@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Shield, Users, Image, Upload, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
+import { Shield, Users, Image, Upload, Trash2, ArrowLeft, Loader2, Flag, CheckCircle, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 // Static badge imports for preview
@@ -105,18 +105,25 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <Tabs defaultValue="badges">
-          <TabsList className="w-full grid grid-cols-2 mb-4">
+        <Tabs defaultValue="reports">
+          <TabsList className="w-full grid grid-cols-3 mb-4">
+            <TabsTrigger value="reports" className="flex items-center gap-1.5">
+              <Flag className="h-4 w-4" />
+              Meldungen
+            </TabsTrigger>
             <TabsTrigger value="badges" className="flex items-center gap-1.5">
               <Image className="h-4 w-4" />
-              Badge Images
+              Badges
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-1.5">
               <Users className="h-4 w-4" />
-              User Analytics
+              Users
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="reports">
+            <FoodReports />
+          </TabsContent>
           <TabsContent value="badges">
             <BadgeManager />
           </TabsContent>
@@ -436,6 +443,155 @@ function UserAnalytics() {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+interface FoodReport {
+  id: string;
+  reporter_id: string;
+  food_name: string;
+  food_source: string;
+  community_product_id: string | null;
+  reason: string | null;
+  status: string;
+  created_at: string;
+  resolved_at: string | null;
+}
+
+function FoodReports() {
+  const [reports, setReports] = useState<FoodReport[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadReports();
+  }, []);
+
+  const loadReports = async () => {
+    const { data } = await supabase
+      .from('food_reports')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (data) setReports(data as unknown as FoodReport[]);
+    setLoading(false);
+  };
+
+  const updateStatus = async (id: string, status: string) => {
+    const { error } = await supabase
+      .from('food_reports')
+      .update({ status, resolved_at: status !== 'open' ? new Date().toISOString() : null } as any)
+      .eq('id', id);
+    if (error) {
+      toast.error('Fehler beim Aktualisieren');
+    } else {
+      toast.success(`Status → ${status}`);
+      setReports(prev => prev.map(r => r.id === id ? { ...r, status, resolved_at: status !== 'open' ? new Date().toISOString() : null } : r));
+    }
+  };
+
+  if (loading) {
+    return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+  }
+
+  const openReports = reports.filter(r => r.status === 'open');
+  const resolvedReports = reports.filter(r => r.status !== 'open');
+
+  return (
+    <div className="space-y-4">
+      {/* Summary */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="nutri-card text-center">
+          <p className="text-2xl font-black text-destructive">{openReports.length}</p>
+          <p className="text-[10px] text-muted-foreground font-medium">Offen</p>
+        </div>
+        <div className="nutri-card text-center">
+          <p className="text-2xl font-black text-primary">{resolvedReports.length}</p>
+          <p className="text-[10px] text-muted-foreground font-medium">Erledigt</p>
+        </div>
+        <div className="nutri-card text-center">
+          <p className="text-2xl font-black text-foreground">{reports.length}</p>
+          <p className="text-[10px] text-muted-foreground font-medium">Gesamt</p>
+        </div>
+      </div>
+
+      {reports.length === 0 && (
+        <p className="text-sm text-muted-foreground text-center py-8">Keine Meldungen vorhanden</p>
+      )}
+
+      {/* Open reports */}
+      {openReports.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="font-semibold text-sm flex items-center gap-2">
+            <Flag className="h-4 w-4 text-destructive" />
+            Offene Meldungen ({openReports.length})
+          </h3>
+          {openReports.map(report => (
+            <ReportCard key={report.id} report={report} onUpdateStatus={updateStatus} />
+          ))}
+        </div>
+      )}
+
+      {/* Resolved reports */}
+      {resolvedReports.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="font-semibold text-sm flex items-center gap-2 text-muted-foreground">
+            <CheckCircle className="h-4 w-4" />
+            Erledigte Meldungen ({resolvedReports.length})
+          </h3>
+          {resolvedReports.map(report => (
+            <ReportCard key={report.id} report={report} onUpdateStatus={updateStatus} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReportCard({ report, onUpdateStatus }: { report: FoodReport; onUpdateStatus: (id: string, status: string) => void }) {
+  const isOpen = report.status === 'open';
+
+  return (
+    <div className={`border rounded-xl p-3 bg-card ${isOpen ? 'border-destructive/30' : 'border-border opacity-70'}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="font-bold text-sm truncate">{report.food_name}</p>
+          <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
+            <span className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-medium">{report.food_source}</span>
+            <span>📅 {new Date(report.created_at).toLocaleDateString('de-DE')}</span>
+          </div>
+          {report.reason && (
+            <p className="text-xs text-muted-foreground mt-1.5">💬 {report.reason}</p>
+          )}
+        </div>
+        <div className="flex gap-1.5 shrink-0">
+          {isOpen ? (
+            <>
+              <button
+                onClick={() => onUpdateStatus(report.id, 'resolved')}
+                className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                title="Als erledigt markieren"
+              >
+                <CheckCircle className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => onUpdateStatus(report.id, 'dismissed')}
+                className="p-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+                title="Verwerfen"
+              >
+                <XCircle className="h-4 w-4" />
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => onUpdateStatus(report.id, 'open')}
+              className="p-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+              title="Wieder öffnen"
+            >
+              <Flag className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

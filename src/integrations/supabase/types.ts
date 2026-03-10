@@ -209,6 +209,53 @@ export type Database = {
         }
         Relationships: []
       }
+      food_reports: {
+        Row: {
+          community_product_id: string | null
+          created_at: string
+          food_name: string
+          food_source: string
+          id: string
+          reason: string | null
+          reporter_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+        }
+        Insert: {
+          community_product_id?: string | null
+          created_at?: string
+          food_name: string
+          food_source?: string
+          id?: string
+          reason?: string | null
+          reporter_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Update: {
+          community_product_id?: string | null
+          created_at?: string
+          food_name?: string
+          food_source?: string
+          id?: string
+          reason?: string | null
+          reporter_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_reports_community_product_id_fkey"
+            columns: ["community_product_id"]
+            isOneToOne: false
+            referencedRelation: "community_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_entries: {
         Row: {
           ai_analysis_status:

@@ -1,9 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from '@/lib/i18n';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import type { FoodEntry } from '@/lib/food-database';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 import {
   Drawer,
   DrawerContent,
@@ -144,6 +147,7 @@ function NutritionRow({ label, value, sub }: { label: string; value: string; sub
 
 export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCommunityForm }: FoodDetailDrawerProps) {
   const { language } = useTranslation();
+  const { user } = useAuth();
   const [quantity, setQuantity] = useState<number>(food?.quantity || 100);
   const [unit, setUnit] = useState<string>(food?.unit === 'Scheibe' || food?.unit === 'Stück' || food?.unit === 'piece' ? food.unit : 'g');
   const [isFavorite, setIsFavorite] = useState(false);
@@ -296,7 +300,24 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
             </span>
             <span>·</span>
             <button
-              onClick={() => { setReported(true); hapticFeedback('light'); }}
+              onClick={async () => {
+                if (!user || !food) return;
+                setReported(true);
+                hapticFeedback('light');
+                const { error } = await supabase.from('food_reports').insert({
+                  reporter_id: user.id,
+                  food_name: food.name,
+                  food_source: food.category || 'database',
+                  community_product_id: food.category === 'community' && food.communityProductId ? food.communityProductId : null,
+                  reason: null,
+                } as any);
+                if (error) {
+                  toast.error(language === 'de' ? 'Fehler beim Melden' : 'Failed to report');
+                  setReported(false);
+                } else {
+                  toast.success(language === 'de' ? 'Problem gemeldet – Danke!' : 'Problem reported – Thanks!');
+                }
+              }}
               className={`flex items-center gap-0.5 ${reported ? 'text-destructive' : 'hover:text-destructive'} transition-colors`}
               disabled={reported}
             >
