@@ -46,6 +46,17 @@ function getSlotForTime(time: string | null): MealSlot {
   return 'snack3';
 }
 
+function getDefaultTimeForSlot(slot: MealSlot): string {
+  switch (slot) {
+    case 'breakfast': return '08:00:00';
+    case 'snack1': return '10:00:00';
+    case 'lunch': return '12:00:00';
+    case 'snack2': return '15:00:00';
+    case 'dinner': return '18:00:00';
+    case 'snack3': return '21:00:00';
+  }
+}
+
 function getWeekDays(selectedDate: Date): { date: Date; label: string; dayNum: number; isToday: boolean; isSelected: boolean }[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -335,11 +346,15 @@ export default function MealsPage() {
     const totalCarbs = items.reduce((s, i) => s + Number(i.carbs_g), 0);
 
     const now = new Date();
+    const currentTime = now.toTimeString().split(' ')[0];
+    const currentSlot = getSlotForTime(currentTime);
+    // Use current time if it matches the selected slot, otherwise use the slot's default time
+    const entryTime = currentSlot === activeSlot ? currentTime : getDefaultTimeForSlot(activeSlot);
     const mealName = items.map(i => i.food_name).filter(Boolean).slice(0, 3).join(', ');
     const { data: mealData, error: mealError } = await supabase.from('meal_entries').insert({
       user_id: user.id,
       entry_date: dateStr,
-      entry_time: now.toTimeString().split(' ')[0],
+      entry_time: entryTime,
       meal_type: mealType,
       image_url: imageUrl,
       notes: mealName || null,
