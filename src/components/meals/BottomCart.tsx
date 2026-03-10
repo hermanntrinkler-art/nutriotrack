@@ -214,16 +214,6 @@ export default function BottomCart({
           ) : (
             <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
           )}
-          {!expanded && (
-            <Button
-              size="sm"
-              onClick={(e) => { e.stopPropagation(); onSave(); }}
-              disabled={saving || items.some(i => !i.food_name)}
-              className="rounded-xl h-8 px-4 font-bold text-xs shrink-0"
-            >
-              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : (language === 'de' ? 'Speichern' : 'Save')}
-            </Button>
-          )}
         </button>
 
         {/* Expanded content */}
