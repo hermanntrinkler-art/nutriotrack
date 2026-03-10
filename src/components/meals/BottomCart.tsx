@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronUp, ChevronDown, Flame, Star, Loader2, X, Pencil, Trash2, Minus, Plus } from 'lucide-react';
+import { ChevronUp, ChevronDown, Flame, Star, Loader2, X, Pencil, Trash2, Minus, Plus, Leaf } from 'lucide-react';
 import { hapticFeedback } from '@/lib/haptics';
 import { saveAsRecipe } from '@/components/meals/SavedRecipesScreen';
 import { toast } from 'sonner';
+import { estimateMicronutrients, MICRO_LABELS, type MicronutrientEstimate } from '@/lib/micronutrients';
 
 interface BottomCartProps {
   items: AnalyzedFoodItem[];
@@ -33,6 +34,107 @@ function scaleItem(item: AnalyzedFoodItem, oldQty: number, newQty: number): Anal
     fat_g: Math.round(item.fat_g * factor * 10) / 10,
     carbs_g: Math.round(item.carbs_g * factor * 10) / 10,
   };
+}
+
+function CartItemWithMicros({ item, index, language, onEditItem, onRemoveItem, onReplaceItem, handleStep }: {
+  item: AnalyzedFoodItem; index: number; language: string;
+  onEditItem: (i: number) => void; onRemoveItem: (i: number) => void;
+  onReplaceItem: (i: number, newItem: AnalyzedFoodItem) => void;
+  handleStep: (i: number, delta: number) => void;
+}) {
+  const [showMicros, setShowMicros] = useState(false);
+
+  const grams = useMemo(() => {
+    const u = (item.unit || '').toLowerCase();
+    if (u === 'g' || u === 'ml') return item.quantity;
+    if (u === 'stück' || u === 'piece' || u === 'portion') return item.quantity * 100;
+    if (u === 'scheibe' || u === 'slice') return item.quantity * 40;
+    return item.quantity;
+  }, [item.quantity, item.unit]);
+
+  const micros = useMemo(() => estimateMicronutrients(item.food_name, grams), [item.food_name, grams]);
+
+  const vitaminKeys: (keyof MicronutrientEstimate)[] = ['vitaminA_ug', 'vitaminB1_mg', 'vitaminB2_mg', 'vitaminB6_mg', 'vitaminB12_ug', 'vitaminC_mg', 'vitaminD_ug', 'vitaminE_mg', 'vitaminK_ug', 'folate_ug'];
+  const mineralKeys: (keyof MicronutrientEstimate)[] = ['iron_mg', 'calcium_mg', 'magnesium_mg', 'zinc_mg', 'potassium_mg', 'sodium_mg', 'phosphorus_mg'];
+  const lang = language === 'de' ? 'de' : 'en';
+
+  return (
+    <div className="rounded-xl bg-muted/50 p-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-semibold truncate flex-1">{item.food_name || (language === 'de' ? 'Lebensmittel' : 'Food item')}</span>
+        <div className="flex items-center gap-1 ml-2">
+          <button onClick={() => onEditItem(index)} className="p-1.5 rounded-lg hover:bg-accent transition-colors">
+            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+          <button onClick={() => onRemoveItem(index)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors">
+            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+          </button>
+        </div>
+      </div>
+      {/* Quantity stepper */}
+      <div className="flex items-center gap-2">
+        <button onClick={() => handleStep(index, -1)} className="w-7 h-7 rounded-full bg-background hover:bg-accent flex items-center justify-center transition-colors active:scale-95">
+          <Minus className="h-3.5 w-3.5 text-foreground" />
+        </button>
+        <span className="text-sm font-medium min-w-[60px] text-center">{item.quantity} {item.unit}</span>
+        <button onClick={() => handleStep(index, 1)} className="w-7 h-7 rounded-full bg-background hover:bg-accent flex items-center justify-center transition-colors active:scale-95">
+          <Plus className="h-3.5 w-3.5 text-foreground" />
+        </button>
+        <div className="flex-1" />
+        <span className="text-xs font-bold tabular-nums">{Math.round(item.calories)} kcal</span>
+      </div>
+      {/* Macros */}
+      <div className="flex gap-3 text-[11px]">
+        <span className="text-protein font-semibold">P {Math.round(item.protein_g)}g</span>
+        <span className="text-fat font-semibold">F {Math.round(item.fat_g)}g</span>
+        <span className="text-carbs font-semibold">K {Math.round(item.carbs_g)}g</span>
+      </div>
+      {/* Micros toggle */}
+      <button
+        onClick={() => setShowMicros(!showMicros)}
+        className="flex items-center gap-1.5 text-[10px] font-semibold text-primary hover:text-primary/80 transition-colors pt-0.5"
+      >
+        <Leaf className="h-3 w-3" />
+        {showMicros ? (language === 'de' ? 'Mikronährstoffe ausblenden' : 'Hide micronutrients') : (language === 'de' ? 'Vitamine & Mineralstoffe' : 'Vitamins & Minerals')}
+        {showMicros ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+      </button>
+      <AnimatePresence>
+        {showMicros && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-2 pt-1">
+              <div className="rounded-lg bg-background/60 p-2 space-y-0.5">
+                <p className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Vitamine</p>
+                {vitaminKeys.map(k => (
+                  <div key={k} className="flex justify-between text-[10px]">
+                    <span className="text-muted-foreground">{MICRO_LABELS[k][lang]}</span>
+                    <span className="font-medium">{micros[k]} {MICRO_LABELS[k].unit}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="rounded-lg bg-background/60 p-2 space-y-0.5">
+                <p className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Mineralstoffe</p>
+                {mineralKeys.map(k => (
+                  <div key={k} className="flex justify-between text-[10px]">
+                    <span className="text-muted-foreground">{MICRO_LABELS[k][lang]}</span>
+                    <span className="font-medium">{micros[k]} {MICRO_LABELS[k].unit}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[9px] text-muted-foreground italic">
+                {language === 'de' ? '* Geschätzte Werte basierend auf Referenzdaten' : '* Estimated values based on reference data'}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
 
 export default function BottomCart({
@@ -138,45 +240,7 @@ export default function BottomCart({
                 {/* Items list */}
                 <div className="space-y-2">
                   {items.map((item, i) => (
-                    <div key={i} className="rounded-xl bg-muted/50 p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold truncate flex-1">{item.food_name || (language === 'de' ? 'Lebensmittel' : 'Food item')}</span>
-                        <div className="flex items-center gap-1 ml-2">
-                          <button onClick={() => onEditItem(i)} className="p-1.5 rounded-lg hover:bg-accent transition-colors">
-                            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                          </button>
-                          <button onClick={() => onRemoveItem(i)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors">
-                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                          </button>
-                        </div>
-                      </div>
-                      {/* Quantity stepper */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleStep(i, -1)}
-                          className="w-7 h-7 rounded-full bg-background hover:bg-accent flex items-center justify-center transition-colors active:scale-95"
-                        >
-                          <Minus className="h-3.5 w-3.5 text-foreground" />
-                        </button>
-                        <span className="text-sm font-medium min-w-[60px] text-center">
-                          {item.quantity} {item.unit}
-                        </span>
-                        <button
-                          onClick={() => handleStep(i, 1)}
-                          className="w-7 h-7 rounded-full bg-background hover:bg-accent flex items-center justify-center transition-colors active:scale-95"
-                        >
-                          <Plus className="h-3.5 w-3.5 text-foreground" />
-                        </button>
-                        <div className="flex-1" />
-                        <span className="text-xs font-bold tabular-nums">{Math.round(item.calories)} kcal</span>
-                      </div>
-                      {/* Macros */}
-                      <div className="flex gap-3 text-[11px]">
-                        <span className="text-protein font-semibold">P {Math.round(item.protein_g)}g</span>
-                        <span className="text-fat font-semibold">F {Math.round(item.fat_g)}g</span>
-                        <span className="text-carbs font-semibold">K {Math.round(item.carbs_g)}g</span>
-                      </div>
-                    </div>
+                    <CartItemWithMicros key={i} item={item} index={i} language={language} onEditItem={onEditItem} onRemoveItem={onRemoveItem} onReplaceItem={onReplaceItem} handleStep={handleStep} />
                   ))}
                 </div>
 
