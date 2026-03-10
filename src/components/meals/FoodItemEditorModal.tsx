@@ -84,6 +84,20 @@ const PIECE_WEIGHTS: Record<string, number> = {
   praline: 12, bonbon: 5,
 };
 
+// Average weight per portion/scoop in grams for common foods
+const PORTION_WEIGHTS: Record<string, number> = {
+  'chunky': 3,
+  'chunky flavour': 3,
+  'flavour': 3,
+  'geschmackspulver': 3,
+  'proteinpulver': 30,
+  'protein powder': 30,
+  'whey': 30,
+  'casein': 30,
+  'kreatin': 5,
+  'creatine': 5,
+};
+
 function getPieceWeight(foodName: string): number {
   const normalized = foodName.trim().toLowerCase();
   // Direct match
