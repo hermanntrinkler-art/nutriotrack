@@ -58,6 +58,7 @@ export default function CreateRecipeScreen({ onClose, onCreated }: CreateRecipeS
         onSave={handleSaveFromSearch}
         saving={false}
         initialItems={[]}
+        singleAddMode
       />
     );
   }

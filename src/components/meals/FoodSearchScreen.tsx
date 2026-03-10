@@ -25,6 +25,8 @@ interface FoodSearchScreenProps {
   initialItems?: AnalyzedFoodItem[];
   isAiResult?: boolean;
   onEditItem?: (index: number, items: AnalyzedFoodItem[]) => void;
+  /** When true, each added item immediately triggers onSave([item]) and closes */
+  singleAddMode?: boolean;
 }
 
 interface SavedFavorite {
@@ -76,6 +78,7 @@ export default function FoodSearchScreen({
   initialItems,
   isAiResult,
   onEditItem,
+  singleAddMode,
 }: FoodSearchScreenProps) {
   const { t, language } = useTranslation();
   const { user } = useAuth();
@@ -494,9 +497,9 @@ export default function FoodSearchScreen({
         )}
       </div>
 
-      {/* Bottom Cart */}
+      {/* Bottom Cart — hidden in singleAddMode */}
       <AnimatePresence>
-        {selectedItems.length > 0 && (
+        {selectedItems.length > 0 && !singleAddMode && (
           <BottomCart
             items={selectedItems}
             isAiResult={isAiResult || false}
@@ -518,7 +521,11 @@ export default function FoodSearchScreen({
         onClose={() => setDetailFood(null)}
         onAdd={(item) => {
           hapticFeedback('light');
-          setSelectedItems(prev => [...prev, item]);
+          if (singleAddMode) {
+            onSave([item]);
+          } else {
+            setSelectedItems(prev => [...prev, item]);
+          }
         }}
         onShowCommunityForm={() => setShowCommunityForm(true)}
       />
