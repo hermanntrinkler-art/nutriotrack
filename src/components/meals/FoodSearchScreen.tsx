@@ -127,6 +127,7 @@ export default function FoodSearchScreen({
         communityContributor: `${e.contributor_avatar_emoji || '😊'} ${e.contributor_display_name}`,
         communityBrand: e.brand,
         communityStore: e.store,
+        communityProductId: e.id,
       })));
     }
   }, []);
