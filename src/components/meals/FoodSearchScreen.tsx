@@ -280,18 +280,9 @@ export default function FoodSearchScreen({
     setSelectedItems(prev => prev.map((item, i) => i === index ? { ...newItem, confidence_score: 1 } : item));
   };
 
-  const handleSelectFavorite = (fav: SavedFavorite) => {
+  const handleSelectFavorite = async (fav: SavedFavorite) => {
     hapticFeedback('light');
-    setPortionScale(1);
-    setPortionFav(fav);
-  };
-
-  const confirmFavoritePortion = async () => {
-    if (!portionFav) return;
-    const fav = portionFav;
-    setPortionFav(null);
-    hapticFeedback('success');
-
+    // Load items to compute total quantity
     const { data: itemsData } = await supabase
       .from('saved_recipe_items')
       .select('*')
@@ -300,9 +291,27 @@ export default function FoodSearchScreen({
       toast.error(language === 'de' ? 'Favorit ist leer' : 'Favorite is empty');
       return;
     }
+    const totalQty = (itemsData as any[]).reduce((sum: number, item: any) => sum + (Number(item.quantity) || 0), 0);
+    // Determine dominant unit
+    const units = (itemsData as any[]).map((i: any) => i.unit || 'g');
+    const hasMl = units.some((u: string) => u === 'ml');
+    setPortionFavItems(itemsData);
+    setPortionOriginalTotal(totalQty);
+    setPortionAmount(totalQty);
+    setPortionFav({ ...fav, _unit: hasMl ? 'ml' : 'g' } as any);
+  };
+
+  const confirmFavoritePortion = async () => {
+    if (!portionFav || !portionFavItems) return;
+    const fav = portionFav;
+    const itemsData = portionFavItems;
+    setPortionFav(null);
+    setPortionFavItems(null);
+    hapticFeedback('success');
+
     await supabase.from('saved_recipes').update({ use_count: (fav.use_count || 0) + 1 } as any).eq('id', fav.id);
     
-    const scale = portionScale;
+    const scale = portionOriginalTotal > 0 ? portionAmount / portionOriginalTotal : 1;
     const newItems: AnalyzedFoodItem[] = (itemsData as any[]).map(item => ({
       food_name: item.food_name,
       quantity: Math.round(Number(item.quantity) * scale * 10) / 10,
