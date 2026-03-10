@@ -117,7 +117,7 @@ h1{font-size:2rem;font-weight:800;margin-bottom:1rem}
 <div class="r"><img src="${ogImageEsc}" alt="${escapeHtml(title)}"/></div>
 <h1>${escapeHtml(title)}</h1>
 <p class="s">"${ogDescription}"</p>
-<a href="https://id-preview--5f3fe5d0-5358-4723-9618-5f168297cbde.lovable.app" class="b">${isDE ? 'Jetzt auch tracken!' : 'Start tracking too!'}</a>
+<a href="https://nutriotrack.com" class="b">${isDE ? 'Jetzt auch tracken!' : 'Start tracking too!'}</a>
 <p class="g">NutrioTrack 🌱</p>
 </div>
 </body>
