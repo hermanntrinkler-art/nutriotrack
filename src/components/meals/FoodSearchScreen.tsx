@@ -444,7 +444,7 @@ export default function FoodSearchScreen({
               <motion.button
                 key={`${name}-${food.unit}-${i}`}
                 type="button"
-                onClick={() => addItem(food)}
+                onClick={() => setDetailFood(food)}
                 className="w-full text-left px-3.5 py-3 rounded-xl bg-card border border-border hover:border-primary/30 hover:bg-accent/30 transition-all flex items-center gap-3 active:scale-[0.98]"
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
