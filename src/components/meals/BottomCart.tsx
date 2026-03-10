@@ -137,7 +137,7 @@ function CartItemWithMicros({ item, index, language, onEditItem, onRemoveItem, o
   );
 }
 
-
+export default function BottomCart({
   items,
   isAiResult,
   onRemoveItem,
