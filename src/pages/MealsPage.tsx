@@ -24,7 +24,8 @@ import SavedRecipesScreen, { saveAsRecipe } from '@/components/meals/SavedRecipe
 
 type MealSlot = 'breakfast' | 'snack1' | 'lunch' | 'snack2' | 'dinner' | 'snack3';
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-type Step = 'overview' | 'select-method' | 'analyzing' | 'review' | 'confirm' | 'barcode' | 'search' | 'recipes';
+type Step = 'overview' | 'diary-entry' | 'analyzing' | 'review' | 'confirm' | 'barcode';
+type DiaryTab = 'search' | 'favorites' | 'recipes' | 'activities';
 
 const MEAL_SLOTS: { slot: MealSlot; type: MealType; label: { de: string; en: string }; emoji: string; timeRange: string }[] = [
   { slot: 'breakfast', type: 'breakfast', label: { de: 'Frühstück', en: 'Breakfast' }, emoji: '🌅', timeRange: '00:00–09:59' },
