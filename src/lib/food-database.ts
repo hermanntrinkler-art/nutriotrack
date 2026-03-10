@@ -9,6 +9,7 @@ export interface FoodEntry {
   carbs_g: number;
   category: string;
   gram_per_piece?: number; // grams per Scheibe/Stück for unit conversion
+  gram_per_portion?: number; // grams per Portion/Messlöffel for unit conversion
   matchedAlias?: string;
   communityContributor?: string;
   communityBrand?: string;
@@ -440,12 +441,12 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Basler Läckerli', name_en: 'Basel Läckerli', quantity: 30, unit: 'g', calories: 105, protein_g: 2, fat_g: 2, carbs_g: 22, category: 'sweets' },
 
   // Flavour Pulver / Flavour Powders
-  { name: 'Chunky Flavour', name_en: 'Chunky Flavour Powder', quantity: 6, unit: 'g', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands' },
-  { name: 'Chunky Flavour (Vanille)', name_en: 'Chunky Flavour Vanilla', quantity: 6, unit: 'g', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands' },
-  { name: 'Chunky Flavour (Schoko)', name_en: 'Chunky Flavour Chocolate', quantity: 6, unit: 'g', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands' },
-  { name: 'Chunky Flavour (Zimt)', name_en: 'Chunky Flavour Cinnamon', quantity: 6, unit: 'g', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands' },
-  { name: 'Chunky Flavour (Erdbeere)', name_en: 'Chunky Flavour Strawberry', quantity: 6, unit: 'g', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands' },
-  { name: 'Chunky Flavour (Karamell)', name_en: 'Chunky Flavour Caramel', quantity: 6, unit: 'g', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands' },
+  { name: 'Chunky Flavour', name_en: 'Chunky Flavour Powder', quantity: 2, unit: 'Portion', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands', gram_per_portion: 3 },
+  { name: 'Chunky Flavour (Vanille)', name_en: 'Chunky Flavour Vanilla', quantity: 2, unit: 'Portion', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands', gram_per_portion: 3 },
+  { name: 'Chunky Flavour (Schoko)', name_en: 'Chunky Flavour Chocolate', quantity: 2, unit: 'Portion', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands', gram_per_portion: 3 },
+  { name: 'Chunky Flavour (Zimt)', name_en: 'Chunky Flavour Cinnamon', quantity: 2, unit: 'Portion', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands', gram_per_portion: 3 },
+  { name: 'Chunky Flavour (Erdbeere)', name_en: 'Chunky Flavour Strawberry', quantity: 2, unit: 'Portion', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands', gram_per_portion: 3 },
+  { name: 'Chunky Flavour (Karamell)', name_en: 'Chunky Flavour Caramel', quantity: 2, unit: 'Portion', calories: 18, protein_g: 0, fat_g: 0, carbs_g: 4, category: 'brands', gram_per_portion: 3 },
 ];
 
 // Synonym / slang map: keys are normalized aliases, values are normalized canonical names

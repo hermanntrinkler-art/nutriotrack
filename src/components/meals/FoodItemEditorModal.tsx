@@ -35,6 +35,7 @@ const UNIT_TO_GRAMS: Record<string, number> = {
   TL: 5,
   EL: 15,
   'Stück': 0, // dynamic, looked up per food
+  'Portion': 0, // dynamic, looked up per food
 };
 
 // Average weight per piece in grams for common foods
@@ -83,15 +84,36 @@ const PIECE_WEIGHTS: Record<string, number> = {
   praline: 12, bonbon: 5,
 };
 
+// Average weight per portion/scoop in grams for common foods
+const PORTION_WEIGHTS: Record<string, number> = {
+  'chunky': 3,
+  'chunky flavour': 3,
+  'flavour': 3,
+  'geschmackspulver': 3,
+  'proteinpulver': 30,
+  'protein powder': 30,
+  'whey': 30,
+  'casein': 30,
+  'kreatin': 5,
+  'creatine': 5,
+};
+
 function getPieceWeight(foodName: string): number {
   const normalized = foodName.trim().toLowerCase();
-  // Direct match
   if (PIECE_WEIGHTS[normalized]) return PIECE_WEIGHTS[normalized];
-  // Partial match: check if any key is contained in the food name
   for (const [key, weight] of Object.entries(PIECE_WEIGHTS)) {
     if (normalized.includes(key) || key.includes(normalized)) return weight;
   }
-  return 0; // unknown
+  return 0;
+}
+
+function getPortionWeight(foodName: string): number {
+  const normalized = foodName.trim().toLowerCase();
+  if (PORTION_WEIGHTS[normalized]) return PORTION_WEIGHTS[normalized];
+  for (const [key, weight] of Object.entries(PORTION_WEIGHTS)) {
+    if (normalized.includes(key) || key.includes(normalized)) return weight;
+  }
+  return 0;
 }
 
 const UNIT_OPTIONS_DE = [
@@ -100,6 +122,7 @@ const UNIT_OPTIONS_DE = [
   { value: 'TL', label: 'TL (Teelöffel ≈ 5g)' },
   { value: 'EL', label: 'EL (Esslöffel ≈ 15g)' },
   { value: 'Stück', label: 'Stück' },
+  { value: 'Portion', label: 'Portion (Messlöffel)' },
 ];
 
 const UNIT_OPTIONS_EN = [
@@ -108,11 +131,16 @@ const UNIT_OPTIONS_EN = [
   { value: 'TL', label: 'tsp (teaspoon ≈ 5g)' },
   { value: 'EL', label: 'tbsp (tablespoon ≈ 15g)' },
   { value: 'Stück', label: 'piece' },
+  { value: 'Portion', label: 'portion (scoop)' },
 ];
 
 function getGramsEquivalent(quantity: number, unit: string, foodName?: string): number {
   if (unit === 'Stück') {
     const pw = foodName ? getPieceWeight(foodName) : 0;
+    return pw > 0 ? quantity * pw : quantity;
+  }
+  if (unit === 'Portion') {
+    const pw = foodName ? getPortionWeight(foodName) : 0;
     return pw > 0 ? quantity * pw : quantity;
   }
   const factor = UNIT_TO_GRAMS[unit];
@@ -325,7 +353,14 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
       if (pw > 0) {
         newQuantity = Math.round((currentGrams / pw) * 10) / 10;
       } else {
-        // Unknown piece weight: keep quantity and nutrition unchanged
+        setForm(prev => ({ ...prev, unit: newUnit }));
+        return;
+      }
+    } else if (newUnit === 'Portion') {
+      const pw = getPortionWeight(form.food_name);
+      if (pw > 0) {
+        newQuantity = Math.round((currentGrams / pw) * 10) / 10;
+      } else {
         setForm(prev => ({ ...prev, unit: newUnit }));
         return;
       }
@@ -480,6 +515,10 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
                 ? (language === 'de'
                     ? `1 Stück ≈ ${getPieceWeight(form.food_name)}g · Nährwerte skalieren automatisch`
                     : `1 piece ≈ ${getPieceWeight(form.food_name)}g · Nutrition scales automatically`)
+                : form.unit === 'Portion' && getPortionWeight(form.food_name) > 0
+                ? (language === 'de'
+                    ? `1 Portion ≈ ${getPortionWeight(form.food_name)}g · Nährwerte skalieren automatisch`
+                    : `1 portion ≈ ${getPortionWeight(form.food_name)}g · Nutrition scales automatically`)
                 : (language === 'de'
                     ? `Nährwerte skalieren automatisch (Basis: ${baseNutrition.baseQuantity} ${baseNutrition.baseUnit})`
                     : `Nutrition scales automatically (base: ${baseNutrition.baseQuantity} ${baseNutrition.baseUnit})`)}
