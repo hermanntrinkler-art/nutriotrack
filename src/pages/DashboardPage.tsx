@@ -5,9 +5,9 @@ import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserGoals, MealEntry } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Plus, TrendingDown, TrendingUp, Minus, Flame, Zap, Dumbbell, Droplets, Sparkles, CalendarDays, BarChart3 } from 'lucide-react';
+import { Plus, TrendingDown, TrendingUp, Minus, Flame, Zap, Dumbbell, Droplets, Sparkles, CalendarDays, BarChart3, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import WaterTracker from '@/components/WaterTracker';
 import ReminderBanner from '@/components/ReminderBanner';
 import CalendarHeatmap from '@/components/CalendarHeatmap';
@@ -92,12 +92,22 @@ function calculateStreak(meals: MealEntry[]): number {
     if (uniqueDays.has(dateStr)) {
       streak++;
     } else {
-      // Allow today to be missing (day not over yet)
       if (i === 0) continue;
       break;
     }
   }
   return streak;
+}
+
+// --- Widget visibility helper ---
+type WidgetKey = 'yesterdayComparison' | '7dayTrend' | '30dayHeatmap' | 'weeklyReport' | 'micronutrients';
+
+function getHiddenWidgets(): Set<WidgetKey> {
+  try {
+    const raw = localStorage.getItem('dashboard_hidden_widgets');
+    if (raw) return new Set(JSON.parse(raw));
+  } catch {}
+  return new Set();
 }
 
 // --- Animation variants ---
@@ -119,6 +129,14 @@ export default function DashboardPage() {
   const [todayMeals, setTodayMeals] = useState<MealEntry[]>([]);
   const [allMeals, setAllMeals] = useState<MealEntry[]>([]);
   const [todayTotals, setTodayTotals] = useState({ calories: 0, protein: 0, fat: 0, carbs: 0 });
+  const [statsOpen, setStatsOpen] = useState(() => {
+    try { return localStorage.getItem('dashboard_stats_collapsed') !== 'true'; } catch { return true; }
+  });
+  const [hiddenWidgets] = useState(() => getHiddenWidgets());
+
+  useEffect(() => {
+    localStorage.setItem('dashboard_stats_collapsed', statsOpen ? 'false' : 'true');
+  }, [statsOpen]);
 
   useEffect(() => {
     if (!user) return;
@@ -146,7 +164,6 @@ export default function DashboardPage() {
 
   const streak = useMemo(() => calculateStreak(allMeals), [allMeals]);
 
-  // Weekly report: last 7 days
   const weeklyReport = useMemo(() => {
     const today = new Date();
     const last7: string[] = [];
@@ -166,7 +183,6 @@ export default function DashboardPage() {
     };
   }, [allMeals]);
 
-  // Yesterday comparison
   const yesterdayTotals = useMemo(() => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
@@ -180,7 +196,6 @@ export default function DashboardPage() {
     };
   }, [allMeals]);
 
-  // 7-day macro trend data
   const last7DaysData = useMemo(() => {
     const today = new Date();
     const days: { label: string; calories: number; protein: number; fat: number; carbs: number }[] = [];
@@ -206,7 +221,6 @@ export default function DashboardPage() {
   const circumference = 2 * Math.PI * 42;
   const calOffset = circumference - (calPct / 100) * circumference;
 
-  // Confetti when calorie goal reached
   const confettiFired = useRef(false);
   useEffect(() => {
     if (calPct >= 95 && calPct <= 105 && todayTotals.calories > 0 && !confettiFired.current) {
@@ -245,13 +259,13 @@ export default function DashboardPage() {
   if (fatPct >= 0.85 && fatPct < 1) hints.push(t('hint.fatAlmost'));
 
   const displayName = profile?.name || profile?.email?.split('@')[0] || '';
-
-  // Weekly trend vs goal
   const weeklyTrendPct = calorieTarget > 0 ? Math.round((weeklyReport.avgCalories / calorieTarget) * 100) : 0;
+
+  const isWidgetVisible = (key: WidgetKey) => !hiddenWidgets.has(key);
 
   return (
     <motion.div
-      className="page-container space-y-5"
+      className="page-container space-y-5 pb-24"
       variants={container}
       initial="hidden"
       animate="show"
@@ -264,65 +278,29 @@ export default function DashboardPage() {
             {t('dashboard.hello')}, <span className="gradient-text">{displayName}</span> 💪
           </h1>
         </div>
-        <motion.div
-          className="sport-badge"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Flame className="h-3.5 w-3.5" />
-          {t('dashboard.goal')}
-        </motion.div>
-      </motion.div>
-
-      {/* Weekly Summary Report (Sundays) */}
-      <WeeklySummaryReport meals={allMeals} goals={goals} />
-
-      {/* Streak Counter */}
-      <motion.div
-        className="flex items-center gap-3 rounded-2xl p-3.5 border border-energy/30"
-        style={{ background: 'linear-gradient(135deg, hsl(var(--energy) / 0.08), hsl(var(--energy) / 0.03))' }}
-        variants={fadeUp}
-      >
-        <motion.div
-          className="w-12 h-12 rounded-xl flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg, hsl(var(--energy) / 0.2), hsl(var(--energy) / 0.1))' }}
-          animate={streak > 0 ? { scale: [1, 1.1, 1] } : {}}
-          transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
-        >
-          <Flame className="h-6 w-6 text-energy" />
-        </motion.div>
-        <div className="flex-1">
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-foreground tabular-nums">{streak}</span>
-            <span className="text-sm font-bold text-muted-foreground">{t('dashboard.streak')}</span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {streak === 0 ? t('dashboard.streakEmpty') : '🔥'}
-          </p>
+        <div className="flex items-center gap-2">
+          {/* Streak inline */}
+          <motion.div
+            className="sport-badge"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Flame className="h-3.5 w-3.5" />
+            {streak} {t('dashboard.streak')}
+          </motion.div>
         </div>
       </motion.div>
 
       {/* Reminder Banner */}
       <ReminderBanner hasMealsToday={todayMeals.length > 0} />
 
-      {/* Motivational Message */}
-      <motion.div
-        className="rounded-2xl p-3.5 border border-primary/20 bg-primary/5"
-        variants={fadeUp}
-      >
-        <div className="flex items-center gap-2.5">
-          <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
-          <p className="text-sm font-medium text-foreground">{motivationalMsg}</p>
-        </div>
-      </motion.div>
-
-      {/* Calorie Ring Card */}
+      {/* Calorie Ring + Macros combined card */}
       <motion.div
         className="nutri-card-highlight shadow-lg hover:shadow-xl transition-shadow duration-300"
         variants={fadeUp}
       >
         <div className="flex items-center gap-6">
-          <div className="relative w-32 h-32 flex-shrink-0">
+          <div className="relative w-28 h-28 flex-shrink-0">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
               <circle cx="50" cy="50" r="42" fill="none" strokeWidth="8" className="stroke-muted/40" />
               <motion.circle
@@ -349,13 +327,13 @@ export default function DashboardPage() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.8 }}
             >
-              <Flame className="h-4 w-4 text-primary mb-0.5" />
-              <span className="text-2xl font-black text-foreground tracking-tight tabular-nums">{Math.round(remaining)}</span>
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('dashboard.kcal')}</span>
+              <Flame className="h-3.5 w-3.5 text-primary mb-0.5" />
+              <span className="text-xl font-black text-foreground tracking-tight tabular-nums">{Math.round(remaining)}</span>
+              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{t('dashboard.kcal')}</span>
             </motion.div>
           </div>
 
-          <div className="flex-1 space-y-3">
+          <div className="flex-1 space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground font-medium">{t('dashboard.eaten')}</span>
               <span className="font-bold tabular-nums">{Math.round(todayTotals.calories)} <span className="text-muted-foreground font-normal text-xs">{t('dashboard.kcal')}</span></span>
@@ -380,62 +358,9 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </motion.div>
 
-      {/* Yesterday Comparison */}
-      <motion.div
-        className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
-        variants={fadeUp}
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <CalendarDays className="h-4 w-4 text-primary" />
-          <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">
-            {language === 'de' ? 'Vergleich zu gestern' : 'vs. Yesterday'}
-          </h3>
-        </div>
-        {yesterdayTotals.calories > 0 ? (
-          <div className="grid grid-cols-4 gap-2">
-            {([
-              { label: t('dashboard.kcal'), today: todayTotals.calories, yesterday: yesterdayTotals.calories, color: 'text-primary' },
-              { label: t('dashboard.protein'), today: todayTotals.protein, yesterday: yesterdayTotals.protein, color: 'text-protein' },
-              { label: t('dashboard.fat'), today: todayTotals.fat, yesterday: yesterdayTotals.fat, color: 'text-fat' },
-              { label: t('dashboard.carbs'), today: todayTotals.carbs, yesterday: yesterdayTotals.carbs, color: 'text-carbs' },
-            ] as const).map(({ label, today, yesterday, color }) => {
-              const diff = today - yesterday;
-              const diffPct = yesterday > 0 ? Math.round((diff / yesterday) * 100) : 0;
-              return (
-                <div key={label} className="text-center p-2 rounded-xl bg-muted/50">
-                  <p className={`text-base font-black tabular-nums ${color}`}>
-                    {Math.round(today)}{label !== t('dashboard.kcal') ? 'g' : ''}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground font-medium">{label}</p>
-                  <div className="flex items-center justify-center gap-0.5 mt-1">
-                    {diff > 0 ? <TrendingUp className="h-3 w-3 text-energy" /> : diff < 0 ? <TrendingDown className="h-3 w-3 text-primary" /> : <Minus className="h-3 w-3 text-muted-foreground" />}
-                    <span className={`text-[10px] font-bold tabular-nums ${diff > 0 ? 'text-energy' : diff < 0 ? 'text-primary' : 'text-muted-foreground'}`}>
-                      {diff > 0 ? '+' : ''}{diffPct}%
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground text-center py-3">
-            {language === 'de' ? 'Keine Daten von gestern' : 'No data from yesterday'}
-          </p>
-        )}
-      </motion.div>
-
-      <motion.div
-        className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
-        variants={fadeUp}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">
-            {t('dashboard.protein')} / {t('dashboard.fat')} / {t('dashboard.carbs')}
-          </h3>
-        </div>
-        <div className="flex justify-around">
+        {/* Macro rings inline */}
+        <div className="flex justify-around mt-4 pt-4 border-t border-border/50">
           <MacroRing
             label={t('dashboard.protein')}
             current={todayTotals.protein}
@@ -463,124 +388,16 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* Micronutrient Estimates */}
-      <MicronutrientCard />
-
-      {/* 7-Day Macro Sparklines */}
+      {/* Motivational + Streak inline */}
       <motion.div
-        className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
+        className="rounded-2xl p-3 border border-primary/20 bg-primary/5 flex items-center gap-2.5"
         variants={fadeUp}
       >
-        <div className="flex items-center gap-2 mb-3">
-          <BarChart3 className="h-4 w-4 text-primary" />
-          <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">
-            {language === 'de' ? '7-Tage Trend' : '7-Day Trend'}
-          </h3>
-        </div>
-        <div className="space-y-3">
-          {([
-            { key: 'calories' as const, label: t('dashboard.kcal'), color: 'hsl(var(--primary))' },
-            { key: 'protein' as const, label: t('dashboard.protein'), color: 'hsl(var(--protein))' },
-            { key: 'fat' as const, label: t('dashboard.fat'), color: 'hsl(var(--fat))' },
-            { key: 'carbs' as const, label: t('dashboard.carbs'), color: 'hsl(var(--carbs))' },
-          ]).map(({ key, label, color }) => {
-            const values = last7DaysData.map(d => d[key]);
-            const max = Math.max(...values, 1);
-            return (
-              <div key={key} className="flex items-center gap-3">
-                <span className="text-[10px] font-bold text-muted-foreground w-12 text-right">{label}</span>
-                <div className="flex-1 flex items-end gap-0.5 h-6">
-                  {values.map((v, i) => (
-                    <motion.div
-                      key={i}
-                      className="flex-1 rounded-sm"
-                      style={{ backgroundColor: color, opacity: i === 6 ? 1 : 0.5 }}
-                      initial={{ height: 0 }}
-                      animate={{ height: `${Math.max((v / max) * 100, 4)}%` }}
-                      transition={{ duration: 0.6, delay: i * 0.05 }}
-                    />
-                  ))}
-                </div>
-                <span className="text-[10px] font-bold tabular-nums text-foreground w-10">
-                  {Math.round(values[6])}{key !== 'calories' ? 'g' : ''}
-                </span>
-              </div>
-            );
-          })}
-          <div className="flex justify-between px-12 mt-1">
-            {last7DaysData.map((d, i) => (
-              <span key={i} className={`text-[8px] font-medium flex-1 text-center ${i === 6 ? 'text-foreground' : 'text-muted-foreground'}`}>
-                {d.label}
-              </span>
-            ))}
-          </div>
-        </div>
+        <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
+        <p className="text-sm font-medium text-foreground flex-1">{motivationalMsg}</p>
       </motion.div>
 
-
-      {/* Calendar Heatmap */}
-      <CalendarHeatmap meals={allMeals} calorieTarget={calorieTarget} />
-
-      <motion.div
-        className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300"
-        variants={fadeUp}
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <BarChart3 className="h-4 w-4 text-primary" />
-          <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">
-            {t('dashboard.weeklyReport')}
-          </h3>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="text-center p-2 rounded-xl bg-muted/50">
-            <p className="text-lg font-black text-foreground tabular-nums">{weeklyReport.avgCalories}</p>
-            <p className="text-[10px] text-muted-foreground font-medium">{t('dashboard.avgCalories')}</p>
-          </div>
-          <div className="text-center p-2 rounded-xl bg-muted/50">
-            <p className="text-lg font-black text-protein tabular-nums">{weeklyReport.avgProtein}g</p>
-            <p className="text-[10px] text-muted-foreground font-medium">{t('dashboard.avgProtein')}</p>
-          </div>
-          <div className="text-center p-2 rounded-xl bg-muted/50">
-            <p className="text-lg font-black text-foreground tabular-nums">{weeklyReport.daysTracked}<span className="text-xs text-muted-foreground">/7</span></p>
-            <p className="text-[10px] text-muted-foreground font-medium">{t('dashboard.daysTracked')}</p>
-          </div>
-        </div>
-        {weeklyReport.daysTracked > 0 && (
-          <div className="mt-3 flex items-center gap-2">
-            <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-              <motion.div
-                className="h-full rounded-full"
-                style={{ background: `linear-gradient(90deg, hsl(var(--primary)), hsl(var(--energy)))` }}
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min(weeklyTrendPct, 100)}%` }}
-                transition={{ duration: 1, delay: 0.5 }}
-              />
-            </div>
-            <span className="text-xs font-bold text-muted-foreground tabular-nums">{weeklyTrendPct}%</span>
-          </div>
-        )}
-      </motion.div>
-
-      {/* Water Tracker */}
-      <WaterTracker />
-
-      {/* Hints */}
-      {hints.length > 0 && (
-        <motion.div
-          className="rounded-2xl border border-primary/15 p-4 space-y-2 shadow-sm"
-          style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.06), hsl(var(--gradient-end) / 0.06))' }}
-          variants={fadeUp}
-        >
-          <h3 className="font-bold text-sm text-primary flex items-center gap-1.5">
-            <Zap className="h-3.5 w-3.5" /> {t('dashboard.hints')}
-          </h3>
-          {hints.map((hint, i) => (
-            <p key={i} className="text-sm text-foreground/80">💡 {hint}</p>
-          ))}
-        </motion.div>
-      )}
-
-      {/* Recent meals */}
+      {/* Today's Meals */}
       <motion.div className="space-y-3" variants={fadeUp}>
         <div className="flex items-center justify-between">
           <h3 className="font-bold uppercase tracking-wider text-sm text-muted-foreground">{t('dashboard.recentMeals')}</h3>
@@ -595,16 +412,16 @@ export default function DashboardPage() {
         </div>
         {todayMeals.length === 0 ? (
           <motion.div
-            className="nutri-card text-center py-10 shadow-sm"
+            className="nutri-card text-center py-8 shadow-sm"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4 }}
           >
-            <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-primary/10 to-accent flex items-center justify-center">
-              <Flame className="h-7 w-7 text-primary" />
+            <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-primary/10 to-accent flex items-center justify-center">
+              <Flame className="h-6 w-6 text-primary" />
             </div>
             <p className="text-muted-foreground text-sm font-medium">{t('dashboard.noMeals')}</p>
-            <Button className="mt-4 font-bold" onClick={() => navigate('/meals')}>
+            <Button className="mt-3 font-bold" onClick={() => navigate('/meals')}>
               <Plus className="h-4 w-4 mr-1" /> {t('dashboard.addMeal')}
             </Button>
           </motion.div>
@@ -637,6 +454,215 @@ export default function DashboardPage() {
           ))
         )}
       </motion.div>
+
+      {/* Water Tracker */}
+      <WaterTracker />
+
+      {/* Hints */}
+      {hints.length > 0 && (
+        <motion.div
+          className="rounded-2xl border border-primary/15 p-3 space-y-1.5 shadow-sm"
+          style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.06), hsl(var(--gradient-end) / 0.06))' }}
+          variants={fadeUp}
+        >
+          <h3 className="font-bold text-sm text-primary flex items-center gap-1.5">
+            <Zap className="h-3.5 w-3.5" /> {t('dashboard.hints')}
+          </h3>
+          {hints.map((hint, i) => (
+            <p key={i} className="text-sm text-foreground/80">💡 {hint}</p>
+          ))}
+        </motion.div>
+      )}
+
+      {/* Weekly Summary Report (Sundays) */}
+      <WeeklySummaryReport meals={allMeals} goals={goals} />
+
+      {/* Collapsible Statistics Section */}
+      <motion.div variants={fadeUp}>
+        <button
+          onClick={() => setStatsOpen(!statsOpen)}
+          className="w-full flex items-center justify-between rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm px-4 py-3 transition-colors hover:border-primary/30"
+        >
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-primary" />
+            <span className="font-bold text-sm text-foreground">
+              📊 {language === 'de' ? 'Statistiken' : 'Statistics'}
+            </span>
+          </div>
+          {statsOpen ? (
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          )}
+        </button>
+
+        <AnimatePresence initial={false}>
+          {statsOpen && (
+            <motion.div
+              className="space-y-4 mt-4"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              style={{ overflow: 'hidden' }}
+            >
+              {/* Yesterday Comparison */}
+              {isWidgetVisible('yesterdayComparison') && (
+                <div className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CalendarDays className="h-4 w-4 text-primary" />
+                    <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">
+                      {language === 'de' ? 'Vergleich zu gestern' : 'vs. Yesterday'}
+                    </h3>
+                  </div>
+                  {yesterdayTotals.calories > 0 ? (
+                    <div className="grid grid-cols-4 gap-2">
+                      {([
+                        { label: t('dashboard.kcal'), today: todayTotals.calories, yesterday: yesterdayTotals.calories, color: 'text-primary' },
+                        { label: t('dashboard.protein'), today: todayTotals.protein, yesterday: yesterdayTotals.protein, color: 'text-protein' },
+                        { label: t('dashboard.fat'), today: todayTotals.fat, yesterday: yesterdayTotals.fat, color: 'text-fat' },
+                        { label: t('dashboard.carbs'), today: todayTotals.carbs, yesterday: yesterdayTotals.carbs, color: 'text-carbs' },
+                      ] as const).map(({ label, today, yesterday, color }) => {
+                        const diff = today - yesterday;
+                        const diffPct = yesterday > 0 ? Math.round((diff / yesterday) * 100) : 0;
+                        return (
+                          <div key={label} className="text-center p-2 rounded-xl bg-muted/50">
+                            <p className={`text-base font-black tabular-nums ${color}`}>
+                              {Math.round(today)}{label !== t('dashboard.kcal') ? 'g' : ''}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground font-medium">{label}</p>
+                            <div className="flex items-center justify-center gap-0.5 mt-1">
+                              {diff > 0 ? <TrendingUp className="h-3 w-3 text-energy" /> : diff < 0 ? <TrendingDown className="h-3 w-3 text-primary" /> : <Minus className="h-3 w-3 text-muted-foreground" />}
+                              <span className={`text-[10px] font-bold tabular-nums ${diff > 0 ? 'text-energy' : diff < 0 ? 'text-primary' : 'text-muted-foreground'}`}>
+                                {diff > 0 ? '+' : ''}{diffPct}%
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-3">
+                      {language === 'de' ? 'Keine Daten von gestern' : 'No data from yesterday'}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* 7-Day Trend */}
+              {isWidgetVisible('7dayTrend') && (
+                <div className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300">
+                  <div className="flex items-center gap-2 mb-3">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">
+                      {language === 'de' ? '7-Tage Trend' : '7-Day Trend'}
+                    </h3>
+                  </div>
+                  <div className="space-y-3">
+                    {([
+                      { key: 'calories' as const, label: t('dashboard.kcal'), color: 'hsl(var(--primary))' },
+                      { key: 'protein' as const, label: t('dashboard.protein'), color: 'hsl(var(--protein))' },
+                      { key: 'fat' as const, label: t('dashboard.fat'), color: 'hsl(var(--fat))' },
+                      { key: 'carbs' as const, label: t('dashboard.carbs'), color: 'hsl(var(--carbs))' },
+                    ]).map(({ key, label, color }) => {
+                      const values = last7DaysData.map(d => d[key]);
+                      const max = Math.max(...values, 1);
+                      return (
+                        <div key={key} className="flex items-center gap-3">
+                          <span className="text-[10px] font-bold text-muted-foreground w-12 text-right">{label}</span>
+                          <div className="flex-1 flex items-end gap-0.5 h-6">
+                            {values.map((v, i) => (
+                              <motion.div
+                                key={i}
+                                className="flex-1 rounded-sm"
+                                style={{ backgroundColor: color, opacity: i === 6 ? 1 : 0.5 }}
+                                initial={{ height: 0 }}
+                                animate={{ height: `${Math.max((v / max) * 100, 4)}%` }}
+                                transition={{ duration: 0.6, delay: i * 0.05 }}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-[10px] font-bold tabular-nums text-foreground w-10">
+                            {Math.round(values[6])}{key !== 'calories' ? 'g' : ''}
+                          </span>
+                        </div>
+                      );
+                    })}
+                    <div className="flex justify-between px-12 mt-1">
+                      {last7DaysData.map((d, i) => (
+                        <span key={i} className={`text-[8px] font-medium flex-1 text-center ${i === 6 ? 'text-foreground' : 'text-muted-foreground'}`}>
+                          {d.label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Calendar Heatmap */}
+              {isWidgetVisible('30dayHeatmap') && (
+                <CalendarHeatmap meals={allMeals} calorieTarget={calorieTarget} />
+              )}
+
+              {/* Weekly Report */}
+              {isWidgetVisible('weeklyReport') && (
+                <div className="nutri-card shadow-md hover:shadow-lg transition-shadow duration-300">
+                  <div className="flex items-center gap-2 mb-3">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    <h3 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">
+                      {t('dashboard.weeklyReport')}
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="text-center p-2 rounded-xl bg-muted/50">
+                      <p className="text-lg font-black text-foreground tabular-nums">{weeklyReport.avgCalories}</p>
+                      <p className="text-[10px] text-muted-foreground font-medium">{t('dashboard.avgCalories')}</p>
+                    </div>
+                    <div className="text-center p-2 rounded-xl bg-muted/50">
+                      <p className="text-lg font-black text-protein tabular-nums">{weeklyReport.avgProtein}g</p>
+                      <p className="text-[10px] text-muted-foreground font-medium">{t('dashboard.avgProtein')}</p>
+                    </div>
+                    <div className="text-center p-2 rounded-xl bg-muted/50">
+                      <p className="text-lg font-black text-foreground tabular-nums">{weeklyReport.daysTracked}<span className="text-xs text-muted-foreground">/7</span></p>
+                      <p className="text-[10px] text-muted-foreground font-medium">{t('dashboard.daysTracked')}</p>
+                    </div>
+                  </div>
+                  {weeklyReport.daysTracked > 0 && (
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                        <motion.div
+                          className="h-full rounded-full"
+                          style={{ background: `linear-gradient(90deg, hsl(var(--primary)), hsl(var(--energy)))` }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(weeklyTrendPct, 100)}%` }}
+                          transition={{ duration: 1, delay: 0.5 }}
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-muted-foreground tabular-nums">{weeklyTrendPct}%</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Micronutrients */}
+              {isWidgetVisible('micronutrients') && <MicronutrientCard />}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
+      {/* FAB - Floating Action Button */}
+      <motion.button
+        onClick={() => navigate('/meals')}
+        className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.5, type: 'spring', stiffness: 260, damping: 20 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+      >
+        <Plus className="h-6 w-6" />
+      </motion.button>
     </motion.div>
   );
 }

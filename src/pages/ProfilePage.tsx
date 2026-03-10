@@ -468,6 +468,9 @@ export default function ProfilePage() {
         {/* Reminders */}
         <ReminderSettings />
 
+        {/* Dashboard Widget Toggles */}
+        <DashboardWidgetSettings />
+
         {/* Edit Goals */}
         <button onClick={() => navigate('/onboarding')} className="nutri-card w-full flex items-center gap-3 hover:border-primary/30 transition-colors">
           <Target className="h-5 w-5 text-muted-foreground" />
