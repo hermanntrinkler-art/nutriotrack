@@ -889,10 +889,7 @@ function ReportCard({ report, onUpdateStatus, onDelete, onUpdate }: {
   );
 }
 
-      reason: editReason || null,
-      food_source: editSource,
-    });
-    if (ok) setEditing(false);
+
   };
 
   const NutritionRow = ({ label, value, unit }: { label: string; value: number | string; unit: string }) => (
