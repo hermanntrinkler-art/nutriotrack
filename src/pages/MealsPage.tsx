@@ -625,7 +625,10 @@ export default function MealsPage() {
           {diaryTab === 'search' && (
             <div className="space-y-3">
               <FoodSearchScreen
-                onSave={(items) => handleSave(items)}
+                onSave={(items) => {
+                  handleSave(items);
+                  setInitialSearchItem(null);
+                }}
                 saving={saving}
                 initialItems={pendingItems}
                 isAiResult={isAiResult}
@@ -636,6 +639,7 @@ export default function MealsPage() {
                 onCancel={handleReset}
                 hideHeader
                 onBarcodeScan={() => setStep('barcode')}
+                initialItem={initialSearchItem}
               />
 
               {/* Photo & Upload secondary options */}

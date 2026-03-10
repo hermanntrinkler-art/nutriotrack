@@ -91,6 +91,8 @@ async function lookupOpenFoodFacts(code: string): Promise<OFFResult> {
     };
   } catch {
     return { item: null, hasNutrition: false };
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
