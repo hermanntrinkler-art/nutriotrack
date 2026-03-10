@@ -634,120 +634,196 @@ export default function MealsPage() {
         </div>
       )}
 
-      {/* === SELECT METHOD STEP === */}
-      {step === 'select-method' && (
+      {/* === DIARY ENTRY STEP (Tabbed FDDB-style) === */}
+      {step === 'diary-entry' && (
         <div className="space-y-3 animate-fade-in">
-          <div className="flex items-center gap-2 mb-1">
+          {/* Header */}
+          <div className="flex items-center gap-2">
             <button onClick={handleReset} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-              <ChevronLeft className="h-4 w-4" />
+              <X className="h-4 w-4" />
             </button>
             <span className="text-xl">{currentSlotInfo.emoji}</span>
-            <span className="font-semibold">{slotLabel(currentSlotInfo)}</span>
+            <span className="font-semibold flex-1">{language === 'de' ? 'Tagebucheintrag' : 'Diary Entry'}</span>
+            <button onClick={handleManualEntry} className="p-1.5 rounded-lg hover:bg-muted transition-colors" title={t('meals.manualEntry')}>
+              <Plus className="h-4 w-4 text-primary" />
+            </button>
           </div>
 
-          {/* Search - primary */}
-          <button onClick={() => setStep('search')} className="nutri-card w-full flex items-center gap-4 py-4 hover:border-primary/30 transition-colors border-primary/20">
-            <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <Search className="h-5 w-5 text-primary" />
-            </div>
-            <div className="text-left flex-1">
-              <p className="font-semibold text-sm">{language === 'de' ? 'Lebensmittel suchen' : 'Search Food'}</p>
-              <p className="text-[11px] text-muted-foreground">{language === 'de' ? 'Suchen, Favoriten & Rezepte' : 'Search, favorites & recipes'}</p>
-            </div>
-          </button>
-
-          {/* Photo */}
-          <div className="nutri-card w-full flex items-center gap-4 py-4 hover:border-primary/30 transition-colors">
-            <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <Camera className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-sm">{t('meals.takePhoto')}</p>
-              <p className="text-[11px] text-muted-foreground mb-2">{t('meals.aiDescription')}</p>
-              <Button type="button" size="sm" onClick={handleOpenCamera} className="w-full" disabled={cameraLoading}>
-                {cameraLoading ? 'Öffne Kamera…' : t('meals.takePhoto')}
-              </Button>
-              {cameraError && <p className="text-xs text-destructive mt-1">{cameraError}</p>}
-            </div>
+          {/* Tabs */}
+          <div className="flex border-b border-border overflow-x-auto scrollbar-none">
+            {([
+              { key: 'search' as DiaryTab, label: language === 'de' ? 'Suche' : 'Search', icon: <Search className="h-3.5 w-3.5" /> },
+              { key: 'favorites' as DiaryTab, label: language === 'de' ? 'Favoriten' : 'Favorites', icon: <Star className="h-3.5 w-3.5" /> },
+              { key: 'recipes' as DiaryTab, label: language === 'de' ? 'Rezepte' : 'Recipes', icon: <BookOpen className="h-3.5 w-3.5" /> },
+              { key: 'activities' as DiaryTab, label: language === 'de' ? 'Aktivitäten' : 'Activities', icon: <Flame className="h-3.5 w-3.5" /> },
+            ]).map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setDiaryTab(tab.key)}
+                className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium whitespace-nowrap border-b-2 transition-colors ${
+                  diaryTab === tab.key
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
           </div>
 
-          {cameraOpen && (
-            <div className="nutri-card space-y-3">
-              <video ref={videoRef} autoPlay playsInline muted className="w-full h-48 rounded-xl object-cover bg-muted" />
-              <div className="flex gap-2">
-                <Button type="button" className="flex-1" onClick={handleCapturePhoto}>Foto verwenden</Button>
-                <Button type="button" variant="outline" className="flex-1" onClick={stopCamera}>{t('common.cancel')}</Button>
+          {/* Tab: Search */}
+          {diaryTab === 'search' && (
+            <div className="space-y-3">
+              <FoodSearchScreen
+                onDone={(searchItems) => {
+                  setIsAiResult(false);
+                  if (returnToReview) {
+                    setItems(prev => [...prev.filter(i => i.food_name), ...searchItems]);
+                    setReturnToReview(false);
+                  } else {
+                    setItems(searchItems);
+                  }
+                  setStep('review');
+                }}
+                onCancel={handleReset}
+                hideHeader
+              />
+
+              {/* Photo & Upload secondary options */}
+              <div className="flex gap-2 pt-2 border-t border-border/50">
+                <button
+                  onClick={handleOpenCamera}
+                  disabled={cameraLoading}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 bg-muted hover:bg-muted/80 border border-border text-sm font-medium transition-all active:scale-[0.98]"
+                >
+                  <Camera className="h-4 w-4 text-primary" />
+                  {language === 'de' ? 'Foto' : 'Photo'}
+                </button>
+                <button
+                  onClick={handleOpenFilePicker}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 bg-muted hover:bg-muted/80 border border-border text-sm font-medium transition-all active:scale-[0.98]"
+                >
+                  <Upload className="h-4 w-4 text-primary" />
+                  {language === 'de' ? 'Hochladen' : 'Upload'}
+                </button>
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
               </div>
+
+              {cameraError && <p className="text-xs text-destructive">{cameraError}</p>}
+
+              {cameraOpen && (
+                <div className="nutri-card space-y-3">
+                  <video ref={videoRef} autoPlay playsInline muted className="w-full h-48 rounded-xl object-cover bg-muted" />
+                  <div className="flex gap-2">
+                    <Button type="button" className="flex-1" onClick={handleCapturePhoto}>
+                      {language === 'de' ? 'Foto verwenden' : 'Use Photo'}
+                    </Button>
+                    <Button type="button" variant="outline" className="flex-1" onClick={stopCamera}>{t('common.cancel')}</Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Upload */}
-          <div className="nutri-card w-full flex items-center gap-4 py-4 hover:border-primary/30 transition-colors">
-            <div className="w-11 h-11 rounded-2xl bg-info/10 flex items-center justify-center">
-              <Upload className="h-5 w-5 text-info" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-sm">{t('meals.uploadImage')}</p>
-              <Button type="button" variant="outline" size="sm" onClick={handleOpenFilePicker} className="w-full mt-1">
-                {t('meals.uploadImage')}
-              </Button>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-            </div>
-          </div>
+          {/* Tab: Favorites */}
+          {diaryTab === 'favorites' && (
+            <SavedRecipesScreen
+              onSelect={(recipeItems, recipeMealType) => {
+                setIsAiResult(false);
+                setItems(recipeItems);
+                if (['breakfast', 'lunch', 'dinner', 'snack'].includes(recipeMealType)) setMealType(recipeMealType as MealType);
+                setStep('review');
+              }}
+              onCancel={handleReset}
+              hideHeader
+            />
+          )}
 
-          {/* Barcode */}
-          <button onClick={() => setStep('barcode')} className="nutri-card w-full flex items-center gap-4 py-4 hover:border-primary/30 transition-colors">
-            <div className="w-11 h-11 rounded-2xl bg-accent/30 flex items-center justify-center">
-              <ScanBarcode className="h-5 w-5 text-foreground" />
-            </div>
-            <div className="text-left">
-              <p className="font-semibold text-sm">{t('meals.scanBarcode')}</p>
-              <p className="text-[11px] text-muted-foreground">{t('meals.barcodeDescription')}</p>
-            </div>
-          </button>
+          {/* Tab: Recipes */}
+          {diaryTab === 'recipes' && (
+            <SavedRecipesScreen
+              onSelect={(recipeItems, recipeMealType) => {
+                setIsAiResult(false);
+                setItems(recipeItems);
+                if (['breakfast', 'lunch', 'dinner', 'snack'].includes(recipeMealType)) setMealType(recipeMealType as MealType);
+                setStep('review');
+              }}
+              onCancel={handleReset}
+              hideHeader
+            />
+          )}
 
-          {/* Manual */}
-          <Button variant="ghost" onClick={handleManualEntry} className="w-full text-sm">
-            {t('meals.manualEntry')}
-          </Button>
+          {/* Tab: Activities */}
+          {diaryTab === 'activities' && (
+            <div className="space-y-4">
+              {/* Presets */}
+              <div className="grid grid-cols-3 gap-2">
+                {PRESET_ACTIVITIES.map(p => (
+                  <button
+                    key={p.name}
+                    onClick={() => selectPresetActivity(p)}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all ${
+                      activityForm.name === (language === 'de' ? p.name : p.nameEn)
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    <span className="text-2xl">{p.emoji}</span>
+                    <span className="text-xs font-medium">{language === 'de' ? p.name : p.nameEn}</span>
+                    <span className="text-[10px] text-muted-foreground">{p.kcalPerMin} kcal/min</span>
+                  </button>
+                ))}
+              </div>
 
-          <Button variant="ghost" onClick={handleReset} className="w-full text-xs text-muted-foreground">
-            {t('meals.cancel')}
-          </Button>
+              {/* Form */}
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{language === 'de' ? 'Name' : 'Name'}</label>
+                  <Input value={activityForm.name} onChange={e => setActivityForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder={language === 'de' ? 'z.B. Spaziergang' : 'e.g. Walking'} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{language === 'de' ? 'Dauer (Minuten)' : 'Duration (min)'}</label>
+                  <Input type="number" value={activityForm.duration} min={1}
+                    onChange={e => {
+                      const dur = Number(e.target.value);
+                      const preset = PRESET_ACTIVITIES.find(p => (language === 'de' ? p.name : p.nameEn) === activityForm.name);
+                      setActivityForm(f => ({ ...f, duration: dur, calories: preset ? dur * preset.kcalPerMin : f.calories }));
+                    }} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{language === 'de' ? 'Verbrannte kcal' : 'Calories burned'}</label>
+                  <Input type="number" value={activityForm.calories} min={0}
+                    onChange={e => setActivityForm(f => ({ ...f, calories: Number(e.target.value) }))} />
+                </div>
+                <Button onClick={saveActivity} className="w-full" disabled={!activityForm.name || activityForm.calories <= 0}>
+                  {language === 'de' ? 'Speichern' : 'Save'}
+                </Button>
+              </div>
+
+              {/* Today's activities */}
+              {activities.length > 0 && (
+                <div className="space-y-1 pt-2 border-t border-border/50">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">
+                    {language === 'de' ? 'Heutige Aktivitäten' : "Today's Activities"}
+                  </p>
+                  {activities.map(act => (
+                    <div key={act.id} className="flex items-center gap-2 text-xs py-1.5 px-2 rounded-lg hover:bg-muted/50 transition-colors group">
+                      <span>{act.emoji || '🏃'}</span>
+                      <span className="flex-1 font-medium">{act.activity_name}</span>
+                      {act.duration_minutes && <span className="text-muted-foreground">{act.duration_minutes} min</span>}
+                      <span className="text-energy font-bold tabular-nums">+{Math.round(Number(act.calories_burned))} kcal</span>
+                      <button onClick={() => deleteActivity(act.id)} className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5">
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      )}
-
-      {/* Search */}
-      {step === 'search' && (
-        <FoodSearchScreen
-          onDone={(searchItems) => {
-            setIsAiResult(false);
-            if (returnToReview) {
-              setItems(prev => [...prev.filter(i => i.food_name), ...searchItems]);
-              setReturnToReview(false);
-            } else {
-              setItems(searchItems);
-            }
-            setStep('review');
-          }}
-          onCancel={() => {
-            if (returnToReview) { setReturnToReview(false); setStep('review'); }
-            else setStep('select-method');
-          }}
-        />
-      )}
-
-      {/* Recipes */}
-      {step === 'recipes' && (
-        <SavedRecipesScreen
-          onSelect={(recipeItems, recipeMealType) => {
-            setIsAiResult(false);
-            setItems(recipeItems);
-            if (['breakfast', 'lunch', 'dinner', 'snack'].includes(recipeMealType)) setMealType(recipeMealType as MealType);
-            setStep('review');
-          }}
-          onCancel={() => setStep('select-method')}
-        />
       )}
 
       {/* Barcode */}
