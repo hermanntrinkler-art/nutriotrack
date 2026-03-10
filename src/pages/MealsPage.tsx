@@ -183,7 +183,7 @@ export default function MealsPage() {
       emoji: activityForm.emoji,
     } as any);
     setActivityForm({ name: '', duration: 30, calories: 0, emoji: '🏃' });
-    setActivitySheetOpen(false);
+    
     loadActivities();
     toast.success(language === 'de' ? 'Aktivität gespeichert!' : 'Activity saved!');
   };
