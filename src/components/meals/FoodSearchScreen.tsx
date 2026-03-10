@@ -278,8 +278,18 @@ export default function FoodSearchScreen({
     setSelectedItems(prev => prev.map((item, i) => i === index ? { ...newItem, confidence_score: 1 } : item));
   };
 
-  const handleSelectFavorite = async (fav: SavedFavorite) => {
+  const handleSelectFavorite = (fav: SavedFavorite) => {
+    hapticFeedback('light');
+    setPortionScale(1);
+    setPortionFav(fav);
+  };
+
+  const confirmFavoritePortion = async () => {
+    if (!portionFav) return;
+    const fav = portionFav;
+    setPortionFav(null);
     hapticFeedback('success');
+
     const { data: itemsData } = await supabase
       .from('saved_recipe_items')
       .select('*')
@@ -290,14 +300,15 @@ export default function FoodSearchScreen({
     }
     await supabase.from('saved_recipes').update({ use_count: (fav.use_count || 0) + 1 } as any).eq('id', fav.id);
     
+    const scale = portionScale;
     const newItems: AnalyzedFoodItem[] = (itemsData as any[]).map(item => ({
       food_name: item.food_name,
-      quantity: Number(item.quantity),
+      quantity: Math.round(Number(item.quantity) * scale * 10) / 10,
       unit: item.unit,
-      calories: Number(item.calories),
-      protein_g: Number(item.protein_g),
-      fat_g: Number(item.fat_g),
-      carbs_g: Number(item.carbs_g),
+      calories: Math.round(Number(item.calories) * scale),
+      protein_g: Math.round(Number(item.protein_g) * scale * 10) / 10,
+      fat_g: Math.round(Number(item.fat_g) * scale * 10) / 10,
+      carbs_g: Math.round(Number(item.carbs_g) * scale * 10) / 10,
       confidence_score: 1,
     }));
     setSelectedItems(prev => [...prev, ...newItems]);
