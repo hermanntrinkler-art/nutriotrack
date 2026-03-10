@@ -39,6 +39,9 @@ function getAvailableUnits(food: FoodEntry): { value: string; label: string }[] 
 
   if (food.unit === 'Scheibe' || food.unit === 'Stück' || food.unit === 'piece') {
     units.push({ value: food.unit, label: food.unit });
+  } else {
+    // Always offer Stück for all items (useful for supplements, tablets, etc.)
+    units.push({ value: 'Stück', label: 'Stück' });
   }
   if (food.unit === 'ml') {
     units.push({ value: 'ml', label: 'ml' });
