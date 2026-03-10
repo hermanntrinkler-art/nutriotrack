@@ -14,7 +14,6 @@ import { hapticFeedback } from '@/lib/haptics';
 import { motion } from 'framer-motion';
 
 import AnalyseScreen from '@/components/meals/AnalyseScreen';
-import EditableFoodItemsList from '@/components/meals/EditableFoodItemsList';
 import FoodItemEditorModal from '@/components/meals/FoodItemEditorModal';
 import SaveMealConfirmation from '@/components/meals/SaveMealConfirmation';
 import BarcodeScanner from '@/components/meals/BarcodeScanner';
@@ -23,7 +22,7 @@ import SavedRecipesScreen, { saveAsRecipe } from '@/components/meals/SavedRecipe
 
 type MealSlot = 'breakfast' | 'snack1' | 'lunch' | 'snack2' | 'dinner' | 'snack3';
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-type Step = 'overview' | 'diary-entry' | 'analyzing' | 'review' | 'barcode';
+type Step = 'overview' | 'diary-entry' | 'analyzing' | 'barcode';
 type DiaryTab = 'search' | 'favorites' | 'recipes' | 'activities';
 
 const MEAL_SLOTS: { slot: MealSlot; type: MealType; label: { de: string; en: string }; emoji: string; timeRange: string }[] = [
@@ -46,13 +45,12 @@ function getSlotForTime(time: string | null): MealSlot {
   return 'snack3';
 }
 
-
 function getWeekDays(selectedDate: Date): { date: Date; label: string; dayNum: number; isToday: boolean; isSelected: boolean }[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const startOfWeek = new Date(selectedDate);
   const day = startOfWeek.getDay();
-  const diff = day === 0 ? -6 : 1 - day; // Monday start
+  const diff = day === 0 ? -6 : 1 - day;
   startOfWeek.setDate(startOfWeek.getDate() + diff);
 
   return Array.from({ length: 7 }, (_, i) => {
@@ -85,18 +83,17 @@ export default function MealsPage() {
   const [step, setStep] = useState<Step>('overview');
   const [mealType, setMealType] = useState<MealType>('lunch');
   const [activeSlot, setActiveSlot] = useState<MealSlot>('lunch');
-  const [items, setItems] = useState<AnalyzedFoodItem[]>([]);
+  const [pendingItems, setPendingItems] = useState<AnalyzedFoodItem[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [isAiResult, setIsAiResult] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingItems, setEditingItems] = useState<AnalyzedFoodItem[]>([]);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraLoading, setCameraLoading] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
-  const [savingRecipe, setSavingRecipe] = useState(false);
-  const [returnToReview, setReturnToReview] = useState(false);
   const [diaryTab, setDiaryTab] = useState<DiaryTab>('search');
   const [dayMeals, setDayMeals] = useState<MealEntry[]>([]);
   const [goals, setGoals] = useState<UserGoals | null>(null);
@@ -109,7 +106,6 @@ export default function MealsPage() {
   const dateStr = formatDateStr(selectedDate);
   const weekDays = useMemo(() => getWeekDays(selectedDate), [dateStr]);
 
-  // Load goals + meals for selected date
   useEffect(() => {
     if (!user) return;
     supabase.from('user_goals').select('*').eq('user_id', user.id).single()
@@ -140,7 +136,6 @@ export default function MealsPage() {
 
   useEffect(() => { loadDayMeals(); loadActivities(); }, [loadDayMeals, loadActivities]);
 
-  // Compute totals
   const totals = useMemo(() => ({
     calories: dayMeals.reduce((s, m) => s + Number(m.total_calories), 0),
     protein: dayMeals.reduce((s, m) => s + Number(m.total_protein_g), 0),
@@ -153,7 +148,6 @@ export default function MealsPage() {
   const calTarget = goals?.calorie_target || 2000;
   const remaining = calTarget - totals.calories + totalBurned;
 
-  // Preset activities
   const PRESET_ACTIVITIES = [
     { name: 'Gehen', nameEn: 'Walking', kcalPerMin: 4, emoji: '🚶' },
     { name: 'Laufen', nameEn: 'Running', kcalPerMin: 10, emoji: '🏃' },
@@ -184,7 +178,6 @@ export default function MealsPage() {
       emoji: activityForm.emoji,
     } as any);
     setActivityForm({ name: '', duration: 30, calories: 0, emoji: '🏃' });
-    
     loadActivities();
     toast.success(language === 'de' ? 'Aktivität gespeichert!' : 'Activity saved!');
   };
@@ -194,7 +187,6 @@ export default function MealsPage() {
     loadActivities();
   };
 
-  // Group meals into slots
   const mealsBySlot = useMemo(() => {
     const grouped: Record<MealSlot, MealEntry[]> = {
       breakfast: [], snack1: [], lunch: [], snack2: [], dinner: [], snack3: [],
@@ -210,7 +202,6 @@ export default function MealsPage() {
 
   const currentSlotInfo = MEAL_SLOTS.find(s => s.slot === activeSlot) || MEAL_SLOTS[0];
 
-  // --- Week navigation ---
   const goWeek = (dir: number) => {
     setSelectedDate(prev => {
       const d = new Date(prev);
@@ -219,7 +210,7 @@ export default function MealsPage() {
     });
   };
 
-  // --- Camera / Image logic (unchanged) ---
+  // --- Camera / Image logic ---
   const handleImageUpload = async (file: File) => {
     if (!subscription.canScanPhoto) { setShowPaywall(true); return; }
     setImageFile(file);
@@ -230,8 +221,10 @@ export default function MealsPage() {
     try {
       const results = await analyzeFoodImage(file, language);
       if (results.length === 0) { toast.error(t('meals.analysisFailed')); handleManualEntry(); return; }
-      setItems(results);
-      setStep('review');
+      // Go to diary-entry with AI results pre-loaded in the cart
+      setPendingItems(results);
+      setStep('diary-entry');
+      setDiaryTab('search');
     } catch (err: any) {
       if (err.message === 'RATE_LIMIT') toast.error(t('meals.rateLimited'));
       else if (err.message === 'PAYMENT_REQUIRED') toast.error(t('meals.paymentRequired'));
@@ -294,33 +287,23 @@ export default function MealsPage() {
 
   useEffect(() => { return () => { cameraStreamRef.current?.getTracks().forEach(t => t.stop()); }; }, []);
 
-  // --- Item editing ---
+  // --- Item editing (for editor modal from cart) ---
   const handleManualEntry = () => {
     setIsAiResult(false);
-    setItems([{ food_name: '', quantity: 100, unit: 'g', calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0, confidence_score: 1 }]);
-    setStep('review');
-    setEditingIndex(0);
-  };
-
-  const updateItem = (index: number, field: keyof AnalyzedFoodItem, value: string | number) => {
-    setItems(prev => prev.map((item, i) => i === index ? { ...item, [field]: value, confidence_score: 1 } : item));
-  };
-  const replaceItem = (index: number, newItem: AnalyzedFoodItem) => {
-    setItems(prev => prev.map((item, i) => i === index ? { ...newItem, confidence_score: 1 } : item));
-  };
-  const removeItem = (index: number) => setItems(prev => prev.filter((_, i) => i !== index));
-  const addItem = () => {
-    setItems(prev => [...prev, { food_name: '', quantity: 100, unit: 'g', calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0, confidence_score: 1 }]);
-    setEditingIndex(items.length);
+    setPendingItems([{ food_name: '', quantity: 100, unit: 'g', calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0, confidence_score: 1 }]);
+    setStep('diary-entry');
+    setDiaryTab('search');
   };
 
   const handleSaveEditedItem = (updatedItem: AnalyzedFoodItem) => {
-    if (editingIndex !== null) setItems(prev => prev.map((item, i) => i === editingIndex ? updatedItem : item));
+    if (editingIndex !== null) {
+      setEditingItems(prev => prev.map((item, i) => i === editingIndex ? updatedItem : item));
+    }
     setEditingIndex(null);
   };
 
-  // --- Save meal ---
-  const handleSave = async () => {
+  // --- Save meal (called directly from FoodSearchScreen cart) ---
+  const handleSave = async (items: AnalyzedFoodItem[]) => {
     if (!user || items.length === 0) return;
     setSaving(true);
     let imageUrl: string | null = null;
@@ -371,18 +354,19 @@ export default function MealsPage() {
     stopCamera();
     setCameraError(null);
     setStep('overview');
-    setItems([]);
+    setPendingItems([]);
     setImageFile(null);
     setImagePreview(null);
     setIsAiResult(false);
     setEditingIndex(null);
-    setReturnToReview(false);
+    setEditingItems([]);
   };
 
   const openSlot = (slot: typeof MEAL_SLOTS[0]) => {
     setActiveSlot(slot.slot);
     setMealType(slot.type);
     setDiaryTab('search');
+    setPendingItems([]);
     setStep('diary-entry');
   };
 
@@ -426,7 +410,7 @@ export default function MealsPage() {
             </button>
           </div>
 
-          {/* Goal Header: Ziel - Gegessen + Verbrannt = Übrig */}
+          {/* Goal Header */}
           <div className="nutri-card-highlight">
             <div className={`grid ${totalBurned > 0 ? 'grid-cols-4' : 'grid-cols-3'} text-center gap-2`}>
               <div>
@@ -459,7 +443,6 @@ export default function MealsPage() {
                 </p>
               </div>
             </div>
-            {/* Macro bar */}
             <div className="flex gap-3 mt-2 pt-2 border-t border-border/50 text-[11px] justify-center">
               <span className="text-protein font-bold">P {Math.round(totals.protein)}g <span className="text-muted-foreground font-normal">/ {goals?.protein_target_g || 150}g</span></span>
               <span className="text-fat font-bold">F {Math.round(totals.fat)}g <span className="text-muted-foreground font-normal">/ {goals?.fat_target_g || 65}g</span></span>
@@ -497,7 +480,6 @@ export default function MealsPage() {
                       <Plus className="h-5 w-5 text-primary" />
                     )}
                   </button>
-                  {/* Show items within slot */}
                   {slotMeals.length > 0 && (
                     <div className="mt-2 pt-2 border-t border-border/40 space-y-1">
                       {slotMeals.map(meal => (
@@ -575,7 +557,7 @@ export default function MealsPage() {
         </div>
       )}
 
-      {/* === DIARY ENTRY STEP (Tabbed FDDB-style) === */}
+      {/* === DIARY ENTRY STEP (with integrated cart) === */}
       {step === 'diary-entry' && (
         <div className="space-y-3 animate-fade-in">
           {/* Header */}
@@ -585,9 +567,6 @@ export default function MealsPage() {
             </button>
             <span className="text-xl">{currentSlotInfo.emoji}</span>
             <span className="font-semibold flex-1">{language === 'de' ? 'Tagebucheintrag' : 'Diary Entry'}</span>
-            <button onClick={handleManualEntry} className="p-1.5 rounded-lg hover:bg-muted transition-colors" title={t('meals.manualEntry')}>
-              <Plus className="h-4 w-4 text-primary" />
-            </button>
           </div>
 
           {/* Tabs */}
@@ -613,19 +592,17 @@ export default function MealsPage() {
             ))}
           </div>
 
-          {/* Tab: Search */}
+          {/* Tab: Search — now with integrated cart & save */}
           {diaryTab === 'search' && (
             <div className="space-y-3">
               <FoodSearchScreen
-                onDone={(searchItems) => {
-                  setIsAiResult(false);
-                  if (returnToReview) {
-                    setItems(prev => [...prev.filter(i => i.food_name), ...searchItems]);
-                    setReturnToReview(false);
-                  } else {
-                    setItems(searchItems);
-                  }
-                  setStep('review');
+                onSave={(items) => handleSave(items)}
+                saving={saving}
+                initialItems={pendingItems}
+                isAiResult={isAiResult}
+                onEditItem={(index, items) => {
+                  setEditingItems(items);
+                  setEditingIndex(index);
                 }}
                 onCancel={handleReset}
                 hideHeader
@@ -673,9 +650,9 @@ export default function MealsPage() {
             <SavedRecipesScreen
               onSelect={(recipeItems, recipeMealType) => {
                 setIsAiResult(false);
-                setItems(recipeItems);
+                setPendingItems(recipeItems);
                 if (['breakfast', 'lunch', 'dinner', 'snack'].includes(recipeMealType)) setMealType(recipeMealType as MealType);
-                setStep('review');
+                setDiaryTab('search');
               }}
               onCancel={handleReset}
               hideHeader
@@ -687,9 +664,9 @@ export default function MealsPage() {
             <SavedRecipesScreen
               onSelect={(recipeItems, recipeMealType) => {
                 setIsAiResult(false);
-                setItems(recipeItems);
+                setPendingItems(recipeItems);
                 if (['breakfast', 'lunch', 'dinner', 'snack'].includes(recipeMealType)) setMealType(recipeMealType as MealType);
-                setStep('review');
+                setDiaryTab('search');
               }}
               onCancel={handleReset}
               hideHeader
@@ -699,7 +676,6 @@ export default function MealsPage() {
           {/* Tab: Activities */}
           {diaryTab === 'activities' && (
             <div className="space-y-4">
-              {/* Presets */}
               <div className="grid grid-cols-3 gap-2">
                 {PRESET_ACTIVITIES.map(p => (
                   <button
@@ -718,7 +694,6 @@ export default function MealsPage() {
                 ))}
               </div>
 
-              {/* Form */}
               <div className="space-y-3">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">{language === 'de' ? 'Name' : 'Name'}</label>
@@ -744,7 +719,6 @@ export default function MealsPage() {
                 </Button>
               </div>
 
-              {/* Today's activities */}
               {activities.length > 0 && (
                 <div className="space-y-1 pt-2 border-t border-border/50">
                   <p className="text-xs font-medium text-muted-foreground mb-1">
@@ -771,7 +745,12 @@ export default function MealsPage() {
       {/* Barcode */}
       {step === 'barcode' && (
         <BarcodeScanner
-          onResult={(item) => { setIsAiResult(false); setItems([item]); setStep('review'); }}
+          onResult={(item) => {
+            setIsAiResult(false);
+            setPendingItems([item]);
+            setStep('diary-entry');
+            setDiaryTab('search');
+          }}
           onCancel={handleReset}
         />
       )}
@@ -779,96 +758,9 @@ export default function MealsPage() {
       {/* Analyzing */}
       {step === 'analyzing' && <AnalyseScreen imagePreview={imagePreview} />}
 
-      {/* Review */}
-      {step === 'review' && (
-        <div className="space-y-4 animate-fade-in">
-          {imagePreview && (
-            <div className="w-full rounded-2xl overflow-hidden border border-border">
-              <img src={imagePreview} alt="Meal" className="w-full h-40 object-cover" />
-            </div>
-          )}
-
-          <div className="flex items-center gap-2">
-            <button onClick={() => setStep('diary-entry')} className="p-1.5 rounded-lg hover:bg-muted">
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <span className="text-xl">{currentSlotInfo.emoji}</span>
-            <h2 className="font-semibold">{slotLabel(currentSlotInfo)}</h2>
-            {isAiResult && <span className="text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">KI</span>}
-          </div>
-
-          <EditableFoodItemsList
-            items={items} isAiResult={isAiResult}
-            onUpdateItem={updateItem} onReplaceItem={replaceItem}
-            onRemoveItem={removeItem} onAddItem={addItem}
-            onEditItem={(i) => setEditingIndex(i)}
-          />
-
-          <button
-            onClick={() => { setReturnToReview(true); setDiaryTab('search'); setStep('diary-entry'); }}
-            className="w-full flex items-center justify-center gap-1.5 rounded-xl py-2.5 px-3 bg-muted hover:bg-muted/80 border border-border text-foreground font-medium text-sm transition-all active:scale-[0.98]"
-          >
-            <Plus className="h-4 w-4" />
-            {language === 'de' ? 'Weitere Lebensmittel hinzufügen' : 'Add more food'}
-          </button>
-
-          {/* Totals */}
-          <div className="nutri-card-highlight">
-            <div className="grid grid-cols-4 gap-2 text-center text-sm">
-              <div>
-                <p className="font-bold text-foreground">{Math.round(items.reduce((s, i) => s + Number(i.calories), 0))}</p>
-                <p className="text-xs text-muted-foreground">{t('dashboard.kcal')}</p>
-              </div>
-              <div>
-                <p className="font-bold text-protein">{Math.round(items.reduce((s, i) => s + Number(i.protein_g), 0))}g</p>
-                <p className="text-xs text-muted-foreground">{t('dashboard.protein')}</p>
-              </div>
-              <div>
-                <p className="font-bold text-fat">{Math.round(items.reduce((s, i) => s + Number(i.fat_g), 0))}g</p>
-                <p className="text-xs text-muted-foreground">{t('dashboard.fat')}</p>
-              </div>
-              <div>
-                <p className="font-bold text-carbs">{Math.round(items.reduce((s, i) => s + Number(i.carbs_g), 0))}g</p>
-                <p className="text-xs text-muted-foreground">{t('dashboard.carbs')}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Save as Favorite */}
-          {items.length > 0 && items.some(i => i.food_name) && user && (
-            <button
-              onClick={async () => {
-                setSavingRecipe(true);
-                const name = items.map(i => i.food_name).filter(Boolean).slice(0, 3).join(', ');
-                const success = await saveAsRecipe({
-                  userId: user.id, name: name || 'Rezept',
-                  emoji: currentSlotInfo.emoji, mealType, items,
-                });
-                setSavingRecipe(false);
-                if (success) { hapticFeedback('success'); toast.success(language === 'de' ? 'Als Favorit gespeichert! ⭐' : 'Saved as favorite! ⭐'); }
-                else toast.error(language === 'de' ? 'Fehler' : 'Failed');
-              }}
-              disabled={savingRecipe}
-              className="w-full flex items-center justify-center gap-2 rounded-xl py-3 px-4 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-700 dark:text-amber-400 font-semibold text-sm transition-all active:scale-[0.98] disabled:opacity-50"
-            >
-              <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
-              {savingRecipe ? (language === 'de' ? 'Wird gespeichert...' : 'Saving...') : (language === 'de' ? 'Als Favorit speichern' : 'Save as Favorite')}
-            </button>
-          )}
-
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={handleReset} className="flex-1">{t('meals.cancel')}</Button>
-            <Button onClick={handleSave} disabled={saving || items.length === 0 || items.some(i => !i.food_name)} className="flex-1">
-              {saving ? (language === 'de' ? 'Speichert...' : 'Saving...') : (language === 'de' ? 'Mahlzeit speichern' : 'Save Meal')}
-            </Button>
-          </div>
-        </div>
-      )}
-
-
       {/* Editor Modal */}
       <FoodItemEditorModal
-        item={editingIndex !== null ? items[editingIndex] : null}
+        item={editingIndex !== null ? editingItems[editingIndex] : null}
         open={editingIndex !== null}
         onClose={() => setEditingIndex(null)}
         onSave={handleSaveEditedItem}
