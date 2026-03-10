@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
@@ -72,6 +73,7 @@ function formatDateStr(d: Date): string {
 
 export default function MealsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { t, language } = useTranslation();
   const subscription = useSubscription();
 
@@ -506,7 +508,7 @@ export default function MealsPage() {
                       {slotMeals.map(meal => {
                         const foodItems = (meal as any).meal_food_items || [];
                         return (
-                          <div key={meal.id} className="flex items-start gap-2 text-xs py-1 px-1 rounded-lg hover:bg-muted/50 transition-colors group">
+                          <div key={meal.id} onClick={() => navigate(`/meals/${meal.id}/edit`)} className="flex items-start gap-2 text-xs py-1 px-1 rounded-lg hover:bg-accent/50 transition-colors group cursor-pointer">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <p className="font-medium truncate flex-1">{meal.notes || slotLabel(slot)}</p>
