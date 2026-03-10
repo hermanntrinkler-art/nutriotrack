@@ -23,8 +23,10 @@ interface OFFResult {
 }
 
 async function lookupOpenFoodFacts(code: string): Promise<OFFResult> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
   try {
-    const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json`);
+    const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json`, { signal: controller.signal });
     if (!res.ok) return { item: null, hasNutrition: false };
     const data = await res.json();
     
