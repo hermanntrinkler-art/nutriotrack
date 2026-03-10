@@ -96,7 +96,9 @@ export default function FoodSearchScreen({
   const [cartExpanded, setCartExpanded] = useState((initialItems?.length || 0) > 0);
   const [detailFood, setDetailFood] = useState<FoodEntry | null>(null);
   const [portionFav, setPortionFav] = useState<SavedFavorite | null>(null);
-  const [portionScale, setPortionScale] = useState(1);
+  const [portionFavItems, setPortionFavItems] = useState<any[] | null>(null);
+  const [portionAmount, setPortionAmount] = useState(0);
+  const [portionOriginalTotal, setPortionOriginalTotal] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const onlineTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onlineController = useRef<AbortController | null>(null);
@@ -278,18 +280,9 @@ export default function FoodSearchScreen({
     setSelectedItems(prev => prev.map((item, i) => i === index ? { ...newItem, confidence_score: 1 } : item));
   };
 
-  const handleSelectFavorite = (fav: SavedFavorite) => {
+  const handleSelectFavorite = async (fav: SavedFavorite) => {
     hapticFeedback('light');
-    setPortionScale(1);
-    setPortionFav(fav);
-  };
-
-  const confirmFavoritePortion = async () => {
-    if (!portionFav) return;
-    const fav = portionFav;
-    setPortionFav(null);
-    hapticFeedback('success');
-
+    // Load items to compute total quantity
     const { data: itemsData } = await supabase
       .from('saved_recipe_items')
       .select('*')
@@ -298,9 +291,27 @@ export default function FoodSearchScreen({
       toast.error(language === 'de' ? 'Favorit ist leer' : 'Favorite is empty');
       return;
     }
+    const totalQty = (itemsData as any[]).reduce((sum: number, item: any) => sum + (Number(item.quantity) || 0), 0);
+    // Determine dominant unit
+    const units = (itemsData as any[]).map((i: any) => i.unit || 'g');
+    const hasMl = units.some((u: string) => u === 'ml');
+    setPortionFavItems(itemsData);
+    setPortionOriginalTotal(totalQty);
+    setPortionAmount(totalQty);
+    setPortionFav({ ...fav, _unit: hasMl ? 'ml' : 'g' } as any);
+  };
+
+  const confirmFavoritePortion = async () => {
+    if (!portionFav || !portionFavItems) return;
+    const fav = portionFav;
+    const itemsData = portionFavItems;
+    setPortionFav(null);
+    setPortionFavItems(null);
+    hapticFeedback('success');
+
     await supabase.from('saved_recipes').update({ use_count: (fav.use_count || 0) + 1 } as any).eq('id', fav.id);
     
-    const scale = portionScale;
+    const scale = portionOriginalTotal > 0 ? portionAmount / portionOriginalTotal : 1;
     const newItems: AnalyzedFoodItem[] = (itemsData as any[]).map(item => ({
       food_name: item.food_name,
       quantity: Math.round(Number(item.quantity) * scale * 10) / 10,
@@ -545,7 +556,7 @@ export default function FoodSearchScreen({
       />
 
       {/* Favorite portion picker */}
-      <Dialog open={portionFav !== null} onOpenChange={v => { if (!v) setPortionFav(null); }}>
+      <Dialog open={portionFav !== null} onOpenChange={v => { if (!v) { setPortionFav(null); setPortionFavItems(null); } }}>
         <DialogContent className="max-w-xs mx-auto">
           <DialogHeader>
             <DialogTitle className="text-base flex items-center gap-2">
@@ -553,49 +564,60 @@ export default function FoodSearchScreen({
               <span className="truncate">{portionFav?.name}</span>
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 py-2">
-            <p className="text-sm text-muted-foreground">
-              {language === 'de' ? 'Portionsgrösse anpassen:' : 'Adjust portion size:'}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {[0.5, 0.75, 1, 1.5, 2].map(scale => (
-                <button
-                  key={scale}
-                  onClick={() => setPortionScale(scale)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                    portionScale === scale
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted hover:bg-accent text-foreground'
-                  }`}
-                >
-                  {scale === 1 ? (language === 'de' ? '1× Original' : '1× Original') : `${scale}×`}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                step="0.1"
-                min="0.1"
-                value={portionScale}
-                onChange={e => setPortionScale(Math.max(0.1, Number(e.target.value)))}
-                className="w-20 text-center"
-              />
-              <span className="text-sm text-muted-foreground">
-                {language === 'de' ? '× Menge' : '× amount'}
-              </span>
-            </div>
-            {portionFav && (
-              <p className="text-xs text-muted-foreground">
-                ≈ {Math.round((portionFav.total_calories || 0) * portionScale)} kcal · 
-                P:{Math.round((portionFav.total_protein_g || 0) * portionScale)}g 
-                F:{Math.round((portionFav.total_fat_g || 0) * portionScale)}g 
-                C:{Math.round((portionFav.total_carbs_g || 0) * portionScale)}g
+          {portionFav && (
+            <div className="space-y-3 py-2">
+              <p className="text-sm text-muted-foreground">
+                {language === 'de' ? 'Gesamtmenge anpassen:' : 'Adjust total amount:'}
               </p>
-            )}
-          </div>
+              <div className="flex flex-wrap gap-2">
+                {(() => {
+                  const orig = portionOriginalTotal;
+                  const presets = [
+                    Math.round(orig * 0.5),
+                    Math.round(orig * 0.75),
+                    orig,
+                    Math.round(orig * 1.5),
+                    Math.round(orig * 2),
+                  ].filter((v, i, arr) => v > 0 && arr.indexOf(v) === i);
+                  const displayUnit = (portionFav as any)._unit || 'g';
+                  return presets.map(val => (
+                    <button
+                      key={val}
+                      onClick={() => setPortionAmount(val)}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                        portionAmount === val
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted hover:bg-accent text-foreground'
+                      }`}
+                    >
+                      {val} {displayUnit}
+                    </button>
+                  ));
+                })()}
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  step="10"
+                  min="1"
+                  value={portionAmount}
+                  onChange={e => setPortionAmount(Math.max(1, Number(e.target.value)))}
+                  className="w-24 text-center"
+                />
+                <span className="text-sm text-muted-foreground">
+                  {(portionFav as any)._unit || 'g'}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {(() => {
+                  const scale = portionOriginalTotal > 0 ? portionAmount / portionOriginalTotal : 1;
+                  return `≈ ${Math.round((portionFav.total_calories || 0) * scale)} kcal · P:${Math.round((portionFav.total_protein_g || 0) * scale)}g F:${Math.round((portionFav.total_fat_g || 0) * scale)}g C:${Math.round((portionFav.total_carbs_g || 0) * scale)}g`;
+                })()}
+              </p>
+            </div>
+          )}
           <DialogFooter className="flex gap-2">
-            <Button variant="outline" onClick={() => setPortionFav(null)} className="flex-1">
+            <Button variant="outline" onClick={() => { setPortionFav(null); setPortionFavItems(null); }} className="flex-1">
               {language === 'de' ? 'Abbrechen' : 'Cancel'}
             </Button>
             <Button onClick={confirmFavoritePortion} className="flex-1">
