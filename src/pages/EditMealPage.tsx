@@ -5,7 +5,7 @@ import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Loader2, Users, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import EditableFoodItemsList from '@/components/meals/EditableFoodItemsList';
 import FoodItemEditorModal from '@/components/meals/FoodItemEditorModal';
