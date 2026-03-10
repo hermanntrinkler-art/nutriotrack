@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_entries: {
+        Row: {
+          activity_name: string
+          calories_burned: number
+          created_at: string
+          duration_minutes: number | null
+          emoji: string | null
+          entry_date: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activity_name: string
+          calories_burned?: number
+          created_at?: string
+          duration_minutes?: number | null
+          emoji?: string | null
+          entry_date?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activity_name?: string
+          calories_burned?: number
+          created_at?: string
+          duration_minutes?: number | null
+          emoji?: string | null
+          entry_date?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       badge_images: {
         Row: {
           badge_id: string

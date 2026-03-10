@@ -3,9 +3,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import { analyzeFoodImage } from '@/lib/ai-analysis';
-import type { AnalyzedFoodItem, MealEntry, UserGoals } from '@/lib/types';
+import type { AnalyzedFoodItem, MealEntry, UserGoals, ActivityEntry } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, ScanBarcode, Search, Star, Flame, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Camera, Upload, ScanBarcode, Search, Star, Flame, Plus, ChevronLeft, ChevronRight, X, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
@@ -96,6 +98,9 @@ export default function MealsPage() {
   const [returnToReview, setReturnToReview] = useState(false);
   const [dayMeals, setDayMeals] = useState<MealEntry[]>([]);
   const [goals, setGoals] = useState<UserGoals | null>(null);
+  const [activities, setActivities] = useState<ActivityEntry[]>([]);
+  const [activitySheetOpen, setActivitySheetOpen] = useState(false);
+  const [activityForm, setActivityForm] = useState({ name: '', duration: 30, calories: 0, emoji: '🏃' });
   const videoRef = useRef<HTMLVideoElement>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -121,7 +126,18 @@ export default function MealsPage() {
     setDayMeals((data || []) as any as MealEntry[]);
   }, [user, dateStr]);
 
-  useEffect(() => { loadDayMeals(); }, [loadDayMeals]);
+  const loadActivities = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('activity_entries')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('entry_date', dateStr)
+      .order('created_at', { ascending: true });
+    setActivities((data || []) as any as ActivityEntry[]);
+  }, [user, dateStr]);
+
+  useEffect(() => { loadDayMeals(); loadActivities(); }, [loadDayMeals, loadActivities]);
 
   // Compute totals
   const totals = useMemo(() => ({
@@ -131,8 +147,51 @@ export default function MealsPage() {
     carbs: dayMeals.reduce((s, m) => s + Number(m.total_carbs_g), 0),
   }), [dayMeals]);
 
+  const totalBurned = useMemo(() => activities.reduce((s, a) => s + Number(a.calories_burned), 0), [activities]);
+
   const calTarget = goals?.calorie_target || 2000;
-  const remaining = calTarget - totals.calories;
+  const remaining = calTarget - totals.calories + totalBurned;
+
+  // Preset activities
+  const PRESET_ACTIVITIES = [
+    { name: 'Gehen', nameEn: 'Walking', kcalPerMin: 4, emoji: '🚶' },
+    { name: 'Laufen', nameEn: 'Running', kcalPerMin: 10, emoji: '🏃' },
+    { name: 'Radfahren', nameEn: 'Cycling', kcalPerMin: 7, emoji: '🚴' },
+    { name: 'Krafttraining', nameEn: 'Strength', kcalPerMin: 6, emoji: '🏋️' },
+    { name: 'Schwimmen', nameEn: 'Swimming', kcalPerMin: 8, emoji: '🏊' },
+    { name: 'Yoga', nameEn: 'Yoga', kcalPerMin: 3, emoji: '🧘' },
+  ];
+
+  const selectPresetActivity = (preset: typeof PRESET_ACTIVITIES[0]) => {
+    const dur = activityForm.duration || 30;
+    setActivityForm({
+      name: language === 'de' ? preset.name : preset.nameEn,
+      duration: dur,
+      calories: dur * preset.kcalPerMin,
+      emoji: preset.emoji,
+    });
+  };
+
+  const saveActivity = async () => {
+    if (!user || !activityForm.name || activityForm.calories <= 0) return;
+    await supabase.from('activity_entries').insert({
+      user_id: user.id,
+      entry_date: dateStr,
+      activity_name: activityForm.name,
+      duration_minutes: activityForm.duration || null,
+      calories_burned: activityForm.calories,
+      emoji: activityForm.emoji,
+    } as any);
+    setActivityForm({ name: '', duration: 30, calories: 0, emoji: '🏃' });
+    setActivitySheetOpen(false);
+    loadActivities();
+    toast.success(language === 'de' ? 'Aktivität gespeichert!' : 'Activity saved!');
+  };
+
+  const deleteActivity = async (id: string) => {
+    await supabase.from('activity_entries').delete().eq('id', id);
+    loadActivities();
+  };
 
   // Group meals into slots
   const mealsBySlot = useMemo(() => {
@@ -363,9 +422,9 @@ export default function MealsPage() {
             </button>
           </div>
 
-          {/* Goal Header: Ziel - Gegessen = Übrig */}
+          {/* Goal Header: Ziel - Gegessen + Verbrannt = Übrig */}
           <div className="nutri-card-highlight">
-            <div className="grid grid-cols-3 text-center gap-2">
+            <div className={`grid ${totalBurned > 0 ? 'grid-cols-4' : 'grid-cols-3'} text-center gap-2`}>
               <div>
                 <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
                   {language === 'de' ? 'Ziel' : 'Goal'}
@@ -378,6 +437,15 @@ export default function MealsPage() {
                 </p>
                 <p className="text-lg font-black tabular-nums text-foreground">{Math.round(totals.calories)}</p>
               </div>
+              {totalBurned > 0 && (
+                <div>
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide flex items-center justify-center gap-0.5">
+                    <Flame className="h-3 w-3 text-energy" />
+                    {language === 'de' ? 'Verbrannt' : 'Burned'}
+                  </p>
+                  <p className="text-lg font-black tabular-nums text-energy">+{Math.round(totalBurned)}</p>
+                </div>
+              )}
               <div>
                 <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
                   {language === 'de' ? 'Übrig' : 'Remaining'}
@@ -451,6 +519,115 @@ export default function MealsPage() {
               );
             })}
           </div>
+
+          {/* Activities Section */}
+          <div className="nutri-card overflow-hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🏃</span>
+                <div>
+                  <p className="font-semibold text-sm">{language === 'de' ? 'Aktivitäten' : 'Activities'}</p>
+                  {totalBurned > 0 && (
+                    <p className="text-[10px] text-energy font-bold">+{Math.round(totalBurned)} kcal</p>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => setActivitySheetOpen(true)}
+                className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
+              >
+                <Plus className="h-4 w-4 text-primary" />
+              </button>
+            </div>
+            {activities.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-border/40 space-y-1">
+                {activities.map(act => (
+                  <div key={act.id} className="flex items-center gap-2 text-xs py-1 px-1 rounded-lg hover:bg-muted/50 transition-colors group">
+                    <span>{act.emoji || '🏃'}</span>
+                    <span className="flex-1 font-medium">{act.activity_name}</span>
+                    {act.duration_minutes && <span className="text-muted-foreground">{act.duration_minutes} min</span>}
+                    <span className="text-energy font-bold tabular-nums">+{Math.round(Number(act.calories_burned))} kcal</span>
+                    <button onClick={() => deleteActivity(act.id)} className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5">
+                      <Trash2 className="h-3 w-3 text-destructive" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Activity Sheet */}
+          <Sheet open={activitySheetOpen} onOpenChange={setActivitySheetOpen}>
+            <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>{language === 'de' ? 'Aktivität hinzufügen' : 'Add Activity'}</SheetTitle>
+              </SheetHeader>
+              <div className="space-y-4 mt-4">
+                {/* Presets */}
+                <div className="grid grid-cols-3 gap-2">
+                  {PRESET_ACTIVITIES.map(p => (
+                    <button
+                      key={p.name}
+                      onClick={() => selectPresetActivity(p)}
+                      className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all ${
+                        activityForm.name === (language === 'de' ? p.name : p.nameEn)
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/30'
+                      }`}
+                    >
+                      <span className="text-2xl">{p.emoji}</span>
+                      <span className="text-xs font-medium">{language === 'de' ? p.name : p.nameEn}</span>
+                      <span className="text-[10px] text-muted-foreground">{p.kcalPerMin} kcal/min</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom name */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{language === 'de' ? 'Name' : 'Name'}</label>
+                  <Input
+                    value={activityForm.name}
+                    onChange={e => setActivityForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder={language === 'de' ? 'z.B. Spaziergang' : 'e.g. Walking'}
+                  />
+                </div>
+
+                {/* Duration */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{language === 'de' ? 'Dauer (Minuten)' : 'Duration (min)'}</label>
+                  <Input
+                    type="number"
+                    value={activityForm.duration}
+                    onChange={e => {
+                      const dur = Number(e.target.value);
+                      const preset = PRESET_ACTIVITIES.find(p => (language === 'de' ? p.name : p.nameEn) === activityForm.name);
+                      setActivityForm(f => ({
+                        ...f,
+                        duration: dur,
+                        calories: preset ? dur * preset.kcalPerMin : f.calories,
+                      }));
+                    }}
+                    min={1}
+                  />
+                </div>
+
+                {/* Calories */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">{language === 'de' ? 'Verbrannte kcal' : 'Calories burned'}</label>
+                  <Input
+                    type="number"
+                    value={activityForm.calories}
+                    onChange={e => setActivityForm(f => ({ ...f, calories: Number(e.target.value) }))}
+                    min={0}
+                  />
+                </div>
+
+                <Button onClick={saveActivity} className="w-full" disabled={!activityForm.name || activityForm.calories <= 0}>
+                  {language === 'de' ? 'Speichern' : 'Save'}
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       )}
 

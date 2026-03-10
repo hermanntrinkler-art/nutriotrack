@@ -1,5 +1,9 @@
 import { useTranslation } from '@/lib/i18n';
-import type { MealEntry, UserGoals } from '@/lib/types';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import type { MealEntry, UserGoals, ActivityEntry } from '@/lib/types';
+import { Flame } from 'lucide-react';
 
 function MacroProgress({ label, current, target, color }: { label: string; current: number; target: number; color: string }) {
   const pct = target > 0 ? Math.min((current / target) * 100, 100) : 0;
@@ -25,9 +29,18 @@ interface DailyViewProps {
 }
 
 export default function DailyView({ meals, selectedDate, goals }: DailyViewProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
+  const { user } = useAuth();
+  const [activities, setActivities] = useState<ActivityEntry[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('activity_entries').select('*').eq('user_id', user.id).eq('entry_date', selectedDate)
+      .then(({ data }) => setActivities((data || []) as any as ActivityEntry[]));
+  }, [user, selectedDate]);
 
   const dayMeals = meals.filter(m => m.entry_date === selectedDate);
+  const totalBurned = activities.reduce((s, a) => s + Number(a.calories_burned), 0);
 
   const totals = {
     calories: dayMeals.reduce((s, m) => s + Number(m.total_calories), 0),
@@ -37,7 +50,7 @@ export default function DailyView({ meals, selectedDate, goals }: DailyViewProps
   };
 
   const calTarget = goals?.calorie_target || 2000;
-  const calRemaining = calTarget - totals.calories;
+  const calRemaining = calTarget - totals.calories + totalBurned;
   const calPct = Math.min((totals.calories / calTarget) * 100, 100);
 
   const mealEmoji: Record<string, string> = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍎' };
@@ -100,6 +113,27 @@ export default function DailyView({ meals, selectedDate, goals }: DailyViewProps
         <MacroProgress label={t('dashboard.fat')} current={totals.fat} target={goals?.fat_target_g || 65} color="bg-fat" />
         <MacroProgress label={t('dashboard.carbs')} current={totals.carbs} target={goals?.carbs_target_g || 250} color="bg-carbs" />
       </div>
+
+      {/* Burned calories */}
+      {totalBurned > 0 && (
+        <div className="nutri-card">
+          <div className="flex items-center gap-2 mb-2">
+            <Flame className="h-4 w-4 text-energy" />
+            <h3 className="font-semibold text-sm">{language === 'de' ? 'Verbrannt' : 'Burned'}</h3>
+            <span className="ml-auto text-sm font-bold text-energy">+{Math.round(totalBurned)} kcal</span>
+          </div>
+          <div className="space-y-1">
+            {activities.map(act => (
+              <div key={act.id} className="flex items-center gap-2 text-xs">
+                <span>{act.emoji || '🏃'}</span>
+                <span className="flex-1">{act.activity_name}</span>
+                {act.duration_minutes && <span className="text-muted-foreground">{act.duration_minutes} min</span>}
+                <span className="text-energy font-semibold">+{Math.round(Number(act.calories_burned))} kcal</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Meals list */}
       <div className="space-y-2">
