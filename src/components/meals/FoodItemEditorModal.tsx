@@ -139,6 +139,10 @@ function getGramsEquivalent(quantity: number, unit: string, foodName?: string): 
     const pw = foodName ? getPieceWeight(foodName) : 0;
     return pw > 0 ? quantity * pw : quantity;
   }
+  if (unit === 'Portion') {
+    const pw = foodName ? getPortionWeight(foodName) : 0;
+    return pw > 0 ? quantity * pw : quantity;
+  }
   const factor = UNIT_TO_GRAMS[unit];
   if (factor === undefined || factor === 0) return quantity;
   return quantity * factor;
