@@ -23,7 +23,7 @@ import SavedRecipesScreen, { saveAsRecipe } from '@/components/meals/SavedRecipe
 
 type MealSlot = 'breakfast' | 'snack1' | 'lunch' | 'snack2' | 'dinner' | 'snack3';
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-type Step = 'overview' | 'diary-entry' | 'analyzing' | 'review' | 'confirm' | 'barcode';
+type Step = 'overview' | 'diary-entry' | 'analyzing' | 'review' | 'barcode';
 type DiaryTab = 'search' | 'favorites' | 'recipes' | 'activities';
 
 const MEAL_SLOTS: { slot: MealSlot; type: MealType; label: { de: string; en: string }; emoji: string; timeRange: string }[] = [
