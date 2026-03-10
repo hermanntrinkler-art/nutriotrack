@@ -486,25 +486,37 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
             </p>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">{t('dashboard.calories')} (kcal)</Label>
-              <Input type="number" value={form.calories} onChange={e => update('calories', Number(e.target.value))} />
+          {/* Editable nutrition fields */}
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-primary uppercase tracking-wider">
+                {language === 'de' ? '✏️ Nährwerte anpassen' : '✏️ Adjust nutrition'}
+              </span>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">{t('dashboard.protein')} (g)</Label>
-              <Input type="number" value={form.protein_g} onChange={e => update('protein_g', Number(e.target.value))} />
+            <p className="text-[10px] text-muted-foreground">
+              {language === 'de'
+                ? 'Stimmen die Werte nicht? Passe sie an die Verpackungsangaben an. Mengenänderungen skalieren dann korrekt.'
+                : "Values don't match? Adjust them to match the packaging. Quantity changes will then scale correctly."}
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">{t('dashboard.calories')} (kcal)</Label>
+                <Input type="number" value={form.calories} onChange={e => update('calories', Number(e.target.value))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">{t('dashboard.protein')} (g)</Label>
+                <Input type="number" step="0.1" value={form.protein_g} onChange={e => update('protein_g', Number(e.target.value))} />
+              </div>
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">{t('dashboard.fat')} (g)</Label>
-              <Input type="number" value={form.fat_g} onChange={e => update('fat_g', Number(e.target.value))} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">{t('dashboard.carbs')} (g)</Label>
-              <Input type="number" value={form.carbs_g} onChange={e => update('carbs_g', Number(e.target.value))} />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">{t('dashboard.fat')} (g)</Label>
+                <Input type="number" step="0.1" value={form.fat_g} onChange={e => update('fat_g', Number(e.target.value))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium">{t('dashboard.carbs')} (g)</Label>
+                <Input type="number" step="0.1" value={form.carbs_g} onChange={e => update('carbs_g', Number(e.target.value))} />
+              </div>
             </div>
           </div>
         </div>
