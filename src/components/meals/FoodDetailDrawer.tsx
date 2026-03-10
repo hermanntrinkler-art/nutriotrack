@@ -147,6 +147,7 @@ function NutritionRow({ label, value, sub }: { label: string; value: string; sub
 
 export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCommunityForm }: FoodDetailDrawerProps) {
   const { language } = useTranslation();
+  const { user } = useAuth();
   const [quantity, setQuantity] = useState<number>(food?.quantity || 100);
   const [unit, setUnit] = useState<string>(food?.unit === 'Scheibe' || food?.unit === 'Stück' || food?.unit === 'piece' ? food.unit : 'g');
   const [isFavorite, setIsFavorite] = useState(false);
