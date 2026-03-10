@@ -25,6 +25,8 @@ interface FoodSearchScreenProps {
   initialItems?: AnalyzedFoodItem[];
   isAiResult?: boolean;
   onEditItem?: (index: number, items: AnalyzedFoodItem[]) => void;
+  /** When true, each added item immediately triggers onSave([item]) and closes */
+  singleAddMode?: boolean;
 }
 
 interface SavedFavorite {
