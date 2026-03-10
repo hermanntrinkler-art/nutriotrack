@@ -510,6 +510,18 @@ export default function FoodSearchScreen({
         )}
       </AnimatePresence>
 
+      {/* Food detail drawer */}
+      <FoodDetailDrawer
+        food={detailFood}
+        open={detailFood !== null}
+        onClose={() => setDetailFood(null)}
+        onAdd={(item) => {
+          hapticFeedback('light');
+          setSelectedItems(prev => [...prev, item]);
+        }}
+        onShowCommunityForm={() => setShowCommunityForm(true)}
+      />
+
       {/* Community product form */}
       {showCommunityForm && (
         <CommunityProductForm
