@@ -90,6 +90,7 @@ export default function FoodSearchScreen({
   const [favorites, setFavorites] = useState<SavedFavorite[]>([]);
   const [showCommunityForm, setShowCommunityForm] = useState(false);
   const [cartExpanded, setCartExpanded] = useState((initialItems?.length || 0) > 0);
+  const [detailFood, setDetailFood] = useState<FoodEntry | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const onlineTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onlineController = useRef<AbortController | null>(null);
