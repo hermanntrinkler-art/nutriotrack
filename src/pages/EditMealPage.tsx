@@ -22,6 +22,8 @@ export default function EditMealPage() {
   const [mealType, setMealType] = useState('');
   const [items, setItems] = useState<AnalyzedFoodItem[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [sharedIndices, setSharedIndices] = useState<Set<number>>(new Set());
+  const [sharingIndex, setSharingIndex] = useState<number | null>(null);
 
   const mealEmojis: Record<string, string> = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍎' };
 
