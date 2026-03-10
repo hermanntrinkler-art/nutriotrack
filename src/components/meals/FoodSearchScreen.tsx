@@ -260,7 +260,7 @@ export default function FoodSearchScreen({
   const addItem = (food: FoodEntry) => {
     hapticFeedback('light');
     const name = language === 'de' ? food.name : food.name_en;
-    setSelectedItems(prev => [...prev, {
+    const item: AnalyzedFoodItem = {
       food_name: name,
       quantity: food.quantity,
       unit: food.unit,
@@ -269,7 +269,9 @@ export default function FoodSearchScreen({
       fat_g: food.fat_g,
       carbs_g: food.carbs_g,
       confidence_score: 1,
-    }]);
+    };
+    // Auto-save immediately
+    onSave([item]);
   };
 
   const removeItem = (index: number) => {
@@ -323,7 +325,8 @@ export default function FoodSearchScreen({
       carbs_g: Math.round(Number(item.carbs_g) * scale * 10) / 10,
       confidence_score: 1,
     }));
-    setSelectedItems(prev => [...prev, ...newItems]);
+    // Auto-save immediately
+    onSave(newItems);
   };
 
   const filteredFavorites = query.trim()
@@ -523,9 +526,9 @@ export default function FoodSearchScreen({
         )}
       </div>
 
-      {/* Bottom Cart — hidden in singleAddMode */}
+      {/* Bottom Cart — only show for AI results that need review */}
       <AnimatePresence>
-        {selectedItems.length > 0 && !singleAddMode && (
+        {selectedItems.length > 0 && isAiResult && (
           <BottomCart
             items={selectedItems}
             isAiResult={isAiResult || false}
@@ -547,11 +550,7 @@ export default function FoodSearchScreen({
         onClose={() => setDetailFood(null)}
         onAdd={(item) => {
           hapticFeedback('light');
-          if (singleAddMode) {
-            onSave([item]);
-          } else {
-            setSelectedItems(prev => [...prev, item]);
-          }
+          onSave([item]);
         }}
         onShowCommunityForm={() => setShowCommunityForm(true)}
       />

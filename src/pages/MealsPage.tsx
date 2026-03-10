@@ -362,7 +362,11 @@ export default function MealsPage() {
     hapticFeedback('success');
     toast.success(t('meals.saved'));
     setSaving(false);
-    handleReset();
+    // Stay on search screen so user can keep adding items
+    setPendingItems([]);
+    setImageFile(null);
+    setImagePreview(null);
+    setIsAiResult(false);
     loadDayMeals();
   };
 
