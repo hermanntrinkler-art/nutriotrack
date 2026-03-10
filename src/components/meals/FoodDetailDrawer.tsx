@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Minus, Users, Globe, ChevronDown, ChevronUp, Pencil, BookOpen, Link2 } from 'lucide-react';
+import { Plus, Minus, Users, Globe, ChevronDown, ChevronUp, Pencil, BookOpen, Link2, Star, Flag } from 'lucide-react';
 import { hapticFeedback } from '@/lib/haptics';
 import { estimateMicronutrients, MICRO_LABELS, DAILY_TARGETS } from '@/lib/micronutrients';
 
