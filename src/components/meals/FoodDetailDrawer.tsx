@@ -154,6 +154,8 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
   const [prevKey, setPrevKey] = useState(foodKey);
   if (foodKey !== prevKey) {
     setPrevKey(foodKey);
+    setIsFavorite(false);
+    setReported(false);
     if (food) {
       const isPiece = food.unit === 'Scheibe' || food.unit === 'Stück' || food.unit === 'piece';
       if (isPiece) {
