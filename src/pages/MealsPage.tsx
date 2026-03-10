@@ -522,7 +522,7 @@ export default function MealsPage() {
                               </div>
                               {foodItems.length > 0 && (
                                 <p className="text-[10px] text-muted-foreground truncate">
-                                  {foodItems.map((item: any) => `${item.quantity ? Math.round(Number(item.quantity)) : ''}${item.unit && item.unit !== 'portion' ? ' ' + item.unit : 'x'} ${item.food_name}`).join(', ')}
+                                  {foodItems.map((item: any) => `${item.food_name} ${Math.round(Number(item.quantity) || 100)} ${item.unit === 'portion' ? 'Port.' : (item.unit || 'g')}`).join(', ')}
                                   {' · '}P{Math.round(Number(meal.total_protein_g))} F{Math.round(Number(meal.total_fat_g))} K{Math.round(Number(meal.total_carbs_g))}
                                 </p>
                               )}
