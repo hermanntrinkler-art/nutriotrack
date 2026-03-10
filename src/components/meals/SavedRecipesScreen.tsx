@@ -36,9 +36,10 @@ interface RecipeItem {
 interface SavedRecipesScreenProps {
   onSelect: (items: AnalyzedFoodItem[], mealType: string) => void;
   onCancel: () => void;
+  hideHeader?: boolean;
 }
 
-export default function SavedRecipesScreen({ onSelect, onCancel }: SavedRecipesScreenProps) {
+export default function SavedRecipesScreen({ onSelect, onCancel, hideHeader }: SavedRecipesScreenProps) {
   const { user } = useAuth();
   const { language } = useTranslation();
   const [recipes, setRecipes] = useState<SavedRecipe[]>([]);
@@ -105,18 +106,20 @@ export default function SavedRecipesScreen({ onSelect, onCancel }: SavedRecipesS
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <button onClick={onCancel} className="p-1.5 rounded-xl hover:bg-muted transition-colors">
-          <ArrowLeft className="h-5 w-5 text-muted-foreground" />
-        </button>
-        <div className="flex items-center gap-2 flex-1">
-          <BookOpen className="h-5 w-5 text-primary" />
-          <h2 className="font-bold text-lg">
-            {language === 'de' ? 'Meine Favoriten' : 'My Favorites'}
-          </h2>
+      {!hideHeader && (
+        <div className="flex items-center gap-3">
+          <button onClick={onCancel} className="p-1.5 rounded-xl hover:bg-muted transition-colors">
+            <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+          </button>
+          <div className="flex items-center gap-2 flex-1">
+            <BookOpen className="h-5 w-5 text-primary" />
+            <h2 className="font-bold text-lg">
+              {language === 'de' ? 'Meine Favoriten' : 'My Favorites'}
+            </h2>
+          </div>
+          <span className="text-xs text-muted-foreground font-medium">{recipes.length}</span>
         </div>
-        <span className="text-xs text-muted-foreground font-medium">{recipes.length}</span>
-      </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-12">

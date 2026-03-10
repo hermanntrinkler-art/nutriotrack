@@ -5,9 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { analyzeFoodImage } from '@/lib/ai-analysis';
 import type { AnalyzedFoodItem, MealEntry, UserGoals, ActivityEntry } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, ScanBarcode, Search, Star, Flame, Plus, ChevronLeft, ChevronRight, X, Trash2 } from 'lucide-react';
+import { Camera, Upload, ScanBarcode, Search, Star, Flame, Plus, ChevronLeft, ChevronRight, X, Trash2, BookOpen } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
@@ -24,7 +23,8 @@ import SavedRecipesScreen, { saveAsRecipe } from '@/components/meals/SavedRecipe
 
 type MealSlot = 'breakfast' | 'snack1' | 'lunch' | 'snack2' | 'dinner' | 'snack3';
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-type Step = 'overview' | 'select-method' | 'analyzing' | 'review' | 'confirm' | 'barcode' | 'search' | 'recipes';
+type Step = 'overview' | 'diary-entry' | 'analyzing' | 'review' | 'confirm' | 'barcode';
+type DiaryTab = 'search' | 'favorites' | 'recipes' | 'activities';
 
 const MEAL_SLOTS: { slot: MealSlot; type: MealType; label: { de: string; en: string }; emoji: string; timeRange: string }[] = [
   { slot: 'breakfast', type: 'breakfast', label: { de: 'Frühstück', en: 'Breakfast' }, emoji: '🌅', timeRange: '00:00–09:59' },
@@ -96,10 +96,10 @@ export default function MealsPage() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [savingRecipe, setSavingRecipe] = useState(false);
   const [returnToReview, setReturnToReview] = useState(false);
+  const [diaryTab, setDiaryTab] = useState<DiaryTab>('search');
   const [dayMeals, setDayMeals] = useState<MealEntry[]>([]);
   const [goals, setGoals] = useState<UserGoals | null>(null);
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
-  const [activitySheetOpen, setActivitySheetOpen] = useState(false);
   const [activityForm, setActivityForm] = useState({ name: '', duration: 30, calories: 0, emoji: '🏃' });
   const videoRef = useRef<HTMLVideoElement>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
@@ -183,7 +183,7 @@ export default function MealsPage() {
       emoji: activityForm.emoji,
     } as any);
     setActivityForm({ name: '', duration: 30, calories: 0, emoji: '🏃' });
-    setActivitySheetOpen(false);
+    
     loadActivities();
     toast.success(language === 'de' ? 'Aktivität gespeichert!' : 'Activity saved!');
   };
@@ -379,7 +379,8 @@ export default function MealsPage() {
   const openSlot = (slot: typeof MEAL_SLOTS[0]) => {
     setActiveSlot(slot.slot);
     setMealType(slot.type);
-    setStep('select-method');
+    setDiaryTab('search');
+    setStep('diary-entry');
   };
 
   // --- Render ---
@@ -533,7 +534,7 @@ export default function MealsPage() {
                 </div>
               </div>
               <button
-                onClick={() => setActivitySheetOpen(true)}
+                onClick={() => { setDiaryTab('activities'); setStep('diary-entry'); }}
                 className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
               >
                 <Plus className="h-4 w-4 text-primary" />
@@ -555,196 +556,199 @@ export default function MealsPage() {
               </div>
             )}
           </div>
+        </div>
+      )}
 
-          {/* Activity Sheet */}
-          <Sheet open={activitySheetOpen} onOpenChange={setActivitySheetOpen}>
-            <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>{language === 'de' ? 'Aktivität hinzufügen' : 'Add Activity'}</SheetTitle>
-              </SheetHeader>
-              <div className="space-y-4 mt-4">
-                {/* Presets */}
-                <div className="grid grid-cols-3 gap-2">
-                  {PRESET_ACTIVITIES.map(p => (
-                    <button
-                      key={p.name}
-                      onClick={() => selectPresetActivity(p)}
-                      className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all ${
-                        activityForm.name === (language === 'de' ? p.name : p.nameEn)
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/30'
-                      }`}
-                    >
-                      <span className="text-2xl">{p.emoji}</span>
-                      <span className="text-xs font-medium">{language === 'de' ? p.name : p.nameEn}</span>
-                      <span className="text-[10px] text-muted-foreground">{p.kcalPerMin} kcal/min</span>
-                    </button>
-                  ))}
+      {/* === DIARY ENTRY STEP (Tabbed FDDB-style) === */}
+      {step === 'diary-entry' && (
+        <div className="space-y-3 animate-fade-in">
+          {/* Header */}
+          <div className="flex items-center gap-2">
+            <button onClick={handleReset} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+              <X className="h-4 w-4" />
+            </button>
+            <span className="text-xl">{currentSlotInfo.emoji}</span>
+            <span className="font-semibold flex-1">{language === 'de' ? 'Tagebucheintrag' : 'Diary Entry'}</span>
+            <button onClick={handleManualEntry} className="p-1.5 rounded-lg hover:bg-muted transition-colors" title={t('meals.manualEntry')}>
+              <Plus className="h-4 w-4 text-primary" />
+            </button>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex border-b border-border overflow-x-auto scrollbar-none">
+            {([
+              { key: 'search' as DiaryTab, label: language === 'de' ? 'Suche' : 'Search', icon: <Search className="h-3.5 w-3.5" /> },
+              { key: 'favorites' as DiaryTab, label: language === 'de' ? 'Favoriten' : 'Favorites', icon: <Star className="h-3.5 w-3.5" /> },
+              { key: 'recipes' as DiaryTab, label: language === 'de' ? 'Rezepte' : 'Recipes', icon: <BookOpen className="h-3.5 w-3.5" /> },
+              { key: 'activities' as DiaryTab, label: language === 'de' ? 'Aktivitäten' : 'Activities', icon: <Flame className="h-3.5 w-3.5" /> },
+            ]).map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setDiaryTab(tab.key)}
+                className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium whitespace-nowrap border-b-2 transition-colors ${
+                  diaryTab === tab.key
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab: Search */}
+          {diaryTab === 'search' && (
+            <div className="space-y-3">
+              <FoodSearchScreen
+                onDone={(searchItems) => {
+                  setIsAiResult(false);
+                  if (returnToReview) {
+                    setItems(prev => [...prev.filter(i => i.food_name), ...searchItems]);
+                    setReturnToReview(false);
+                  } else {
+                    setItems(searchItems);
+                  }
+                  setStep('review');
+                }}
+                onCancel={handleReset}
+                hideHeader
+              />
+
+              {/* Photo & Upload secondary options */}
+              <div className="flex gap-2 pt-2 border-t border-border/50">
+                <button
+                  onClick={handleOpenCamera}
+                  disabled={cameraLoading}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 bg-muted hover:bg-muted/80 border border-border text-sm font-medium transition-all active:scale-[0.98]"
+                >
+                  <Camera className="h-4 w-4 text-primary" />
+                  {language === 'de' ? 'Foto' : 'Photo'}
+                </button>
+                <button
+                  onClick={handleOpenFilePicker}
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 bg-muted hover:bg-muted/80 border border-border text-sm font-medium transition-all active:scale-[0.98]"
+                >
+                  <Upload className="h-4 w-4 text-primary" />
+                  {language === 'de' ? 'Hochladen' : 'Upload'}
+                </button>
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+              </div>
+
+              {cameraError && <p className="text-xs text-destructive">{cameraError}</p>}
+
+              {cameraOpen && (
+                <div className="nutri-card space-y-3">
+                  <video ref={videoRef} autoPlay playsInline muted className="w-full h-48 rounded-xl object-cover bg-muted" />
+                  <div className="flex gap-2">
+                    <Button type="button" className="flex-1" onClick={handleCapturePhoto}>
+                      {language === 'de' ? 'Foto verwenden' : 'Use Photo'}
+                    </Button>
+                    <Button type="button" variant="outline" className="flex-1" onClick={stopCamera}>{t('common.cancel')}</Button>
+                  </div>
                 </div>
+              )}
+            </div>
+          )}
 
-                {/* Custom name */}
+          {/* Tab: Favorites */}
+          {diaryTab === 'favorites' && (
+            <SavedRecipesScreen
+              onSelect={(recipeItems, recipeMealType) => {
+                setIsAiResult(false);
+                setItems(recipeItems);
+                if (['breakfast', 'lunch', 'dinner', 'snack'].includes(recipeMealType)) setMealType(recipeMealType as MealType);
+                setStep('review');
+              }}
+              onCancel={handleReset}
+              hideHeader
+            />
+          )}
+
+          {/* Tab: Recipes */}
+          {diaryTab === 'recipes' && (
+            <SavedRecipesScreen
+              onSelect={(recipeItems, recipeMealType) => {
+                setIsAiResult(false);
+                setItems(recipeItems);
+                if (['breakfast', 'lunch', 'dinner', 'snack'].includes(recipeMealType)) setMealType(recipeMealType as MealType);
+                setStep('review');
+              }}
+              onCancel={handleReset}
+              hideHeader
+            />
+          )}
+
+          {/* Tab: Activities */}
+          {diaryTab === 'activities' && (
+            <div className="space-y-4">
+              {/* Presets */}
+              <div className="grid grid-cols-3 gap-2">
+                {PRESET_ACTIVITIES.map(p => (
+                  <button
+                    key={p.name}
+                    onClick={() => selectPresetActivity(p)}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all ${
+                      activityForm.name === (language === 'de' ? p.name : p.nameEn)
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    <span className="text-2xl">{p.emoji}</span>
+                    <span className="text-xs font-medium">{language === 'de' ? p.name : p.nameEn}</span>
+                    <span className="text-[10px] text-muted-foreground">{p.kcalPerMin} kcal/min</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Form */}
+              <div className="space-y-3">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">{language === 'de' ? 'Name' : 'Name'}</label>
-                  <Input
-                    value={activityForm.name}
-                    onChange={e => setActivityForm(f => ({ ...f, name: e.target.value }))}
-                    placeholder={language === 'de' ? 'z.B. Spaziergang' : 'e.g. Walking'}
-                  />
+                  <Input value={activityForm.name} onChange={e => setActivityForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder={language === 'de' ? 'z.B. Spaziergang' : 'e.g. Walking'} />
                 </div>
-
-                {/* Duration */}
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">{language === 'de' ? 'Dauer (Minuten)' : 'Duration (min)'}</label>
-                  <Input
-                    type="number"
-                    value={activityForm.duration}
+                  <Input type="number" value={activityForm.duration} min={1}
                     onChange={e => {
                       const dur = Number(e.target.value);
                       const preset = PRESET_ACTIVITIES.find(p => (language === 'de' ? p.name : p.nameEn) === activityForm.name);
-                      setActivityForm(f => ({
-                        ...f,
-                        duration: dur,
-                        calories: preset ? dur * preset.kcalPerMin : f.calories,
-                      }));
-                    }}
-                    min={1}
-                  />
+                      setActivityForm(f => ({ ...f, duration: dur, calories: preset ? dur * preset.kcalPerMin : f.calories }));
+                    }} />
                 </div>
-
-                {/* Calories */}
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">{language === 'de' ? 'Verbrannte kcal' : 'Calories burned'}</label>
-                  <Input
-                    type="number"
-                    value={activityForm.calories}
-                    onChange={e => setActivityForm(f => ({ ...f, calories: Number(e.target.value) }))}
-                    min={0}
-                  />
+                  <Input type="number" value={activityForm.calories} min={0}
+                    onChange={e => setActivityForm(f => ({ ...f, calories: Number(e.target.value) }))} />
                 </div>
-
                 <Button onClick={saveActivity} className="w-full" disabled={!activityForm.name || activityForm.calories <= 0}>
                   {language === 'de' ? 'Speichern' : 'Save'}
                 </Button>
               </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      )}
 
-      {/* === SELECT METHOD STEP === */}
-      {step === 'select-method' && (
-        <div className="space-y-3 animate-fade-in">
-          <div className="flex items-center gap-2 mb-1">
-            <button onClick={handleReset} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <span className="text-xl">{currentSlotInfo.emoji}</span>
-            <span className="font-semibold">{slotLabel(currentSlotInfo)}</span>
-          </div>
-
-          {/* Search - primary */}
-          <button onClick={() => setStep('search')} className="nutri-card w-full flex items-center gap-4 py-4 hover:border-primary/30 transition-colors border-primary/20">
-            <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <Search className="h-5 w-5 text-primary" />
-            </div>
-            <div className="text-left flex-1">
-              <p className="font-semibold text-sm">{language === 'de' ? 'Lebensmittel suchen' : 'Search Food'}</p>
-              <p className="text-[11px] text-muted-foreground">{language === 'de' ? 'Suchen, Favoriten & Rezepte' : 'Search, favorites & recipes'}</p>
-            </div>
-          </button>
-
-          {/* Photo */}
-          <div className="nutri-card w-full flex items-center gap-4 py-4 hover:border-primary/30 transition-colors">
-            <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <Camera className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-sm">{t('meals.takePhoto')}</p>
-              <p className="text-[11px] text-muted-foreground mb-2">{t('meals.aiDescription')}</p>
-              <Button type="button" size="sm" onClick={handleOpenCamera} className="w-full" disabled={cameraLoading}>
-                {cameraLoading ? 'Öffne Kamera…' : t('meals.takePhoto')}
-              </Button>
-              {cameraError && <p className="text-xs text-destructive mt-1">{cameraError}</p>}
-            </div>
-          </div>
-
-          {cameraOpen && (
-            <div className="nutri-card space-y-3">
-              <video ref={videoRef} autoPlay playsInline muted className="w-full h-48 rounded-xl object-cover bg-muted" />
-              <div className="flex gap-2">
-                <Button type="button" className="flex-1" onClick={handleCapturePhoto}>Foto verwenden</Button>
-                <Button type="button" variant="outline" className="flex-1" onClick={stopCamera}>{t('common.cancel')}</Button>
-              </div>
+              {/* Today's activities */}
+              {activities.length > 0 && (
+                <div className="space-y-1 pt-2 border-t border-border/50">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">
+                    {language === 'de' ? 'Heutige Aktivitäten' : "Today's Activities"}
+                  </p>
+                  {activities.map(act => (
+                    <div key={act.id} className="flex items-center gap-2 text-xs py-1.5 px-2 rounded-lg hover:bg-muted/50 transition-colors group">
+                      <span>{act.emoji || '🏃'}</span>
+                      <span className="flex-1 font-medium">{act.activity_name}</span>
+                      {act.duration_minutes && <span className="text-muted-foreground">{act.duration_minutes} min</span>}
+                      <span className="text-energy font-bold tabular-nums">+{Math.round(Number(act.calories_burned))} kcal</span>
+                      <button onClick={() => deleteActivity(act.id)} className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5">
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
-
-          {/* Upload */}
-          <div className="nutri-card w-full flex items-center gap-4 py-4 hover:border-primary/30 transition-colors">
-            <div className="w-11 h-11 rounded-2xl bg-info/10 flex items-center justify-center">
-              <Upload className="h-5 w-5 text-info" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-sm">{t('meals.uploadImage')}</p>
-              <Button type="button" variant="outline" size="sm" onClick={handleOpenFilePicker} className="w-full mt-1">
-                {t('meals.uploadImage')}
-              </Button>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-            </div>
-          </div>
-
-          {/* Barcode */}
-          <button onClick={() => setStep('barcode')} className="nutri-card w-full flex items-center gap-4 py-4 hover:border-primary/30 transition-colors">
-            <div className="w-11 h-11 rounded-2xl bg-accent/30 flex items-center justify-center">
-              <ScanBarcode className="h-5 w-5 text-foreground" />
-            </div>
-            <div className="text-left">
-              <p className="font-semibold text-sm">{t('meals.scanBarcode')}</p>
-              <p className="text-[11px] text-muted-foreground">{t('meals.barcodeDescription')}</p>
-            </div>
-          </button>
-
-          {/* Manual */}
-          <Button variant="ghost" onClick={handleManualEntry} className="w-full text-sm">
-            {t('meals.manualEntry')}
-          </Button>
-
-          <Button variant="ghost" onClick={handleReset} className="w-full text-xs text-muted-foreground">
-            {t('meals.cancel')}
-          </Button>
         </div>
-      )}
-
-      {/* Search */}
-      {step === 'search' && (
-        <FoodSearchScreen
-          onDone={(searchItems) => {
-            setIsAiResult(false);
-            if (returnToReview) {
-              setItems(prev => [...prev.filter(i => i.food_name), ...searchItems]);
-              setReturnToReview(false);
-            } else {
-              setItems(searchItems);
-            }
-            setStep('review');
-          }}
-          onCancel={() => {
-            if (returnToReview) { setReturnToReview(false); setStep('review'); }
-            else setStep('select-method');
-          }}
-        />
-      )}
-
-      {/* Recipes */}
-      {step === 'recipes' && (
-        <SavedRecipesScreen
-          onSelect={(recipeItems, recipeMealType) => {
-            setIsAiResult(false);
-            setItems(recipeItems);
-            if (['breakfast', 'lunch', 'dinner', 'snack'].includes(recipeMealType)) setMealType(recipeMealType as MealType);
-            setStep('review');
-          }}
-          onCancel={() => setStep('select-method')}
-        />
       )}
 
       {/* Barcode */}
@@ -768,7 +772,7 @@ export default function MealsPage() {
           )}
 
           <div className="flex items-center gap-2">
-            <button onClick={() => setStep('select-method')} className="p-1.5 rounded-lg hover:bg-muted">
+            <button onClick={() => setStep('diary-entry')} className="p-1.5 rounded-lg hover:bg-muted">
               <ChevronLeft className="h-4 w-4" />
             </button>
             <span className="text-xl">{currentSlotInfo.emoji}</span>
@@ -784,7 +788,7 @@ export default function MealsPage() {
           />
 
           <button
-            onClick={() => { setReturnToReview(true); setStep('search'); }}
+            onClick={() => { setReturnToReview(true); setDiaryTab('search'); setStep('diary-entry'); }}
             className="w-full flex items-center justify-center gap-1.5 rounded-xl py-2.5 px-3 bg-muted hover:bg-muted/80 border border-border text-foreground font-medium text-sm transition-all active:scale-[0.98]"
           >
             <Plus className="h-4 w-4" />

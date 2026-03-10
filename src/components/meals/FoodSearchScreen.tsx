@@ -17,6 +17,7 @@ import CommunityProductForm from '@/components/CommunityProductForm';
 interface FoodSearchScreenProps {
   onDone: (items: AnalyzedFoodItem[]) => void;
   onCancel: () => void;
+  hideHeader?: boolean;
 }
 
 interface SavedFavorite {
@@ -59,7 +60,7 @@ const CATEGORY_MAP: Record<string, string[]> = {
   snacks: ['snacks', 'sweets', 'brands'],
 };
 
-export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenProps) {
+export default function FoodSearchScreen({ onDone, onCancel, hideHeader }: FoodSearchScreenProps) {
   const { t, language } = useTranslation();
   const { user } = useAuth();
   const [query, setQuery] = useState('');
@@ -317,14 +318,16 @@ export default function FoodSearchScreen({ onDone, onCancel }: FoodSearchScreenP
   return (
     <div className="space-y-3 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <button onClick={onCancel} className="p-1.5 rounded-xl hover:bg-muted transition-colors">
-          <ArrowLeft className="h-5 w-5 text-muted-foreground" />
-        </button>
-        <h2 className="font-bold text-lg flex-1">
-          {language === 'de' ? 'Lebensmittel suchen' : 'Search Food'}
-        </h2>
-      </div>
+      {!hideHeader && (
+        <div className="flex items-center gap-3">
+          <button onClick={onCancel} className="p-1.5 rounded-xl hover:bg-muted transition-colors">
+            <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+          </button>
+          <h2 className="font-bold text-lg flex-1">
+            {language === 'de' ? 'Lebensmittel suchen' : 'Search Food'}
+          </h2>
+        </div>
+      )}
 
       {/* Search input */}
       <div className="relative">
