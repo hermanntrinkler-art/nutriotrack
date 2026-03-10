@@ -466,8 +466,16 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
                   <span>{language === 'de' ? 'Werte pro' : 'Values per'}</span>
                   <span>100 g</span>
                 </div>
+                <NutritionRow label="Vitamin A" value={`${microsPer100.vitaminA_ug} µg`} />
+                <NutritionRow label="Vitamin B1" value={`${microsPer100.vitaminB1_mg} mg`} />
+                <NutritionRow label="Vitamin B2" value={`${microsPer100.vitaminB2_mg} mg`} />
+                <NutritionRow label="Vitamin B6" value={`${microsPer100.vitaminB6_mg} mg`} />
+                <NutritionRow label="Vitamin B12" value={`${microsPer100.vitaminB12_ug} µg`} />
                 <NutritionRow label="Vitamin C" value={`${microsPer100.vitaminC_mg} mg`} />
                 <NutritionRow label="Vitamin D" value={`${microsPer100.vitaminD_ug} µg`} />
+                <NutritionRow label="Vitamin E" value={`${microsPer100.vitaminE_mg} mg`} />
+                <NutritionRow label="Vitamin K" value={`${microsPer100.vitaminK_ug} µg`} />
+                <NutritionRow label={language === 'de' ? 'Folsäure' : 'Folate'} value={`${microsPer100.folate_ug} µg`} />
               </div>
             </div>
           )}
@@ -484,10 +492,15 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
                   <span>100 g</span>
                 </div>
                 <NutritionRow label={language === 'de' ? 'Eisen' : 'Iron'} value={`${microsPer100.iron_mg} mg`} />
+                <NutritionRow label={language === 'de' ? 'Kalium' : 'Potassium'} value={`${microsPer100.potassium_mg} mg`} />
                 <NutritionRow label={language === 'de' ? 'Kalzium' : 'Calcium'} value={`${microsPer100.calcium_mg} mg`} />
                 <NutritionRow label="Magnesium" value={`${microsPer100.magnesium_mg} mg`} />
+                <NutritionRow label={language === 'de' ? 'Natrium' : 'Sodium'} value={`${microsPer100.sodium_mg} mg`} />
+                <NutritionRow label={language === 'de' ? 'Phosphor' : 'Phosphorus'} value={`${microsPer100.phosphorus_mg} mg`} />
                 <NutritionRow label={language === 'de' ? 'Zink' : 'Zinc'} value={`${microsPer100.zinc_mg} mg`} />
               </div>
+            </div>
+          )}
             </div>
           )}
         </div>
