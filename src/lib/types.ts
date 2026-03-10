@@ -132,6 +132,24 @@ export interface AnalyzedFoodItem {
   was_user_edited?: boolean;
   barcode?: string;
   gram_per_piece?: number;
+  // Micronutrients
+  vitamin_a_ug?: number;
+  vitamin_b1_mg?: number;
+  vitamin_b2_mg?: number;
+  vitamin_b6_mg?: number;
+  vitamin_b12_ug?: number;
+  vitamin_c_mg?: number;
+  vitamin_d_ug?: number;
+  vitamin_e_mg?: number;
+  vitamin_k_ug?: number;
+  folate_ug?: number;
+  iron_mg?: number;
+  potassium_mg?: number;
+  calcium_mg?: number;
+  magnesium_mg?: number;
+  sodium_mg?: number;
+  phosphorus_mg?: number;
+  zinc_mg?: number;
 }
 
 export interface NutritionCalculation {
