@@ -887,11 +887,6 @@ function ReportCard({ report, onUpdateStatus, onDelete, onUpdate }: {
     </div>
   );
 }
-      setLoadingProduct(false);
-    };
-    
-    loadProduct();
-  }, [expanded]);
 
   const micros = useMemo(() => {
     if (!productData) return null;
