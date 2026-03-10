@@ -490,6 +490,30 @@ function FoodReports() {
     }
   };
 
+  const deleteReport = async (id: string) => {
+    const { error } = await supabase.from('food_reports').delete().eq('id', id);
+    if (error) {
+      toast.error('Fehler beim Löschen');
+    } else {
+      toast.success('Meldung gelöscht');
+      setReports(prev => prev.filter(r => r.id !== id));
+    }
+  };
+
+  const updateReport = async (id: string, updates: Partial<FoodReport>) => {
+    const { error } = await supabase
+      .from('food_reports')
+      .update(updates as any)
+      .eq('id', id);
+    if (error) {
+      toast.error('Fehler beim Speichern');
+      return false;
+    }
+    toast.success('Meldung aktualisiert');
+    setReports(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+    return true;
+  };
+
   if (loading) {
     return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   }
@@ -527,7 +551,7 @@ function FoodReports() {
             Offene Meldungen ({openReports.length})
           </h3>
           {openReports.map(report => (
-            <ReportCard key={report.id} report={report} onUpdateStatus={updateStatus} />
+            <ReportCard key={report.id} report={report} onUpdateStatus={updateStatus} onDelete={deleteReport} onUpdate={updateReport} />
           ))}
         </div>
       )}
@@ -540,7 +564,7 @@ function FoodReports() {
             Erledigte Meldungen ({resolvedReports.length})
           </h3>
           {resolvedReports.map(report => (
-            <ReportCard key={report.id} report={report} onUpdateStatus={updateStatus} />
+            <ReportCard key={report.id} report={report} onUpdateStatus={updateStatus} onDelete={deleteReport} onUpdate={updateReport} />
           ))}
         </div>
       )}
@@ -548,51 +572,189 @@ function FoodReports() {
   );
 }
 
-function ReportCard({ report, onUpdateStatus }: { report: FoodReport; onUpdateStatus: (id: string, status: string) => void }) {
+function ReportCard({ report, onUpdateStatus, onDelete, onUpdate }: { 
+  report: FoodReport; 
+  onUpdateStatus: (id: string, status: string) => void;
+  onDelete: (id: string) => void;
+  onUpdate: (id: string, updates: Partial<FoodReport>) => Promise<boolean>;
+}) {
   const isOpen = report.status === 'open';
+  const [expanded, setExpanded] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState(report.food_name);
+  const [editReason, setEditReason] = useState(report.reason || '');
+  const [editSource, setEditSource] = useState(report.food_source);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const handleSave = async () => {
+    const ok = await onUpdate(report.id, {
+      food_name: editName,
+      reason: editReason || null,
+      food_source: editSource,
+    });
+    if (ok) setEditing(false);
+  };
 
   return (
-    <div className={`border rounded-xl p-3 bg-card ${isOpen ? 'border-destructive/30' : 'border-border opacity-70'}`}>
-      <div className="flex items-start justify-between gap-2">
+    <div className={`border rounded-xl bg-card transition-colors ${isOpen ? 'border-destructive/30' : 'border-border opacity-70'}`}>
+      {/* Header - always visible, clickable */}
+      <button
+        onClick={() => { setExpanded(!expanded); setConfirmDelete(false); }}
+        className="w-full p-3 flex items-center justify-between gap-2 text-left"
+      >
         <div className="min-w-0 flex-1">
-          <p className="font-bold text-sm truncate">{report.food_name}</p>
-          <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
+          <p className="font-bold text-sm">{report.food_name}</p>
+          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
             <span className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-medium">{report.food_source}</span>
             <span>📅 {new Date(report.created_at).toLocaleDateString('de-DE')}</span>
           </div>
-          {report.reason && (
-            <p className="text-xs text-muted-foreground mt-1.5">💬 {report.reason}</p>
-          )}
         </div>
-        <div className="flex gap-1.5 shrink-0">
-          {isOpen ? (
-            <>
-              <button
-                onClick={() => onUpdateStatus(report.id, 'resolved')}
-                className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                title="Als erledigt markieren"
-              >
-                <CheckCircle className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => onUpdateStatus(report.id, 'dismissed')}
-                className="p-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
-                title="Verwerfen"
-              >
-                <XCircle className="h-4 w-4" />
-              </button>
-            </>
+        {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
+      </button>
+
+      {/* Expanded details */}
+      {expanded && (
+        <div className="px-3 pb-3 space-y-3 border-t border-border pt-3">
+          {editing ? (
+            <div className="space-y-2">
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase">Produktname</label>
+                <input
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  className="w-full mt-0.5 text-sm p-2 rounded-lg border border-border bg-background"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase">Quelle</label>
+                <input
+                  value={editSource}
+                  onChange={e => setEditSource(e.target.value)}
+                  className="w-full mt-0.5 text-sm p-2 rounded-lg border border-border bg-background"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase">Grund / Notiz</label>
+                <textarea
+                  value={editReason}
+                  onChange={e => setEditReason(e.target.value)}
+                  className="w-full mt-0.5 text-sm p-2 rounded-lg border border-border bg-background resize-none"
+                  rows={3}
+                  placeholder="Grund der Meldung..."
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSave}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors"
+                >
+                  <Save className="h-3.5 w-3.5" /> Speichern
+                </button>
+                <button
+                  onClick={() => { setEditing(false); setEditName(report.food_name); setEditReason(report.reason || ''); setEditSource(report.food_source); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-muted/80 transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" /> Abbrechen
+                </button>
+              </div>
+            </div>
           ) : (
-            <button
-              onClick={() => onUpdateStatus(report.id, 'open')}
-              className="p-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
-              title="Wieder öffnen"
-            >
-              <Flag className="h-4 w-4" />
-            </button>
+            <>
+              {/* Full details view */}
+              <div className="space-y-1.5 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Produkt</span>
+                  <span className="font-medium">{report.food_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Quelle</span>
+                  <span className="font-medium">{report.food_source}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Status</span>
+                  <span className={`font-bold ${isOpen ? 'text-destructive' : 'text-primary'}`}>
+                    {report.status === 'open' ? 'Offen' : report.status === 'resolved' ? 'Erledigt' : 'Verworfen'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Gemeldet am</span>
+                  <span className="font-medium">{new Date(report.created_at).toLocaleString('de-DE')}</span>
+                </div>
+                {report.resolved_at && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Erledigt am</span>
+                    <span className="font-medium">{new Date(report.resolved_at).toLocaleString('de-DE')}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Melder-ID</span>
+                  <span className="font-mono text-[10px]">{report.reporter_id.slice(0, 8)}…</span>
+                </div>
+                {report.community_product_id && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Produkt-ID</span>
+                    <span className="font-mono text-[10px]">{report.community_product_id.slice(0, 8)}…</span>
+                  </div>
+                )}
+                {report.reason && (
+                  <div className="pt-1">
+                    <span className="text-muted-foreground">Grund:</span>
+                    <p className="mt-0.5 text-foreground">{report.reason}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {isOpen ? (
+                  <>
+                    <button
+                      onClick={() => onUpdateStatus(report.id, 'resolved')}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-colors"
+                    >
+                      <CheckCircle className="h-3.5 w-3.5" /> Erledigt
+                    </button>
+                    <button
+                      onClick={() => onUpdateStatus(report.id, 'dismissed')}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-muted/80 transition-colors"
+                    >
+                      <XCircle className="h-3.5 w-3.5" /> Verwerfen
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => onUpdateStatus(report.id, 'open')}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-muted/80 transition-colors"
+                  >
+                    <Flag className="h-3.5 w-3.5" /> Wieder öffnen
+                  </button>
+                )}
+                <button
+                  onClick={() => setEditing(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-accent-foreground text-xs font-bold hover:bg-accent/80 transition-colors"
+                >
+                  <Pencil className="h-3.5 w-3.5" /> Bearbeiten
+                </button>
+                {confirmDelete ? (
+                  <button
+                    onClick={() => onDelete(report.id)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-bold hover:bg-destructive/90 transition-colors animate-pulse"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Wirklich löschen?
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDelete(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-bold hover:bg-destructive/20 transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Löschen
+                  </button>
+                )}
+              </div>
+            </>
           )}
         </div>
-      </div>
+      )}
     </div>
   );
 }
