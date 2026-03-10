@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from '@/lib/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronUp, ChevronDown, Flame, Star, Loader2, X, Pencil, Trash2, Minus, Plus } from 'lucide-react';
+import { ChevronUp, ChevronDown, Flame, Star, Loader2, X, Pencil, Trash2, Minus, Plus, Leaf } from 'lucide-react';
 import { hapticFeedback } from '@/lib/haptics';
 import { saveAsRecipe } from '@/components/meals/SavedRecipesScreen';
 import { toast } from 'sonner';
+import { estimateMicronutrients, MICRO_LABELS, type MicronutrientEstimate } from '@/lib/micronutrients';
 
 interface BottomCartProps {
   items: AnalyzedFoodItem[];
