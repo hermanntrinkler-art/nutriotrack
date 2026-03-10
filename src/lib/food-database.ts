@@ -8,6 +8,7 @@ export interface FoodEntry {
   fat_g: number;
   carbs_g: number;
   category: string;
+  gram_per_piece?: number; // grams per Scheibe/Stück for unit conversion
   matchedAlias?: string;
   communityContributor?: string;
   communityBrand?: string;
@@ -52,22 +53,22 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Wodka', name_en: 'Vodka', quantity: 40, unit: 'ml', calories: 90, protein_g: 0, fat_g: 0, carbs_g: 0, category: 'drinks' },
 
   // Brot / Bread
-  { name: 'Vollkornbrot', name_en: 'Whole Grain Bread', quantity: 1, unit: 'Scheibe', calories: 110, protein_g: 4, fat_g: 1, carbs_g: 20, category: 'bread' },
-  { name: 'Weißbrot', name_en: 'White Bread', quantity: 1, unit: 'Scheibe', calories: 75, protein_g: 2, fat_g: 1, carbs_g: 14, category: 'bread' },
-  { name: 'Leinsamenbrot', name_en: 'Linseed Bread', quantity: 1, unit: 'Scheibe', calories: 120, protein_g: 5, fat_g: 3, carbs_g: 17, category: 'bread' },
-  { name: 'Roggenbrot', name_en: 'Rye Bread', quantity: 1, unit: 'Scheibe', calories: 95, protein_g: 3, fat_g: 1, carbs_g: 18, category: 'bread' },
-  { name: 'Dinkelbrot', name_en: 'Spelt Bread', quantity: 1, unit: 'Scheibe', calories: 105, protein_g: 4, fat_g: 1, carbs_g: 19, category: 'bread' },
-  { name: 'Pumpernickel', name_en: 'Pumpernickel', quantity: 1, unit: 'Scheibe', calories: 80, protein_g: 3, fat_g: 0, carbs_g: 16, category: 'bread' },
-  { name: 'Eiweißbrot', name_en: 'Protein Bread', quantity: 1, unit: 'Scheibe', calories: 110, protein_g: 11, fat_g: 5, carbs_g: 4, category: 'bread' },
-  { name: 'Knäckebrot', name_en: 'Crispbread', quantity: 1, unit: 'Scheibe', calories: 40, protein_g: 1, fat_g: 0, carbs_g: 8, category: 'bread' },
-  { name: 'Ciabatta', name_en: 'Ciabatta', quantity: 1, unit: 'Stück', calories: 180, protein_g: 6, fat_g: 2, carbs_g: 34, category: 'bread' },
-  { name: 'Mehrkornbrötchen', name_en: 'Multigrain Roll', quantity: 1, unit: 'Stück', calories: 160, protein_g: 6, fat_g: 2, carbs_g: 28, category: 'bread' },
-  { name: 'Kürbiskernbrot', name_en: 'Pumpkin Seed Bread', quantity: 1, unit: 'Scheibe', calories: 125, protein_g: 5, fat_g: 4, carbs_g: 17, category: 'bread' },
-  { name: 'Sonnenblumenkernbrot', name_en: 'Sunflower Seed Bread', quantity: 1, unit: 'Scheibe', calories: 120, protein_g: 5, fat_g: 3, carbs_g: 18, category: 'bread' },
-  { name: 'Brötchen', name_en: 'Roll', quantity: 1, unit: 'Stück', calories: 150, protein_g: 5, fat_g: 1, carbs_g: 28, category: 'bread' },
-  { name: 'Croissant', name_en: 'Croissant', quantity: 1, unit: 'Stück', calories: 230, protein_g: 5, fat_g: 12, carbs_g: 26, category: 'bread' },
-  { name: 'Toast', name_en: 'Toast', quantity: 1, unit: 'Scheibe', calories: 65, protein_g: 2, fat_g: 1, carbs_g: 12, category: 'bread' },
-  { name: 'Laugenstange', name_en: 'Pretzel Stick', quantity: 1, unit: 'Stück', calories: 190, protein_g: 6, fat_g: 2, carbs_g: 35, category: 'bread' },
+  { name: 'Vollkornbrot', name_en: 'Whole Grain Bread', quantity: 1, unit: 'Scheibe', calories: 110, protein_g: 4, fat_g: 1, carbs_g: 20, category: 'bread', gram_per_piece: 50 },
+  { name: 'Weißbrot', name_en: 'White Bread', quantity: 1, unit: 'Scheibe', calories: 75, protein_g: 2, fat_g: 1, carbs_g: 14, category: 'bread', gram_per_piece: 30 },
+  { name: 'Leinsamenbrot', name_en: 'Linseed Bread', quantity: 1, unit: 'Scheibe', calories: 120, protein_g: 5, fat_g: 3, carbs_g: 17, category: 'bread', gram_per_piece: 55 },
+  { name: 'Roggenbrot', name_en: 'Rye Bread', quantity: 1, unit: 'Scheibe', calories: 95, protein_g: 3, fat_g: 1, carbs_g: 18, category: 'bread', gram_per_piece: 45 },
+  { name: 'Dinkelbrot', name_en: 'Spelt Bread', quantity: 1, unit: 'Scheibe', calories: 105, protein_g: 4, fat_g: 1, carbs_g: 19, category: 'bread', gram_per_piece: 50 },
+  { name: 'Pumpernickel', name_en: 'Pumpernickel', quantity: 1, unit: 'Scheibe', calories: 80, protein_g: 3, fat_g: 0, carbs_g: 16, category: 'bread', gram_per_piece: 40 },
+  { name: 'Eiweißbrot', name_en: 'Protein Bread', quantity: 1, unit: 'Scheibe', calories: 110, protein_g: 11, fat_g: 5, carbs_g: 4, category: 'bread', gram_per_piece: 45 },
+  { name: 'Knäckebrot', name_en: 'Crispbread', quantity: 1, unit: 'Scheibe', calories: 40, protein_g: 1, fat_g: 0, carbs_g: 8, category: 'bread', gram_per_piece: 12 },
+  { name: 'Ciabatta', name_en: 'Ciabatta', quantity: 1, unit: 'Stück', calories: 180, protein_g: 6, fat_g: 2, carbs_g: 34, category: 'bread', gram_per_piece: 70 },
+  { name: 'Mehrkornbrötchen', name_en: 'Multigrain Roll', quantity: 1, unit: 'Stück', calories: 160, protein_g: 6, fat_g: 2, carbs_g: 28, category: 'bread', gram_per_piece: 65 },
+  { name: 'Kürbiskernbrot', name_en: 'Pumpkin Seed Bread', quantity: 1, unit: 'Scheibe', calories: 125, protein_g: 5, fat_g: 4, carbs_g: 17, category: 'bread', gram_per_piece: 55 },
+  { name: 'Sonnenblumenkernbrot', name_en: 'Sunflower Seed Bread', quantity: 1, unit: 'Scheibe', calories: 120, protein_g: 5, fat_g: 3, carbs_g: 18, category: 'bread', gram_per_piece: 55 },
+  { name: 'Brötchen', name_en: 'Roll', quantity: 1, unit: 'Stück', calories: 150, protein_g: 5, fat_g: 1, carbs_g: 28, category: 'bread', gram_per_piece: 55 },
+  { name: 'Croissant', name_en: 'Croissant', quantity: 1, unit: 'Stück', calories: 230, protein_g: 5, fat_g: 12, carbs_g: 26, category: 'bread', gram_per_piece: 60 },
+  { name: 'Toast', name_en: 'Toast', quantity: 1, unit: 'Scheibe', calories: 65, protein_g: 2, fat_g: 1, carbs_g: 12, category: 'bread', gram_per_piece: 25 },
+  { name: 'Laugenstange', name_en: 'Pretzel Stick', quantity: 1, unit: 'Stück', calories: 190, protein_g: 6, fat_g: 2, carbs_g: 35, category: 'bread', gram_per_piece: 75 },
   { name: 'Laugenbrötchen', name_en: 'Pretzel Roll', quantity: 1, unit: 'Stück', calories: 175, protein_g: 6, fat_g: 2, carbs_g: 32, category: 'bread' },
   { name: 'Baguette', name_en: 'Baguette', quantity: 100, unit: 'g', calories: 270, protein_g: 9, fat_g: 1, carbs_g: 54, category: 'bread' },
   { name: 'Fladenbrot', name_en: 'Flatbread', quantity: 100, unit: 'g', calories: 275, protein_g: 8, fat_g: 3, carbs_g: 52, category: 'bread' },
