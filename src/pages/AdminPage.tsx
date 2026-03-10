@@ -589,40 +589,304 @@ function ReportCard({ report, onUpdateStatus, onDelete, onUpdate }: {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [productData, setProductData] = useState<{
     calories: number; protein_g: number; fat_g: number; carbs_g: number;
-    quantity: number; unit: string; brand?: string; store?: string;
+    quantity: number; unit: string; brand?: string; store?: string; food_name?: string;
   } | null>(null);
+  const [editProduct, setEditProduct] = useState<typeof productData>(null);
   const [loadingProduct, setLoadingProduct] = useState(false);
+  const [savingProduct, setSavingProduct] = useState(false);
+  const isCommunity = !!report.community_product_id;
 
-  // Load product data when expanded
   useEffect(() => {
     if (!expanded || productData) return;
-    
     const loadProduct = async () => {
       setLoadingProduct(true);
-      
-      // Try community product first
       if (report.community_product_id) {
         const { data } = await supabase
           .from('community_products')
-          .select('calories, protein_g, fat_g, carbs_g, quantity, unit, brand, store')
+          .select('food_name, calories, protein_g, fat_g, carbs_g, quantity, unit, brand, store')
           .eq('id', report.community_product_id)
           .single();
-        if (data) {
-          setProductData(data as any);
-          setLoadingProduct(false);
-          return;
-        }
+        if (data) { setProductData(data as any); setLoadingProduct(false); return; }
       }
-      
-      // Try local food database
       const results = searchFoods(report.food_name, 'de');
       if (results.length > 0) {
         const f = results[0];
-        setProductData({ calories: f.calories, protein_g: f.protein_g, fat_g: f.fat_g, carbs_g: f.carbs_g, quantity: f.quantity, unit: f.unit });
-        setLoadingProduct(false);
-        return;
+        setProductData({ food_name: f.name, calories: f.calories, protein_g: f.protein_g, fat_g: f.fat_g, carbs_g: f.carbs_g, quantity: f.quantity, unit: f.unit });
       }
+      setLoadingProduct(false);
+    };
+    loadProduct();
+  }, [expanded]);
 
+  const micros = useMemo(() => {
+    if (!productData) return null;
+    const grams = productData.unit === 'g' || productData.unit === 'ml' ? productData.quantity : 100;
+    return estimateMicronutrients(report.food_name, grams);
+  }, [productData, report.food_name]);
+
+  const handleSaveReport = async () => {
+    const ok = await onUpdate(report.id, { food_name: editName, reason: editReason || null, food_source: editSource });
+    if (ok) setEditing(false);
+  };
+
+  const handleSaveProduct = async () => {
+    if (!editProduct || !report.community_product_id) return;
+    setSavingProduct(true);
+    const { error } = await supabase
+      .from('community_products')
+      .update({
+        food_name: editProduct.food_name || report.food_name,
+        calories: Number(editProduct.calories),
+        protein_g: Number(editProduct.protein_g),
+        fat_g: Number(editProduct.fat_g),
+        carbs_g: Number(editProduct.carbs_g),
+        quantity: Number(editProduct.quantity),
+        unit: editProduct.unit,
+        brand: editProduct.brand || null,
+        store: editProduct.store || null,
+      } as any)
+      .eq('id', report.community_product_id);
+    setSavingProduct(false);
+    if (error) {
+      toast.error('Fehler beim Speichern der Produktdaten');
+    } else {
+      toast.success('Produktdaten aktualisiert!');
+      setProductData({ ...editProduct });
+      setEditProduct(null);
+    }
+  };
+
+  const startEditProduct = () => {
+    if (productData) setEditProduct({ ...productData });
+  };
+
+  const NutritionRow = ({ label, value, unit }: { label: string; value: number | string; unit: string }) => (
+    <div className="flex justify-between text-[11px]">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium">{value} {unit}</span>
+    </div>
+  );
+
+  const EditField = ({ label, value, onChange, unit, type = 'number' }: { label: string; value: string | number; onChange: (v: string) => void; unit: string; type?: string }) => (
+    <div className="flex items-center gap-2 text-[11px]">
+      <span className="text-muted-foreground w-24 shrink-0">{label}</span>
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="flex-1 p-1.5 rounded-md border border-border bg-background text-xs text-right"
+        step={type === 'number' ? '0.1' : undefined}
+      />
+      <span className="text-muted-foreground text-[10px] w-6 shrink-0">{unit}</span>
+    </div>
+  );
+
+  return (
+    <div className={`border rounded-xl bg-card transition-colors ${isOpen ? 'border-destructive/30' : 'border-border opacity-70'}`}>
+      <button
+        onClick={() => { setExpanded(!expanded); setConfirmDelete(false); }}
+        className="w-full p-3 flex items-center justify-between gap-2 text-left"
+      >
+        <div className="min-w-0 flex-1">
+          <p className="font-bold text-sm">{report.food_name}</p>
+          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
+            <span className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-medium">{report.food_source}</span>
+            <span>📅 {new Date(report.created_at).toLocaleDateString('de-DE')}</span>
+          </div>
+        </div>
+        {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
+      </button>
+
+      {expanded && (
+        <div className="px-3 pb-3 space-y-3 border-t border-border pt-3">
+          {/* Report meta editing */}
+          {editing ? (
+            <div className="space-y-2">
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase">Produktname</label>
+                <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full mt-0.5 text-sm p-2 rounded-lg border border-border bg-background" />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase">Quelle</label>
+                <input value={editSource} onChange={e => setEditSource(e.target.value)} className="w-full mt-0.5 text-sm p-2 rounded-lg border border-border bg-background" />
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase">Grund / Notiz</label>
+                <textarea value={editReason} onChange={e => setEditReason(e.target.value)} className="w-full mt-0.5 text-sm p-2 rounded-lg border border-border bg-background resize-none" rows={3} placeholder="Grund der Meldung..." />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={handleSaveReport} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors">
+                  <Save className="h-3.5 w-3.5" /> Speichern
+                </button>
+                <button onClick={() => { setEditing(false); setEditName(report.food_name); setEditReason(report.reason || ''); setEditSource(report.food_source); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-muted/80 transition-colors">
+                  <X className="h-3.5 w-3.5" /> Abbrechen
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Report info */}
+              <div className="space-y-1.5 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Status</span>
+                  <span className={`font-bold ${isOpen ? 'text-destructive' : 'text-primary'}`}>
+                    {report.status === 'open' ? 'Offen' : report.status === 'resolved' ? 'Erledigt' : 'Verworfen'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Gemeldet am</span>
+                  <span className="font-medium">{new Date(report.created_at).toLocaleString('de-DE')}</span>
+                </div>
+                {report.resolved_at && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Erledigt am</span>
+                    <span className="font-medium">{new Date(report.resolved_at).toLocaleString('de-DE')}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Melder-ID</span>
+                  <span className="font-mono text-[10px]">{report.reporter_id.slice(0, 8)}…</span>
+                </div>
+                {report.community_product_id && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Produkt-ID</span>
+                    <span className="font-mono text-[10px]">{report.community_product_id.slice(0, 8)}…</span>
+                  </div>
+                )}
+                {report.reason && (
+                  <div className="pt-1">
+                    <span className="text-muted-foreground">Grund:</span>
+                    <p className="mt-0.5 text-foreground">{report.reason}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Product nutritional data */}
+              {loadingProduct ? (
+                <div className="flex justify-center py-3"><Loader2 className="h-4 w-4 animate-spin text-primary" /></div>
+              ) : productData ? (
+                <div className="space-y-2">
+                  {/* Editable product data */}
+                  {editProduct ? (
+                    <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 space-y-2">
+                      <p className="text-[10px] font-bold text-primary uppercase mb-1">Nährwerte bearbeiten</p>
+                      <EditField label="Produktname" value={editProduct.food_name || ''} onChange={v => setEditProduct(p => p ? { ...p, food_name: v } : p)} unit="" type="text" />
+                      <EditField label="Marke" value={editProduct.brand || ''} onChange={v => setEditProduct(p => p ? { ...p, brand: v } : p)} unit="" type="text" />
+                      <EditField label="Geschäft" value={editProduct.store || ''} onChange={v => setEditProduct(p => p ? { ...p, store: v } : p)} unit="" type="text" />
+                      <div className="border-t border-border pt-2 mt-2 space-y-2">
+                        <div className="flex items-center gap-2 text-[11px]">
+                          <span className="text-muted-foreground w-24 shrink-0">Menge</span>
+                          <input type="number" value={editProduct.quantity} onChange={e => setEditProduct(p => p ? { ...p, quantity: Number(e.target.value) } : p)} className="flex-1 p-1.5 rounded-md border border-border bg-background text-xs text-right" />
+                          <input type="text" value={editProduct.unit} onChange={e => setEditProduct(p => p ? { ...p, unit: e.target.value } : p)} className="w-12 p-1.5 rounded-md border border-border bg-background text-xs text-center" />
+                        </div>
+                        <EditField label="Kalorien" value={editProduct.calories} onChange={v => setEditProduct(p => p ? { ...p, calories: Number(v) } : p)} unit="kcal" />
+                        <EditField label="Protein" value={editProduct.protein_g} onChange={v => setEditProduct(p => p ? { ...p, protein_g: Number(v) } : p)} unit="g" />
+                        <EditField label="Fett" value={editProduct.fat_g} onChange={v => setEditProduct(p => p ? { ...p, fat_g: Number(v) } : p)} unit="g" />
+                        <EditField label="Kohlenhydrate" value={editProduct.carbs_g} onChange={v => setEditProduct(p => p ? { ...p, carbs_g: Number(v) } : p)} unit="g" />
+                      </div>
+                      <div className="flex gap-2 pt-1">
+                        <button onClick={handleSaveProduct} disabled={savingProduct} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors disabled:opacity-50">
+                          {savingProduct ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />} Produktdaten speichern
+                        </button>
+                        <button onClick={() => setEditProduct(null)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-muted/80 transition-colors">
+                          <X className="h-3.5 w-3.5" /> Abbrechen
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="rounded-lg bg-muted/50 p-3 space-y-1">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase">
+                            Nährwerte pro {productData.quantity} {productData.unit}
+                          </p>
+                          {isCommunity && (
+                            <button onClick={startEditProduct} className="flex items-center gap-1 text-[10px] font-bold text-primary hover:text-primary/80 transition-colors">
+                              <Pencil className="h-3 w-3" /> Bearbeiten
+                            </button>
+                          )}
+                        </div>
+                        {productData.brand && <NutritionRow label="Marke" value={productData.brand} unit="" />}
+                        {productData.store && <NutritionRow label="Geschäft" value={productData.store} unit="" />}
+                        <NutritionRow label="Kalorien" value={Number(productData.calories).toFixed(0)} unit="kcal" />
+                        <NutritionRow label="Protein" value={Number(productData.protein_g).toFixed(1)} unit="g" />
+                        <NutritionRow label="Fett" value={Number(productData.fat_g).toFixed(1)} unit="g" />
+                        <NutritionRow label="Kohlenhydrate" value={Number(productData.carbs_g).toFixed(1)} unit="g" />
+                      </div>
+                      {!isCommunity && (
+                        <p className="text-[10px] text-muted-foreground italic">ℹ️ Nur Community-Produkte können bearbeitet werden</p>
+                      )}
+                    </>
+                  )}
+
+                  {micros && !editProduct && (
+                    <>
+                      <div className="rounded-lg bg-muted/50 p-3 space-y-1">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Vitamine (geschätzt)</p>
+                        <NutritionRow label="Vitamin A" value={micros.vitaminA_ug} unit="µg" />
+                        <NutritionRow label="Vitamin B1" value={micros.vitaminB1_mg} unit="mg" />
+                        <NutritionRow label="Vitamin B2" value={micros.vitaminB2_mg} unit="mg" />
+                        <NutritionRow label="Vitamin B6" value={micros.vitaminB6_mg} unit="mg" />
+                        <NutritionRow label="Vitamin B12" value={micros.vitaminB12_ug} unit="µg" />
+                        <NutritionRow label="Vitamin C" value={micros.vitaminC_mg} unit="mg" />
+                        <NutritionRow label="Vitamin D" value={micros.vitaminD_ug} unit="µg" />
+                        <NutritionRow label="Vitamin E" value={micros.vitaminE_mg} unit="mg" />
+                        <NutritionRow label="Vitamin K" value={micros.vitaminK_ug} unit="µg" />
+                        <NutritionRow label="Folsäure" value={micros.folate_ug} unit="µg" />
+                      </div>
+                      <div className="rounded-lg bg-muted/50 p-3 space-y-1">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1.5">Mineralstoffe (geschätzt)</p>
+                        <NutritionRow label="Eisen" value={micros.iron_mg} unit="mg" />
+                        <NutritionRow label="Kalzium" value={micros.calcium_mg} unit="mg" />
+                        <NutritionRow label="Magnesium" value={micros.magnesium_mg} unit="mg" />
+                        <NutritionRow label="Zink" value={micros.zinc_mg} unit="mg" />
+                        <NutritionRow label="Kalium" value={micros.potassium_mg} unit="mg" />
+                        <NutritionRow label="Natrium" value={micros.sodium_mg} unit="mg" />
+                        <NutritionRow label="Phosphor" value={micros.phosphorus_mg} unit="mg" />
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted-foreground italic">Keine Produktdaten gefunden</p>
+              )}
+
+              {/* Action buttons */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {isOpen ? (
+                  <>
+                    <button onClick={() => onUpdateStatus(report.id, 'resolved')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-colors">
+                      <CheckCircle className="h-3.5 w-3.5" /> Erledigt
+                    </button>
+                    <button onClick={() => onUpdateStatus(report.id, 'dismissed')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-muted/80 transition-colors">
+                      <XCircle className="h-3.5 w-3.5" /> Verwerfen
+                    </button>
+                  </>
+                ) : (
+                  <button onClick={() => onUpdateStatus(report.id, 'open')} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-xs font-bold hover:bg-muted/80 transition-colors">
+                    <Flag className="h-3.5 w-3.5" /> Wieder öffnen
+                  </button>
+                )}
+                <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-accent-foreground text-xs font-bold hover:bg-accent/80 transition-colors">
+                  <Pencil className="h-3.5 w-3.5" /> Meldung
+                </button>
+                {confirmDelete ? (
+                  <button onClick={() => onDelete(report.id)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-bold hover:bg-destructive/90 transition-colors animate-pulse">
+                    <Trash2 className="h-3.5 w-3.5" /> Wirklich löschen?
+                  </button>
+                ) : (
+                  <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-bold hover:bg-destructive/20 transition-colors">
+                    <Trash2 className="h-3.5 w-3.5" /> Löschen
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
       setLoadingProduct(false);
     };
     
