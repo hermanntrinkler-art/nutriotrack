@@ -46,6 +46,17 @@ function getSlotForTime(time: string | null): MealSlot {
   return 'snack3';
 }
 
+function getDefaultTimeForSlot(slot: MealSlot): string {
+  switch (slot) {
+    case 'breakfast': return '08:00:00';
+    case 'snack1': return '10:00:00';
+    case 'lunch': return '12:00:00';
+    case 'snack2': return '15:00:00';
+    case 'dinner': return '18:00:00';
+    case 'snack3': return '21:00:00';
+  }
+}
+
 function getWeekDays(selectedDate: Date): { date: Date; label: string; dayNum: number; isToday: boolean; isSelected: boolean }[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
