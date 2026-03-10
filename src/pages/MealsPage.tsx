@@ -863,7 +863,7 @@ export default function MealsPage() {
           />
 
           <button
-            onClick={() => { setReturnToReview(true); setStep('search'); }}
+            onClick={() => { setReturnToReview(true); setDiaryTab('search'); setStep('diary-entry'); }}
             className="w-full flex items-center justify-center gap-1.5 rounded-xl py-2.5 px-3 bg-muted hover:bg-muted/80 border border-border text-foreground font-medium text-sm transition-all active:scale-[0.98]"
           >
             <Plus className="h-4 w-4" />
