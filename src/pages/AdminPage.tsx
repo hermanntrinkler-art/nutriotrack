@@ -887,13 +887,8 @@ function ReportCard({ report, onUpdateStatus, onDelete, onUpdate }: {
     </div>
   );
 }
-    if (!productData) return null;
-    const grams = productData.unit === 'g' || productData.unit === 'ml' ? productData.quantity : 100;
-    return estimateMicronutrients(report.food_name, grams);
-  }, [productData, report.food_name]);
 
-  const handleSave = async () => {
-    const ok = await onUpdate(report.id, {
+
       food_name: editName,
       reason: editReason || null,
       food_source: editSource,
