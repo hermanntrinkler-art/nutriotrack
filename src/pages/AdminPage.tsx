@@ -105,18 +105,25 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <Tabs defaultValue="badges">
-          <TabsList className="w-full grid grid-cols-2 mb-4">
+        <Tabs defaultValue="reports">
+          <TabsList className="w-full grid grid-cols-3 mb-4">
+            <TabsTrigger value="reports" className="flex items-center gap-1.5">
+              <Flag className="h-4 w-4" />
+              Meldungen
+            </TabsTrigger>
             <TabsTrigger value="badges" className="flex items-center gap-1.5">
               <Image className="h-4 w-4" />
-              Badge Images
+              Badges
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-1.5">
               <Users className="h-4 w-4" />
-              User Analytics
+              Users
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="reports">
+            <FoodReports />
+          </TabsContent>
           <TabsContent value="badges">
             <BadgeManager />
           </TabsContent>
