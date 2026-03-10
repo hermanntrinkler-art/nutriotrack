@@ -116,7 +116,7 @@ export default function MealsPage() {
     if (!user) return;
     const { data } = await supabase
       .from('meal_entries')
-      .select('*')
+      .select('*, meal_food_items(*)')
       .eq('user_id', user.id)
       .eq('entry_date', dateStr)
       .order('entry_time', { ascending: true });
