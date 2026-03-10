@@ -35,6 +35,7 @@ const UNIT_TO_GRAMS: Record<string, number> = {
   TL: 5,
   EL: 15,
   'Stück': 0, // dynamic, looked up per food
+  'Portion': 0, // dynamic, looked up per food
 };
 
 // Average weight per piece in grams for common foods
