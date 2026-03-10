@@ -99,6 +99,7 @@ export default function MealsPage() {
   const [goals, setGoals] = useState<UserGoals | null>(null);
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
   const [activityForm, setActivityForm] = useState({ name: '', duration: 30, calories: 0, emoji: '🏃' });
+  const [initialSearchItem, setInitialSearchItem] = useState<AnalyzedFoodItem | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
