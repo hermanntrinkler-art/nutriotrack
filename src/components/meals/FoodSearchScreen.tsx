@@ -330,23 +330,34 @@ export default function FoodSearchScreen({ onDone, onCancel, hideHeader, onBarco
         </div>
       )}
 
-      {/* Search input */}
-      <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
-        <Input
-          ref={inputRef}
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder={language === 'de' ? 'z.B. Haferflocken, Cappuccino, Reis...' : 'e.g. Oats, Cappuccino, Rice...'}
-          className="pl-10 h-12 rounded-2xl text-base bg-card border-border"
-          autoFocus
-        />
-        {query && (
+      {/* Search input with barcode button */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
+          <Input
+            ref={inputRef}
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder={language === 'de' ? 'z.B. Haferflocken, Cappuccino, Reis...' : 'e.g. Oats, Cappuccino, Rice...'}
+            className="pl-10 h-12 rounded-2xl text-base bg-card border-border"
+            autoFocus
+          />
+          {query && (
+            <button
+              onClick={() => { setQuery(''); inputRef.current?.focus(); }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          )}
+        </div>
+        {onBarcodeScan && (
           <button
-            onClick={() => { setQuery(''); inputRef.current?.focus(); }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted"
+            onClick={onBarcodeScan}
+            className="h-12 w-12 rounded-2xl border border-border bg-card flex items-center justify-center hover:bg-muted transition-colors shrink-0"
+            title={language === 'de' ? 'Barcode scannen' : 'Scan barcode'}
           >
-            <X className="h-4 w-4 text-muted-foreground" />
+            <ScanBarcode className="h-5 w-5 text-muted-foreground" />
           </button>
         )}
       </div>
