@@ -300,7 +300,24 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
             </span>
             <span>·</span>
             <button
-              onClick={() => { setReported(true); hapticFeedback('light'); }}
+              onClick={async () => {
+                if (!user || !food) return;
+                setReported(true);
+                hapticFeedback('light');
+                const { error } = await supabase.from('food_reports').insert({
+                  reporter_id: user.id,
+                  food_name: food.name,
+                  food_source: food.category || 'database',
+                  community_product_id: food.category === 'community' && food.communityProductId ? food.communityProductId : null,
+                  reason: null,
+                } as any);
+                if (error) {
+                  toast.error(language === 'de' ? 'Fehler beim Melden' : 'Failed to report');
+                  setReported(false);
+                } else {
+                  toast.success(language === 'de' ? 'Problem gemeldet – Danke!' : 'Problem reported – Thanks!');
+                }
+              }}
               className={`flex items-center gap-0.5 ${reported ? 'text-destructive' : 'hover:text-destructive'} transition-colors`}
               disabled={reported}
             >
