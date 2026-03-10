@@ -17,6 +17,7 @@ import CommunityProductForm from '@/components/CommunityProductForm';
 interface FoodSearchScreenProps {
   onDone: (items: AnalyzedFoodItem[]) => void;
   onCancel: () => void;
+  hideHeader?: boolean;
 }
 
 interface SavedFavorite {
