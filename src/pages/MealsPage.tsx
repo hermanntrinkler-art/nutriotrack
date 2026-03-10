@@ -381,7 +381,8 @@ export default function MealsPage() {
   const openSlot = (slot: typeof MEAL_SLOTS[0]) => {
     setActiveSlot(slot.slot);
     setMealType(slot.type);
-    setStep('select-method');
+    setDiaryTab('search');
+    setStep('diary-entry');
   };
 
   // --- Render ---
