@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Shield, Users, Image, Upload, Trash2, ArrowLeft, Loader2, Flag, CheckCircle, XCircle, ChevronDown, ChevronUp, Pencil, Save, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { searchFoods, type FoodEntry } from '@/lib/food-database';
+import { estimateMicronutrients } from '@/lib/micronutrients';
 
 // Static badge imports for preview
 import badgeFirstMeal from '@/assets/badges/first-meal.png';
