@@ -110,7 +110,7 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Oatly Hafermilch', name_en: 'Oatly Oat Milk', quantity: 200, unit: 'ml', calories: 96, protein_g: 1, fat_g: 3, carbs_g: 14, category: 'brands' },
   { name: 'Activia Joghurt', name_en: 'Activia Yogurt', quantity: 150, unit: 'g', calories: 108, protein_g: 5, fat_g: 3, carbs_g: 15, category: 'brands' },
   { name: 'Müller Milchreis', name_en: 'Müller Rice Pudding', quantity: 200, unit: 'g', calories: 220, protein_g: 6, fat_g: 5, carbs_g: 38, category: 'brands' },
-  { name: 'Iglo Fischstäbchen', name_en: 'Iglo Fish Fingers', quantity: 4, unit: 'Stück', calories: 220, protein_g: 12, fat_g: 10, carbs_g: 20, category: 'brands' },
+  { name: 'Iglo Fischstäbchen', name_en: 'Iglo Fish Fingers', quantity: 4, unit: 'Stück', calories: 220, protein_g: 12, fat_g: 10, carbs_g: 20, category: 'brands', gram_per_piece: 30 },
   { name: 'McCain Pommes', name_en: 'McCain French Fries', quantity: 150, unit: 'g', calories: 230, protein_g: 3, fat_g: 8, carbs_g: 36, category: 'brands' },
 
   // Eigenmarken / Store Brands – EDEKA (Gut & Günstig, Gut Bio)
