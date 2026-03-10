@@ -36,6 +36,7 @@ interface RecipeItem {
 interface SavedRecipesScreenProps {
   onSelect: (items: AnalyzedFoodItem[], mealType: string) => void;
   onCancel: () => void;
+  hideHeader?: boolean;
 }
 
 export default function SavedRecipesScreen({ onSelect, onCancel }: SavedRecipesScreenProps) {
