@@ -526,9 +526,9 @@ export default function FoodSearchScreen({
         )}
       </div>
 
-      {/* Bottom Cart — hidden in singleAddMode */}
+      {/* Bottom Cart — only show for AI results that need review */}
       <AnimatePresence>
-        {selectedItems.length > 0 && !singleAddMode && (
+        {selectedItems.length > 0 && isAiResult && (
           <BottomCart
             items={selectedItems}
             isAiResult={isAiResult || false}
