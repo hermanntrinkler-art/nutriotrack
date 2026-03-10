@@ -67,6 +67,7 @@ async function lookupOpenFoodFacts(code: string): Promise<OFFResult> {
           fat_g: Math.round(fat100 * factor * 10) / 10,
           carbs_g: Math.round(carbs100 * factor * 10) / 10,
           confidence_score: 0.95,
+          barcode: code,
         },
         hasNutrition: true,
       };
