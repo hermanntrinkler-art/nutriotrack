@@ -536,7 +536,7 @@ export default function MealsPage() {
                 </div>
               </div>
               <button
-                onClick={() => setActivitySheetOpen(true)}
+                onClick={() => { setDiaryTab('activities'); setStep('diary-entry'); }}
                 className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
               >
                 <Plus className="h-4 w-4 text-primary" />
@@ -558,79 +558,6 @@ export default function MealsPage() {
               </div>
             )}
           </div>
-
-          {/* Activity Sheet */}
-          <Sheet open={activitySheetOpen} onOpenChange={setActivitySheetOpen}>
-            <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>{language === 'de' ? 'Aktivität hinzufügen' : 'Add Activity'}</SheetTitle>
-              </SheetHeader>
-              <div className="space-y-4 mt-4">
-                {/* Presets */}
-                <div className="grid grid-cols-3 gap-2">
-                  {PRESET_ACTIVITIES.map(p => (
-                    <button
-                      key={p.name}
-                      onClick={() => selectPresetActivity(p)}
-                      className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all ${
-                        activityForm.name === (language === 'de' ? p.name : p.nameEn)
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border hover:border-primary/30'
-                      }`}
-                    >
-                      <span className="text-2xl">{p.emoji}</span>
-                      <span className="text-xs font-medium">{language === 'de' ? p.name : p.nameEn}</span>
-                      <span className="text-[10px] text-muted-foreground">{p.kcalPerMin} kcal/min</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Custom name */}
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">{language === 'de' ? 'Name' : 'Name'}</label>
-                  <Input
-                    value={activityForm.name}
-                    onChange={e => setActivityForm(f => ({ ...f, name: e.target.value }))}
-                    placeholder={language === 'de' ? 'z.B. Spaziergang' : 'e.g. Walking'}
-                  />
-                </div>
-
-                {/* Duration */}
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">{language === 'de' ? 'Dauer (Minuten)' : 'Duration (min)'}</label>
-                  <Input
-                    type="number"
-                    value={activityForm.duration}
-                    onChange={e => {
-                      const dur = Number(e.target.value);
-                      const preset = PRESET_ACTIVITIES.find(p => (language === 'de' ? p.name : p.nameEn) === activityForm.name);
-                      setActivityForm(f => ({
-                        ...f,
-                        duration: dur,
-                        calories: preset ? dur * preset.kcalPerMin : f.calories,
-                      }));
-                    }}
-                    min={1}
-                  />
-                </div>
-
-                {/* Calories */}
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">{language === 'de' ? 'Verbrannte kcal' : 'Calories burned'}</label>
-                  <Input
-                    type="number"
-                    value={activityForm.calories}
-                    onChange={e => setActivityForm(f => ({ ...f, calories: Number(e.target.value) }))}
-                    min={0}
-                  />
-                </div>
-
-                <Button onClick={saveActivity} className="w-full" disabled={!activityForm.name || activityForm.calories <= 0}>
-                  {language === 'de' ? 'Speichern' : 'Save'}
-                </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
         </div>
       )}
 
