@@ -179,7 +179,29 @@ export default function EditMealPage() {
         onEditItem={(index) => setEditingIndex(index)}
       />
 
-      {/* Totals */}
+      {/* Share to Community buttons */}
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground font-medium">👥 Zur Community teilen</p>
+        {items.map((item, index) => (
+          <div key={index} className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2">
+            <span className="text-sm truncate flex-1">{item.food_name || '—'}</span>
+            <button
+              onClick={() => handleShareToCommunity(index)}
+              disabled={sharedIndices.has(index) || sharingIndex === index || !item.food_name}
+              className="ml-2 p-1.5 rounded-md hover:bg-accent transition-colors disabled:opacity-50"
+            >
+              {sharingIndex === index ? (
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              ) : sharedIndices.has(index) ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <Users className="h-4 w-4 text-primary" />
+              )}
+            </button>
+          </div>
+        ))}
+      </div>
+
       <div className="nutri-card-highlight">
         <div className="grid grid-cols-4 gap-2 text-center text-sm">
           <div>
