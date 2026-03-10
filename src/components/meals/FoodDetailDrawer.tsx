@@ -331,6 +331,20 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
         </DrawerHeader>
 
         <div className="px-4 pb-6 space-y-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+          {/* Warning when no nutrition data */}
+          {scaled.calories === 0 && scaled.protein_g === 0 && scaled.fat_g === 0 && scaled.carbs_g === 0 && (
+            <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 px-4 py-3 text-sm">
+              <p className="font-semibold text-amber-700 dark:text-amber-400">
+                {language === 'de' ? '⚠️ Keine Nährwerte vorhanden' : '⚠️ No nutrition data available'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {language === 'de'
+                  ? 'Nutze "Produktdaten korrigieren" um die Werte einzutragen.'
+                  : 'Use "Correct product data" to add nutrition values.'}
+              </p>
+            </div>
+          )}
+
           {/* Main macros - large display */}
           <div className="grid grid-cols-4 gap-3 text-center">
             <div className="py-3 rounded-xl bg-muted">
