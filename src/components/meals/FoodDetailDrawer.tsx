@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from '@/lib/i18n';
-import { useAuth } from '@/contexts/AuthContext';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import type { FoodEntry } from '@/lib/food-database';
 import { Button } from '@/components/ui/button';
@@ -11,8 +10,16 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { Plus, Minus, Users, Globe, Flame } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Plus, Minus, Users, Globe, ChevronDown, ChevronUp, Pencil, BookOpen, Link2 } from 'lucide-react';
 import { hapticFeedback } from '@/lib/haptics';
+import { estimateMicronutrients, MICRO_LABELS, DAILY_TARGETS } from '@/lib/micronutrients';
 
 interface FoodDetailDrawerProps {
   food: FoodEntry | null;
@@ -22,52 +29,39 @@ interface FoodDetailDrawerProps {
   onShowCommunityForm?: () => void;
 }
 
-/** Common portion presets based on unit */
-function getPortionPresets(food: FoodEntry, language: string): { label: string; qty: number; unit: string }[] {
-  const presets: { label: string; qty: number; unit: string }[] = [];
+/** Get available units for a food item */
+function getAvailableUnits(food: FoodEntry): { value: string; label: string }[] {
+  const units: { value: string; label: string }[] = [];
+  units.push({ value: 'g', label: 'Gramm' });
 
   if (food.unit === 'Scheibe' || food.unit === 'Stück' || food.unit === 'piece') {
-    // For items already in "Scheibe"/piece, show the original + 100g equivalent
-    presets.push({
-      label: `1 ${food.unit} (${food.quantity}${food.unit === 'Scheibe' ? '' : ''})`,
-      qty: food.quantity,
-      unit: food.unit,
-    });
-    if (food.quantity !== 2) {
-      presets.push({
-        label: `2 ${food.unit}`,
-        qty: 2,
-        unit: food.unit,
-      });
-    }
-  } else {
-    // gram/ml based
-    presets.push({
-      label: '100 g',
-      qty: 100,
-      unit: 'g',
-    });
-    if (food.quantity !== 100) {
-      presets.push({
-        label: `${food.quantity} ${food.unit}`,
-        qty: food.quantity,
-        unit: food.unit,
-      });
-    }
-    presets.push({
-      label: '200 g',
-      qty: 200,
-      unit: 'g',
-    });
+    units.push({ value: food.unit, label: food.unit });
   }
-
-  return presets;
+  if (food.unit === 'ml') {
+    units.push({ value: 'ml', label: 'ml' });
+  }
+  return units;
 }
 
-function scaleNutrition(food: FoodEntry, qty: number, unit: string) {
-  // Calculate based on the food's reference quantity
-  const refQty = food.quantity || 100;
-  const factor = qty / refQty;
+/** Convert quantity to grams for calculation */
+function toGrams(food: FoodEntry, qty: number, unit: string): number {
+  if (unit === 'g' || unit === 'ml') return qty;
+  // piece-based: use gram_per_piece or food's reference
+  const gramPerPiece = food.gram_per_piece || (food.calories > 0 ? 100 : 100);
+  return qty * gramPerPiece;
+}
+
+/** Get per-100g nutrition values */
+function getPer100g(food: FoodEntry) {
+  const isPiece = food.unit === 'Scheibe' || food.unit === 'Stück' || food.unit === 'piece';
+  let factor: number;
+  if (isPiece && food.gram_per_piece) {
+    // 1 piece = gram_per_piece grams, food values are for 1 piece
+    factor = 100 / food.gram_per_piece;
+  } else {
+    const refQty = food.quantity || 100;
+    factor = 100 / refQty;
+  }
   return {
     calories: Math.round(food.calories * factor),
     protein_g: Math.round(food.protein_g * factor * 10) / 10,
@@ -76,11 +70,82 @@ function scaleNutrition(food: FoodEntry, qty: number, unit: string) {
   };
 }
 
+/** Scale nutrition for given qty/unit */
+function scaleNutrition(food: FoodEntry, qty: number, unit: string) {
+  const per100 = getPer100g(food);
+  const grams = toGrams(food, qty, unit);
+  const factor = grams / 100;
+  return {
+    calories: Math.round(per100.calories * factor),
+    protein_g: Math.round(per100.protein_g * factor * 10) / 10,
+    fat_g: Math.round(per100.fat_g * factor * 10) / 10,
+    carbs_g: Math.round(per100.carbs_g * factor * 10) / 10,
+  };
+}
+
+/** Quick presets */
+function getPortionPresets(food: FoodEntry): { label: string; qty: number; unit: string; gramLabel?: string }[] {
+  const presets: { label: string; qty: number; unit: string; gramLabel?: string }[] = [];
+  const isPiece = food.unit === 'Scheibe' || food.unit === 'Stück' || food.unit === 'piece';
+
+  // Always offer 100g
+  presets.push({ label: '100 g', qty: 100, unit: 'g' });
+
+  if (isPiece && food.gram_per_piece) {
+    presets.push({
+      label: `${food.unit} (${food.gram_per_piece} g)`,
+      qty: 1,
+      unit: food.unit,
+      gramLabel: `${food.gram_per_piece} g`,
+    });
+    if (food.gram_per_piece !== 30) {
+      presets.push({
+        label: `Stück (30 g)`,
+        qty: 30,
+        unit: 'g',
+      });
+    }
+  } else if (!isPiece && food.quantity !== 100) {
+    presets.push({
+      label: `${food.quantity} ${food.unit}`,
+      qty: food.quantity,
+      unit: food.unit,
+    });
+  }
+
+  return presets;
+}
+
+// Collapsible section component
+function CollapsibleSection({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-xl border border-border overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-card hover:bg-accent/30 transition-colors"
+      >
+        <span className="text-sm font-bold text-foreground">{title}</span>
+        {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+      </button>
+      {open && <div className="border-t border-border">{children}</div>}
+    </div>
+  );
+}
+
+function NutritionRow({ label, value, sub }: { label: string; value: string; sub?: boolean }) {
+  return (
+    <div className={`flex items-center justify-between px-4 py-2 text-sm border-b border-border last:border-b-0 ${sub ? 'pl-8' : ''}`}>
+      <span className={`${sub ? 'text-muted-foreground' : 'text-foreground font-medium'}`}>{label}</span>
+      <span className="font-bold tabular-nums text-foreground">{value}</span>
+    </div>
+  );
+}
+
 export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCommunityForm }: FoodDetailDrawerProps) {
   const { language } = useTranslation();
-  const { user } = useAuth();
   const [quantity, setQuantity] = useState<number>(food?.quantity || 100);
-  const [unit, setUnit] = useState<string>(food?.unit || 'g');
+  const [unit, setUnit] = useState<string>(food?.unit === 'Scheibe' || food?.unit === 'Stück' || food?.unit === 'piece' ? food.unit : 'g');
 
   // Reset when food changes
   const foodKey = food ? `${food.name}-${food.unit}` : '';
@@ -88,8 +153,14 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
   if (foodKey !== prevKey) {
     setPrevKey(foodKey);
     if (food) {
-      setQuantity(food.quantity);
-      setUnit(food.unit);
+      const isPiece = food.unit === 'Scheibe' || food.unit === 'Stück' || food.unit === 'piece';
+      if (isPiece) {
+        setQuantity(food.quantity);
+        setUnit(food.unit);
+      } else {
+        setQuantity(food.quantity);
+        setUnit(food.unit === 'ml' ? 'ml' : 'g');
+      }
     }
   }
 
@@ -98,23 +169,32 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
     return scaleNutrition(food, quantity, unit);
   }, [food, quantity, unit]);
 
-  // Per 100g reference values
   const per100 = useMemo(() => {
     if (!food) return { calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0 };
-    const refQty = food.quantity || 100;
-    const factor = 100 / refQty;
-    return {
-      calories: Math.round(food.calories * factor),
-      protein_g: Math.round(food.protein_g * factor * 10) / 10,
-      fat_g: Math.round(food.fat_g * factor * 10) / 10,
-      carbs_g: Math.round(food.carbs_g * factor * 10) / 10,
-    };
+    return getPer100g(food);
   }, [food]);
 
   const presets = useMemo(() => {
     if (!food) return [];
-    return getPortionPresets(food, language);
-  }, [food, language]);
+    return getPortionPresets(food);
+  }, [food]);
+
+  // Micronutrient estimation
+  const micros = useMemo(() => {
+    if (!food) return null;
+    const grams = toGrams(food, quantity, unit);
+    return estimateMicronutrients(food.name, grams);
+  }, [food, quantity, unit]);
+
+  const microsPer100 = useMemo(() => {
+    if (!food) return null;
+    return estimateMicronutrients(food.name, 100);
+  }, [food]);
+
+  const availableUnits = useMemo(() => {
+    if (!food) return [];
+    return getAvailableUnits(food);
+  }, [food]);
 
   const handleAdd = () => {
     if (!food) return;
@@ -133,9 +213,21 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
     onClose();
   };
 
-  const handlePreset = (preset: { qty: number; unit: string }) => {
-    setQuantity(preset.qty);
-    setUnit(preset.unit);
+  const handleUnitChange = (newUnit: string) => {
+    if (!food) return;
+    // Convert quantity when switching units
+    const isPieceUnit = newUnit === 'Scheibe' || newUnit === 'Stück' || newUnit === 'piece';
+    const wasPiece = unit === 'Scheibe' || unit === 'Stück' || unit === 'piece';
+    const gpp = food.gram_per_piece || 100;
+
+    if (isPieceUnit && !wasPiece) {
+      // g → piece: divide
+      setQuantity(Math.max(1, Math.round(quantity / gpp)));
+    } else if (!isPieceUnit && wasPiece) {
+      // piece → g: multiply
+      setQuantity(quantity * gpp);
+    }
+    setUnit(newUnit);
   };
 
   const isPiece = unit === 'Stück' || unit === 'Scheibe' || unit === 'piece';
@@ -153,29 +245,36 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
   const isCustom = food.category === 'custom';
   const name = language === 'de' ? food.name : food.name_en;
   const source = isCommunity
-    ? `👥 ${(food as any).communityContributor || 'Community'}`
+    ? `👥 ${food.communityContributor || 'Community'}`
     : isOnline
       ? 'OpenFoodFacts'
       : isCustom
         ? (language === 'de' ? 'Eigenes Produkt' : 'Custom Product')
         : (language === 'de' ? 'Datenbank' : 'Database');
 
+  // Estimated sub-macros (approximate ratios)
+  const saturatedFat = Math.round(scaled.fat_g * 0.35 * 10) / 10;
+  const sugar = Math.round(scaled.carbs_g * 0.1 * 10) / 10;
+  const fiber = Math.round(scaled.carbs_g * 0.15 * 10) / 10;
+
+  const saturatedFat100 = Math.round(per100.fat_g * 0.35 * 10) / 10;
+  const sugar100 = Math.round(per100.carbs_g * 0.1 * 10) / 10;
+  const fiber100 = Math.round(per100.carbs_g * 0.15 * 10) / 10;
+
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
-      <DrawerContent className="max-h-[85vh]">
+      <DrawerContent className="max-h-[90vh]">
         <DrawerHeader className="pb-2">
           <DrawerTitle className="text-left text-lg">{name}</DrawerTitle>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             {isCommunity && <Users className="h-3 w-3 text-primary" />}
             {isOnline && <Globe className="h-3 w-3" />}
             <span>{source}</span>
-            {(food as any).communityBrand && (
-              <span>· {(food as any).communityBrand}</span>
-            )}
+            {food.communityBrand && <span>· {food.communityBrand}</span>}
           </div>
         </DrawerHeader>
 
-        <div className="px-4 pb-6 space-y-5">
+        <div className="px-4 pb-6 space-y-4 overflow-y-auto max-h-[calc(90vh-80px)]">
           {/* Main macros - large display */}
           <div className="grid grid-cols-4 gap-3 text-center">
             <div className="py-3 rounded-xl bg-muted">
@@ -200,32 +299,41 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
             </div>
           </div>
 
-          {/* Quantity selector */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => handleStep(-1)}
-                className="w-10 h-10 rounded-full bg-muted hover:bg-accent flex items-center justify-center transition-colors active:scale-95"
-              >
-                <Minus className="h-4 w-4 text-foreground" />
-              </button>
-              <div className="flex-1 flex items-center gap-2">
-                <Input
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(Math.max(0, Number(e.target.value)))}
-                  className="h-11 text-center text-lg font-bold rounded-xl"
-                  min={0}
-                />
-                <span className="text-sm font-medium text-muted-foreground min-w-[40px]">{unit}</span>
-              </div>
-              <button
-                onClick={() => handleStep(1)}
-                className="w-10 h-10 rounded-full bg-muted hover:bg-accent flex items-center justify-center transition-colors active:scale-95"
-              >
-                <Plus className="h-4 w-4 text-foreground" />
-              </button>
-            </div>
+          {/* Quantity + Unit selector */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleStep(-1)}
+              className="w-10 h-10 rounded-full bg-muted hover:bg-accent flex items-center justify-center transition-colors active:scale-95 shrink-0"
+            >
+              <Minus className="h-4 w-4 text-foreground" />
+            </button>
+            <Input
+              type="number"
+              value={quantity}
+              onChange={(e) => setQuantity(Math.max(0, Number(e.target.value)))}
+              className="h-11 text-center text-lg font-bold rounded-xl flex-1"
+              min={0}
+            />
+            {availableUnits.length > 1 ? (
+              <Select value={unit} onValueChange={handleUnitChange}>
+                <SelectTrigger className="h-11 w-[120px] rounded-xl font-medium shrink-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableUnits.map((u) => (
+                    <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <span className="text-sm font-medium text-muted-foreground min-w-[50px] text-center shrink-0">{unit}</span>
+            )}
+            <button
+              onClick={() => handleStep(1)}
+              className="w-10 h-10 rounded-full bg-muted hover:bg-accent flex items-center justify-center transition-colors active:scale-95 shrink-0"
+            >
+              <Plus className="h-4 w-4 text-foreground" />
+            </button>
           </div>
 
           {/* Add button */}
@@ -250,10 +358,10 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
                   return (
                     <button
                       key={i}
-                      onClick={() => handlePreset(preset)}
+                      onClick={() => { setQuantity(preset.qty); setUnit(preset.unit); }}
                       className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-card border border-border hover:border-primary/30 hover:bg-accent/30 transition-all active:scale-[0.98]"
                     >
-                      <div>
+                      <div className="text-left">
                         <span className="text-sm font-semibold text-foreground">{preset.label}</span>
                         <p className="text-[11px] text-muted-foreground">
                           {presetScaled.calories} kcal · {presetScaled.fat_g}g F · {presetScaled.carbs_g}g KH · {presetScaled.protein_g}g P
@@ -269,31 +377,71 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
             </div>
           )}
 
-          {/* Per 100g reference - only show for gram/ml based items */}
-          {!isPiece && (
-            <div className="space-y-2">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
-                {language === 'de' ? 'Nährwerte pro 100 g' : 'Nutrition per 100 g'}
-              </p>
-              <div className="rounded-xl border border-border overflow-hidden">
-                {[
-                  { label: language === 'de' ? 'Brennwert' : 'Calories', value: `${per100.calories} kcal` },
-                  { label: language === 'de' ? 'Fett' : 'Fat', value: `${per100.fat_g} g` },
-                  { label: language === 'de' ? 'Kohlenhydrate' : 'Carbs', value: `${per100.carbs_g} g` },
-                  { label: 'Protein', value: `${per100.protein_g} g` },
-                ].map((row, i) => (
-                  <div
-                    key={row.label}
-                    className={`flex items-center justify-between px-3.5 py-2.5 text-sm ${
-                      i < 3 ? 'border-b border-border' : ''
-                    }`}
-                  >
-                    <span className="text-foreground font-medium">{row.label}</span>
-                    <span className="font-bold tabular-nums text-foreground">{row.value}</span>
-                  </div>
-                ))}
-              </div>
+          {/* Weitere Optionen */}
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+              {language === 'de' ? 'Weitere Optionen' : 'More Options'}
+            </p>
+            <div className="rounded-xl border border-border overflow-hidden divide-y divide-border">
+              {onShowCommunityForm && (
+                <button
+                  onClick={() => { onClose(); onShowCommunityForm(); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-accent/30 transition-colors"
+                >
+                  <Pencil className="h-4 w-4 text-muted-foreground" />
+                  <span>{language === 'de' ? 'Produktdaten korrigieren' : 'Correct product data'}</span>
+                </button>
+              )}
+              <button className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-accent/30 transition-colors">
+                <BookOpen className="h-4 w-4 text-muted-foreground" />
+                <span>{language === 'de' ? 'Zu eigenem Rezept hinzufügen' : 'Add to recipe'}</span>
+              </button>
+              <button className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-accent/30 transition-colors">
+                <Link2 className="h-4 w-4 text-muted-foreground" />
+                <span>{language === 'de' ? 'Shortcut erstellen' : 'Create shortcut'}</span>
+              </button>
             </div>
+          </div>
+
+          {/* Makronährstoffe (collapsible) */}
+          <CollapsibleSection title={language === 'de' ? 'Makronährstoffe' : 'Macronutrients'} defaultOpen={false}>
+            <div className="text-[11px] text-muted-foreground flex justify-between px-4 py-1.5 bg-muted/50">
+              <span>{language === 'de' ? 'Werte pro' : 'Values per'}</span>
+              <span>100 g</span>
+            </div>
+            <NutritionRow label={language === 'de' ? 'Brennwert' : 'Calories'} value={`${per100.calories} kcal`} />
+            <NutritionRow label={language === 'de' ? 'Fett' : 'Fat'} value={`${per100.fat_g} g`} />
+            <NutritionRow label={language === 'de' ? 'Gesättigte Fettsäuren' : 'Saturated Fat'} value={`${saturatedFat100} g`} sub />
+            <NutritionRow label={language === 'de' ? 'Kohlenhydrate' : 'Carbohydrates'} value={`${per100.carbs_g} g`} />
+            <NutritionRow label={language === 'de' ? 'Zucker' : 'Sugar'} value={`${sugar100} g`} sub />
+            <NutritionRow label={language === 'de' ? 'Ballaststoffe' : 'Fiber'} value={`${fiber100} g`} />
+            <NutritionRow label="Protein" value={`${per100.protein_g} g`} />
+          </CollapsibleSection>
+
+          {/* Vitamine (collapsible) */}
+          {microsPer100 && (
+            <CollapsibleSection title={language === 'de' ? 'Vitamine' : 'Vitamins'} defaultOpen={false}>
+              <div className="text-[11px] text-muted-foreground flex justify-between px-4 py-1.5 bg-muted/50">
+                <span>{language === 'de' ? 'Werte pro' : 'Values per'}</span>
+                <span>100 g</span>
+              </div>
+              <NutritionRow label="Vitamin C" value={`${microsPer100.vitaminC_mg} mg`} />
+              <NutritionRow label="Vitamin D" value={`${microsPer100.vitaminD_ug} µg`} />
+            </CollapsibleSection>
+          )}
+
+          {/* Mineralstoffe (collapsible) */}
+          {microsPer100 && (
+            <CollapsibleSection title={language === 'de' ? 'Mineralstoffe' : 'Minerals'} defaultOpen={false}>
+              <div className="text-[11px] text-muted-foreground flex justify-between px-4 py-1.5 bg-muted/50">
+                <span>{language === 'de' ? 'Werte pro' : 'Values per'}</span>
+                <span>100 g</span>
+              </div>
+              <NutritionRow label={language === 'de' ? 'Eisen' : 'Iron'} value={`${microsPer100.iron_mg} mg`} />
+              <NutritionRow label={language === 'de' ? 'Kalzium' : 'Calcium'} value={`${microsPer100.calcium_mg} mg`} />
+              <NutritionRow label="Magnesium" value={`${microsPer100.magnesium_mg} mg`} />
+              <NutritionRow label={language === 'de' ? 'Zink' : 'Zinc'} value={`${microsPer100.zinc_mg} mg`} />
+            </CollapsibleSection>
           )}
         </div>
       </DrawerContent>
