@@ -108,6 +108,17 @@ export interface DailySummary {
   updated_at: string;
 }
 
+export interface ActivityEntry {
+  id: string;
+  user_id: string;
+  entry_date: string;
+  activity_name: string;
+  duration_minutes: number | null;
+  calories_burned: number;
+  emoji: string | null;
+  created_at: string;
+}
+
 // For the mock AI analysis
 export interface AnalyzedFoodItem {
   food_name: string;

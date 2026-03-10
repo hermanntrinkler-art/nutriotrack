@@ -114,6 +114,27 @@ export default function DailyView({ meals, selectedDate, goals }: DailyViewProps
         <MacroProgress label={t('dashboard.carbs')} current={totals.carbs} target={goals?.carbs_target_g || 250} color="bg-carbs" />
       </div>
 
+      {/* Burned calories */}
+      {totalBurned > 0 && (
+        <div className="nutri-card">
+          <div className="flex items-center gap-2 mb-2">
+            <Flame className="h-4 w-4 text-energy" />
+            <h3 className="font-semibold text-sm">{t('dashboard.burned') || 'Verbrannt'}</h3>
+            <span className="ml-auto text-sm font-bold text-energy">+{Math.round(totalBurned)} kcal</span>
+          </div>
+          <div className="space-y-1">
+            {activities.map(act => (
+              <div key={act.id} className="flex items-center gap-2 text-xs">
+                <span>{act.emoji || '🏃'}</span>
+                <span className="flex-1">{act.activity_name}</span>
+                {act.duration_minutes && <span className="text-muted-foreground">{act.duration_minutes} min</span>}
+                <span className="text-energy font-semibold">+{Math.round(Number(act.calories_burned))} kcal</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Meals list */}
       <div className="space-y-2">
         <h3 className="font-semibold text-sm">{t('dashboard.recentMeals')} ({dayMeals.length})</h3>

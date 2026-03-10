@@ -215,8 +215,20 @@ export default function DashboardPage() {
     return days;
   }, [allMeals]);
 
+  const [todayBurned, setTodayBurned] = useState(0);
+
+  // Load burned calories
+  useEffect(() => {
+    if (!user) return;
+    const today = new Date().toISOString().split('T')[0];
+    supabase.from('activity_entries').select('calories_burned').eq('user_id', user.id).eq('entry_date', today)
+      .then(({ data }) => {
+        setTodayBurned((data || []).reduce((s: number, a: any) => s + Number(a.calories_burned), 0));
+      });
+  }, [user]);
+
   const calorieTarget = goals?.calorie_target || 2000;
-  const remaining = calorieTarget - todayTotals.calories;
+  const remaining = calorieTarget - todayTotals.calories + todayBurned;
   const calPct = Math.min((todayTotals.calories / calorieTarget) * 100, 100);
   const circumference = 2 * Math.PI * 42;
   const calOffset = circumference - (calPct / 100) * circumference;
