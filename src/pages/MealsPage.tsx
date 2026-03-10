@@ -1,15 +1,16 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import { analyzeFoodImage } from '@/lib/ai-analysis';
-import type { AnalyzedFoodItem } from '@/lib/types';
+import type { AnalyzedFoodItem, MealEntry, UserGoals } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, ScanBarcode, Search, Star, Flame, Plus } from 'lucide-react';
+import { Camera, Upload, ScanBarcode, Search, Star, Flame, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
 import { hapticFeedback } from '@/lib/haptics';
+import { motion } from 'framer-motion';
 
 import AnalyseScreen from '@/components/meals/AnalyseScreen';
 import EditableFoodItemsList from '@/components/meals/EditableFoodItemsList';
@@ -19,16 +20,68 @@ import BarcodeScanner from '@/components/meals/BarcodeScanner';
 import FoodSearchScreen from '@/components/meals/FoodSearchScreen';
 import SavedRecipesScreen, { saveAsRecipe } from '@/components/meals/SavedRecipesScreen';
 
+type MealSlot = 'breakfast' | 'snack1' | 'lunch' | 'snack2' | 'dinner' | 'snack3';
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-type Step = 'select-type' | 'select-method' | 'analyzing' | 'review' | 'confirm' | 'barcode' | 'search' | 'recipes';
+type Step = 'overview' | 'select-method' | 'analyzing' | 'review' | 'confirm' | 'barcode' | 'search' | 'recipes';
+
+const MEAL_SLOTS: { slot: MealSlot; type: MealType; label: { de: string; en: string }; emoji: string; timeRange: string }[] = [
+  { slot: 'breakfast', type: 'breakfast', label: { de: 'Frühstück', en: 'Breakfast' }, emoji: '🌅', timeRange: '00:00–09:59' },
+  { slot: 'snack1', type: 'snack', label: { de: 'Snack 1', en: 'Snack 1' }, emoji: '🍎', timeRange: '10:00–11:29' },
+  { slot: 'lunch', type: 'lunch', label: { de: 'Mittagessen', en: 'Lunch' }, emoji: '☀️', timeRange: '11:30–13:59' },
+  { slot: 'snack2', type: 'snack', label: { de: 'Snack 2', en: 'Snack 2' }, emoji: '🥜', timeRange: '14:00–16:59' },
+  { slot: 'dinner', type: 'dinner', label: { de: 'Abendessen', en: 'Dinner' }, emoji: '🌙', timeRange: '17:00–20:59' },
+  { slot: 'snack3', type: 'snack', label: { de: 'Snack 3', en: 'Snack 3' }, emoji: '🫖', timeRange: '21:00–23:59' },
+];
+
+function getSlotForTime(time: string | null): MealSlot {
+  if (!time) return 'snack1';
+  const h = parseInt(time.split(':')[0], 10);
+  if (h < 10) return 'breakfast';
+  if (h < 12) return 'snack1';
+  if (h < 14) return 'lunch';
+  if (h < 17) return 'snack2';
+  if (h < 21) return 'dinner';
+  return 'snack3';
+}
+
+function getWeekDays(selectedDate: Date): { date: Date; label: string; dayNum: number; isToday: boolean; isSelected: boolean }[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const startOfWeek = new Date(selectedDate);
+  const day = startOfWeek.getDay();
+  const diff = day === 0 ? -6 : 1 - day; // Monday start
+  startOfWeek.setDate(startOfWeek.getDate() + diff);
+
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(startOfWeek);
+    d.setDate(d.getDate() + i);
+    return {
+      date: d,
+      label: d.toLocaleDateString('de-DE', { weekday: 'short' }),
+      dayNum: d.getDate(),
+      isToday: d.toDateString() === today.toDateString(),
+      isSelected: d.toDateString() === selectedDate.toDateString(),
+    };
+  });
+}
+
+function formatDateStr(d: Date): string {
+  return d.toISOString().split('T')[0];
+}
 
 export default function MealsPage() {
   const { user } = useAuth();
   const { t, language } = useTranslation();
   const subscription = useSubscription();
 
-  const [step, setStep] = useState<Step>('select-type');
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+  const [step, setStep] = useState<Step>('overview');
   const [mealType, setMealType] = useState<MealType>('lunch');
+  const [activeSlot, setActiveSlot] = useState<MealSlot>('lunch');
   const [items, setItems] = useState<AnalyzedFoodItem[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -41,167 +94,124 @@ export default function MealsPage() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [savingRecipe, setSavingRecipe] = useState(false);
   const [returnToReview, setReturnToReview] = useState(false);
-  const [favorites, setFavorites] = useState<{id: string; name: string; emoji: string; meal_type: string; total_calories: number; total_protein_g: number; total_fat_g: number; total_carbs_g: number}[]>([]);
+  const [dayMeals, setDayMeals] = useState<MealEntry[]>([]);
+  const [goals, setGoals] = useState<UserGoals | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const mealTypes: { value: MealType; label: string; emoji: string }[] = [
-    { value: 'breakfast', label: t('meals.breakfast'), emoji: '🌅' },
-    { value: 'lunch', label: t('meals.lunch'), emoji: '☀️' },
-    { value: 'dinner', label: t('meals.dinner'), emoji: '🌙' },
-    { value: 'snack', label: t('meals.snack'), emoji: '🍎' },
-  ];
+  const dateStr = formatDateStr(selectedDate);
+  const weekDays = useMemo(() => getWeekDays(selectedDate), [dateStr]);
 
-  const currentMealType = mealTypes.find(m => m.value === mealType);
-
-  // Load favorites (top saved recipes)
-  const loadFavorites = useCallback(async () => {
+  // Load goals + meals for selected date
+  useEffect(() => {
     if (!user) return;
-    const { data } = await supabase
-      .from('saved_recipes')
-      .select('id, name, emoji, meal_type, total_calories, total_protein_g, total_fat_g, total_carbs_g')
-      .eq('user_id', user.id)
-      .order('use_count', { ascending: false })
-      .limit(5);
-    setFavorites((data || []) as any);
+    supabase.from('user_goals').select('*').eq('user_id', user.id).single()
+      .then(({ data }) => { if (data) setGoals(data as any); });
   }, [user]);
 
-  useEffect(() => { loadFavorites(); }, [loadFavorites]);
-
-  const handleSelectFavorite = async (fav: typeof favorites[0]) => {
-    hapticFeedback('success');
-    const { data: itemsData } = await supabase
-      .from('saved_recipe_items')
+  const loadDayMeals = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('meal_entries')
       .select('*')
-      .eq('recipe_id', fav.id);
-    if (!itemsData || itemsData.length === 0) {
-      toast.error(language === 'de' ? 'Favorit ist leer' : 'Favorite is empty');
-      return;
-    }
-    // Increment use count
-    await supabase.from('saved_recipes').update({ use_count: ((fav as any).use_count || 0) + 1 } as any).eq('id', fav.id);
-    
-    const analyzedItems: AnalyzedFoodItem[] = (itemsData as any[]).map(item => ({
-      food_name: item.food_name,
-      quantity: Number(item.quantity),
-      unit: item.unit,
-      calories: Number(item.calories),
-      protein_g: Number(item.protein_g),
-      fat_g: Number(item.fat_g),
-      carbs_g: Number(item.carbs_g),
-      confidence_score: 1,
-    }));
-    setIsAiResult(false);
-    setItems(analyzedItems);
-    if (['breakfast', 'lunch', 'dinner', 'snack'].includes(fav.meal_type)) {
-      setMealType(fav.meal_type as MealType);
-    }
-    setStep('review');
+      .eq('user_id', user.id)
+      .eq('entry_date', dateStr)
+      .order('entry_time', { ascending: true });
+    setDayMeals((data || []) as any as MealEntry[]);
+  }, [user, dateStr]);
+
+  useEffect(() => { loadDayMeals(); }, [loadDayMeals]);
+
+  // Compute totals
+  const totals = useMemo(() => ({
+    calories: dayMeals.reduce((s, m) => s + Number(m.total_calories), 0),
+    protein: dayMeals.reduce((s, m) => s + Number(m.total_protein_g), 0),
+    fat: dayMeals.reduce((s, m) => s + Number(m.total_fat_g), 0),
+    carbs: dayMeals.reduce((s, m) => s + Number(m.total_carbs_g), 0),
+  }), [dayMeals]);
+
+  const calTarget = goals?.calorie_target || 2000;
+  const remaining = calTarget - totals.calories;
+
+  // Group meals into slots
+  const mealsBySlot = useMemo(() => {
+    const grouped: Record<MealSlot, MealEntry[]> = {
+      breakfast: [], snack1: [], lunch: [], snack2: [], dinner: [], snack3: [],
+    };
+    dayMeals.forEach(m => {
+      const slot = getSlotForTime(m.entry_time);
+      grouped[slot].push(m);
+    });
+    return grouped;
+  }, [dayMeals]);
+
+  const slotLabel = (slot: typeof MEAL_SLOTS[0]) => language === 'de' ? slot.label.de : slot.label.en;
+
+  const currentSlotInfo = MEAL_SLOTS.find(s => s.slot === activeSlot) || MEAL_SLOTS[0];
+
+  // --- Week navigation ---
+  const goWeek = (dir: number) => {
+    setSelectedDate(prev => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() + dir * 7);
+      return d;
+    });
   };
 
+  // --- Camera / Image logic (unchanged) ---
   const handleImageUpload = async (file: File) => {
-    // Check scan limit for free users
-    if (!subscription.canScanPhoto) {
-      setShowPaywall(true);
-      return;
-    }
-
+    if (!subscription.canScanPhoto) { setShowPaywall(true); return; }
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
     setStep('analyzing');
     setIsAiResult(true);
-
-    // Increment scan count before analysis
     await subscription.incrementScanCount();
-
     try {
       const results = await analyzeFoodImage(file, language);
-      if (results.length === 0) {
-        toast.error(t('meals.analysisFailed'));
-        handleManualEntry();
-        return;
-      }
+      if (results.length === 0) { toast.error(t('meals.analysisFailed')); handleManualEntry(); return; }
       setItems(results);
       setStep('review');
     } catch (err: any) {
-      if (err.message === 'RATE_LIMIT') {
-        toast.error(t('meals.rateLimited'));
-      } else if (err.message === 'PAYMENT_REQUIRED') {
-        toast.error(t('meals.paymentRequired'));
-      } else {
-        toast.error(t('meals.analysisFailed'));
-      }
-      // Fall back to manual entry with the image still attached
+      if (err.message === 'RATE_LIMIT') toast.error(t('meals.rateLimited'));
+      else if (err.message === 'PAYMENT_REQUIRED') toast.error(t('meals.paymentRequired'));
+      else toast.error(t('meals.analysisFailed'));
       handleManualEntry();
     }
   };
 
   const stopCamera = () => {
-    cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    cameraStreamRef.current?.getTracks().forEach(t => t.stop());
     cameraStreamRef.current = null;
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
+    if (videoRef.current) videoRef.current.srcObject = null;
     setCameraOpen(false);
     setCameraLoading(false);
   };
 
   const handleOpenCamera = async () => {
     setCameraError(null);
-
-    if (!navigator.mediaDevices?.getUserMedia) {
-      toast.error('Kamera wird auf diesem Gerät nicht unterstützt.');
-      return;
-    }
-
+    if (!navigator.mediaDevices?.getUserMedia) { toast.error('Kamera wird nicht unterstützt.'); return; }
     try {
       setCameraLoading(true);
-      // CRITICAL: called directly in user click handler
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
-        audio: false,
-      });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
       cameraStreamRef.current = stream;
       setCameraOpen(true);
-    } catch (error) {
-      setCameraError('Kamerazugriff blockiert. Bitte Berechtigung erlauben.');
-      toast.error('Kein Kamerazugriff. Bitte Browser-App Berechtigung prüfen.');
-    } finally {
-      setCameraLoading(false);
-    }
+    } catch { setCameraError('Kamerazugriff blockiert.'); } finally { setCameraLoading(false); }
   };
 
   const handleCapturePhoto = async () => {
     const video = videoRef.current;
     if (!video) return;
-
     const canvas = document.createElement('canvas');
-    const width = video.videoWidth || 1280;
-    const height = video.videoHeight || 720;
-    canvas.width = width;
-    canvas.height = height;
-
-    const context = canvas.getContext('2d');
-    if (!context) {
-      toast.error('Foto konnte nicht verarbeitet werden.');
-      return;
-    }
-
-    context.drawImage(video, 0, 0, width, height);
-
-    const blob = await new Promise<Blob | null>((resolve) => {
-      canvas.toBlob(resolve, 'image/jpeg', 0.9);
-    });
-
-    if (!blob) {
-      toast.error('Foto konnte nicht erstellt werden.');
-      return;
-    }
-
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>(r => canvas.toBlob(r, 'image/jpeg', 0.9));
+    if (!blob) return;
     stopCamera();
-    const file = new File([blob], `camera-${Date.now()}.jpg`, { type: 'image/jpeg' });
-    handleImageUpload(file);
+    handleImageUpload(new File([blob], `camera-${Date.now()}.jpg`, { type: 'image/jpeg' }));
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -213,17 +223,7 @@ export default function MealsPage() {
   const handleOpenFilePicker = () => {
     const input = fileInputRef.current;
     if (!input) return;
-
-    const pickerInput = input as HTMLInputElement & { showPicker?: () => void };
-    try {
-      if (pickerInput.showPicker) {
-        pickerInput.showPicker();
-      } else {
-        input.click();
-      }
-    } catch {
-      input.click();
-    }
+    try { (input as any).showPicker?.() || input.click(); } catch { input.click(); }
   };
 
   useEffect(() => {
@@ -232,60 +232,42 @@ export default function MealsPage() {
     videoRef.current.play().catch(() => undefined);
   }, [cameraOpen]);
 
-  useEffect(() => {
-    return () => {
-      cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
-    };
-  }, []);
+  useEffect(() => { return () => { cameraStreamRef.current?.getTracks().forEach(t => t.stop()); }; }, []);
 
+  // --- Item editing ---
   const handleManualEntry = () => {
     setIsAiResult(false);
-    const emptyItem: AnalyzedFoodItem = { food_name: '', quantity: 100, unit: 'g', calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0, confidence_score: 1 };
-    setItems([emptyItem]);
+    setItems([{ food_name: '', quantity: 100, unit: 'g', calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0, confidence_score: 1 }]);
     setStep('review');
-    setEditingIndex(0); // Immediately open editor for the first item
+    setEditingIndex(0);
   };
 
   const updateItem = (index: number, field: keyof AnalyzedFoodItem, value: string | number) => {
     setItems(prev => prev.map((item, i) => i === index ? { ...item, [field]: value, confidence_score: 1 } : item));
   };
-
   const replaceItem = (index: number, newItem: AnalyzedFoodItem) => {
     setItems(prev => prev.map((item, i) => i === index ? { ...newItem, confidence_score: 1 } : item));
   };
-
-  const removeItem = (index: number) => {
-    setItems(prev => prev.filter((_, i) => i !== index));
-  };
-
+  const removeItem = (index: number) => setItems(prev => prev.filter((_, i) => i !== index));
   const addItem = () => {
     setItems(prev => [...prev, { food_name: '', quantity: 100, unit: 'g', calories: 0, protein_g: 0, fat_g: 0, carbs_g: 0, confidence_score: 1 }]);
     setEditingIndex(items.length);
   };
 
-  const handleEditItem = (index: number) => {
-    setEditingIndex(index);
-  };
-
   const handleSaveEditedItem = (updatedItem: AnalyzedFoodItem) => {
-    if (editingIndex !== null) {
-      setItems(prev => prev.map((item, i) => i === editingIndex ? updatedItem : item));
-    }
+    if (editingIndex !== null) setItems(prev => prev.map((item, i) => i === editingIndex ? updatedItem : item));
     setEditingIndex(null);
   };
 
+  // --- Save meal ---
   const handleSave = async () => {
     if (!user || items.length === 0) return;
     setSaving(true);
-
     let imageUrl: string | null = null;
     if (imageFile) {
       const path = `${user.id}/${Date.now()}-${imageFile.name}`;
       const { data } = await supabase.storage.from('meal-images').upload(path, imageFile);
-      if (data) {
-        const { data: urlData } = supabase.storage.from('meal-images').getPublicUrl(data.path);
-        imageUrl = urlData.publicUrl;
-      }
+      if (data) { imageUrl = supabase.storage.from('meal-images').getPublicUrl(data.path).data.publicUrl; }
     }
 
     const totalCalories = items.reduce((s, i) => s + Number(i.calories), 0);
@@ -296,7 +278,7 @@ export default function MealsPage() {
     const now = new Date();
     const { data: mealData, error: mealError } = await supabase.from('meal_entries').insert({
       user_id: user.id,
-      entry_date: now.toISOString().split('T')[0],
+      entry_date: dateStr,
       entry_time: now.toTimeString().split(' ')[0],
       meal_type: mealType,
       image_url: imageUrl,
@@ -307,37 +289,26 @@ export default function MealsPage() {
       ai_analysis_status: isAiResult ? 'completed' : 'manual',
     } as any).select().single();
 
-    if (mealError || !mealData) {
-      toast.error(t('common.error'));
-      setSaving(false);
-      return;
-    }
+    if (mealError || !mealData) { toast.error(t('common.error')); setSaving(false); return; }
 
-    const foodItems = items.map(item => ({
+    await supabase.from('meal_food_items').insert(items.map(item => ({
       meal_entry_id: (mealData as any).id,
-      food_name: item.food_name,
-      quantity: item.quantity,
-      unit: item.unit,
-      calories: item.calories,
-      protein_g: item.protein_g,
-      fat_g: item.fat_g,
-      carbs_g: item.carbs_g,
-      confidence_score: item.confidence_score,
-      was_user_edited: true,
-    }));
-
-    await supabase.from('meal_food_items').insert(foodItems as any);
+      food_name: item.food_name, quantity: item.quantity, unit: item.unit,
+      calories: item.calories, protein_g: item.protein_g, fat_g: item.fat_g, carbs_g: item.carbs_g,
+      confidence_score: item.confidence_score, was_user_edited: true,
+    })) as any);
 
     hapticFeedback('success');
     toast.success(t('meals.saved'));
     setSaving(false);
     handleReset();
+    loadDayMeals();
   };
 
   const handleReset = () => {
     stopCamera();
     setCameraError(null);
-    setStep('select-type');
+    setStep('overview');
     setItems([]);
     setImageFile(null);
     setImagePreview(null);
@@ -346,175 +317,227 @@ export default function MealsPage() {
     setReturnToReview(false);
   };
 
+  const openSlot = (slot: typeof MEAL_SLOTS[0]) => {
+    setActiveSlot(slot.slot);
+    setMealType(slot.type);
+    setStep('select-method');
+  };
+
+  // --- Render ---
   return (
-    <div className="page-container space-y-4">
-      <h1 className="text-xl font-bold">{t('meals.title')}</h1>
-
-      {/* Scan counter for free users */}
-      {!subscription.isPro && !subscription.loading && (
-        <div className="flex items-center justify-between text-xs bg-muted/50 rounded-xl px-3 py-2">
-          <span className="text-muted-foreground">
-            {t('paywall.remainingScans', { count: subscription.remainingScans })}
-          </span>
-          <button onClick={() => setShowPaywall(true)} className="text-primary font-bold">
-            {t('paywall.upgradeButton')}
-          </button>
-        </div>
-      )}
-
+    <div className="page-container space-y-3 pb-24">
       {/* Paywall */}
       {showPaywall && (
-        <PaywallScreen
-          onClose={() => setShowPaywall(false)}
-          trigger="scan_limit"
-          onUpgrade={(plan) => {
-            toast.info(t('paywall.comingSoon'));
-            setShowPaywall(false);
-          }}
-        />
+        <PaywallScreen onClose={() => setShowPaywall(false)} trigger="scan_limit"
+          onUpgrade={() => { toast.info(t('paywall.comingSoon')); setShowPaywall(false); }} />
       )}
 
-      {/* Step: Select meal type */}
-      {step === 'select-type' && (
-        <div className="space-y-4 animate-fade-in">
-          <p className="text-sm text-muted-foreground">{t('meals.selectType')}</p>
-          <div className="grid grid-cols-2 gap-3">
-            {mealTypes.map(mt => (
-              <button
-                key={mt.value}
-                onClick={() => { setMealType(mt.value); setStep('select-method'); }}
-                className="nutri-card flex flex-col items-center gap-2 py-6 hover:border-primary/30 transition-colors"
-              >
-                <span className="text-3xl">{mt.emoji}</span>
-                <span className="font-medium text-sm">{mt.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Step: Select method */}
-      {step === 'select-method' && (
+      {/* === OVERVIEW STEP === */}
+      {step === 'overview' && (
         <div className="space-y-3 animate-fade-in">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-2xl">{currentMealType?.emoji}</span>
-            <span className="font-medium">{currentMealType?.label}</span>
+          {/* Week Calendar */}
+          <div className="flex items-center gap-1">
+            <button onClick={() => goWeek(-1)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+              <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+            </button>
+            <div className="flex-1 flex gap-0.5">
+              {weekDays.map(wd => (
+                <button
+                  key={wd.date.toISOString()}
+                  onClick={() => setSelectedDate(wd.date)}
+                  className={`flex-1 flex flex-col items-center py-1.5 rounded-xl transition-all text-xs ${
+                    wd.isSelected
+                      ? 'bg-primary text-primary-foreground font-bold shadow-sm'
+                      : wd.isToday
+                        ? 'bg-primary/10 text-primary font-semibold'
+                        : 'hover:bg-muted text-muted-foreground'
+                  }`}
+                >
+                  <span className="text-[10px] uppercase">{wd.label}</span>
+                  <span className="text-sm font-bold">{wd.dayNum}</span>
+                </button>
+              ))}
+            </div>
+            <button onClick={() => goWeek(1)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </button>
           </div>
 
-          {/* Quick Favorites */}
-          {favorites.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5 px-1">
-                <Star className="h-3.5 w-3.5 text-primary" />
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
-                  {language === 'de' ? 'Favoriten' : 'Favorites'}
-                </span>
+          {/* Goal Header: Ziel - Gegessen = Übrig */}
+          <div className="nutri-card-highlight">
+            <div className="grid grid-cols-3 text-center gap-2">
+              <div>
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
+                  {language === 'de' ? 'Ziel' : 'Goal'}
+                </p>
+                <p className="text-lg font-black tabular-nums text-foreground">{calTarget}</p>
               </div>
-              <div className="flex flex-col gap-1.5">
-                {favorites.map(fav => (
-                  <button
-                    key={fav.id}
-                    onClick={() => handleSelectFavorite(fav)}
-                    className="nutri-card flex items-center gap-3 py-3 hover:border-primary/30 transition-all active:scale-[0.98]"
-                  >
-                    <span className="text-lg">{fav.emoji}</span>
-                    <div className="flex-1 min-w-0 text-left">
-                      <p className="text-sm font-semibold truncate">{fav.name}</p>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Flame className="h-3 w-3 text-energy" />
-                      <span className="text-xs font-bold tabular-nums">{Math.round(fav.total_calories)}</span>
-                      <span className="text-[10px] text-muted-foreground">kcal</span>
-                    </div>
-                  </button>
-                ))}
+              <div>
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
+                  {language === 'de' ? 'Gegessen' : 'Eaten'}
+                </p>
+                <p className="text-lg font-black tabular-nums text-foreground">{Math.round(totals.calories)}</p>
               </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
+                  {language === 'de' ? 'Übrig' : 'Remaining'}
+                </p>
+                <p className={`text-lg font-black tabular-nums ${remaining >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                  {Math.round(remaining)}
+                </p>
+              </div>
+            </div>
+            {/* Macro bar */}
+            <div className="flex gap-3 mt-2 pt-2 border-t border-border/50 text-[11px] justify-center">
+              <span className="text-protein font-bold">P {Math.round(totals.protein)}g <span className="text-muted-foreground font-normal">/ {goals?.protein_target_g || 150}g</span></span>
+              <span className="text-fat font-bold">F {Math.round(totals.fat)}g <span className="text-muted-foreground font-normal">/ {goals?.fat_target_g || 65}g</span></span>
+              <span className="text-carbs font-bold">K {Math.round(totals.carbs)}g <span className="text-muted-foreground font-normal">/ {goals?.carbs_target_g || 250}g</span></span>
+            </div>
+          </div>
+
+          {/* Scan counter for free users */}
+          {!subscription.isPro && !subscription.loading && (
+            <div className="flex items-center justify-between text-xs bg-muted/50 rounded-xl px-3 py-2">
+              <span className="text-muted-foreground">{t('paywall.remainingScans', { count: subscription.remainingScans })}</span>
+              <button onClick={() => setShowPaywall(true)} className="text-primary font-bold">{t('paywall.upgradeButton')}</button>
             </div>
           )}
 
-          <div className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <Camera className="h-6 w-6 text-primary" />
+          {/* Meal Slots */}
+          <div className="space-y-2">
+            {MEAL_SLOTS.map(slot => {
+              const slotMeals = mealsBySlot[slot.slot];
+              const slotCals = slotMeals.reduce((s, m) => s + Number(m.total_calories), 0);
+              return (
+                <div key={slot.slot} className="nutri-card overflow-hidden">
+                  <button
+                    onClick={() => openSlot(slot)}
+                    className="w-full flex items-center gap-3 py-1 hover:opacity-80 transition-opacity"
+                  >
+                    <span className="text-xl">{slot.emoji}</span>
+                    <div className="flex-1 text-left">
+                      <p className="font-semibold text-sm">{slotLabel(slot)}</p>
+                      <p className="text-[10px] text-muted-foreground">{slot.timeRange}</p>
+                    </div>
+                    {slotMeals.length > 0 ? (
+                      <span className="text-sm font-bold tabular-nums">{Math.round(slotCals)} kcal</span>
+                    ) : (
+                      <Plus className="h-5 w-5 text-primary" />
+                    )}
+                  </button>
+                  {/* Show items within slot */}
+                  {slotMeals.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-border/40 space-y-1">
+                      {slotMeals.map(meal => (
+                        <div key={meal.id} className="flex items-center gap-2 text-xs py-1 px-1 rounded-lg hover:bg-muted/50 transition-colors">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{meal.notes || slotLabel(slot)}</p>
+                          </div>
+                          <span className="text-muted-foreground tabular-nums">{Math.round(Number(meal.total_calories))} kcal</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            P{Math.round(Number(meal.total_protein_g))} F{Math.round(Number(meal.total_fat_g))} K{Math.round(Number(meal.total_carbs_g))}
+                          </span>
+                        </div>
+                      ))}
+                      <button
+                        onClick={() => openSlot(slot)}
+                        className="w-full flex items-center justify-center gap-1 text-primary text-xs font-semibold py-1 hover:bg-primary/5 rounded-lg transition-colors"
+                      >
+                        <Plus className="h-3 w-3" /> {language === 'de' ? 'Hinzufügen' : 'Add'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* === SELECT METHOD STEP === */}
+      {step === 'select-method' && (
+        <div className="space-y-3 animate-fade-in">
+          <div className="flex items-center gap-2 mb-1">
+            <button onClick={handleReset} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="text-xl">{currentSlotInfo.emoji}</span>
+            <span className="font-semibold">{slotLabel(currentSlotInfo)}</span>
+          </div>
+
+          {/* Search - primary */}
+          <button onClick={() => setStep('search')} className="nutri-card w-full flex items-center gap-4 py-4 hover:border-primary/30 transition-colors border-primary/20">
+            <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <Search className="h-5 w-5 text-primary" />
+            </div>
+            <div className="text-left flex-1">
+              <p className="font-semibold text-sm">{language === 'de' ? 'Lebensmittel suchen' : 'Search Food'}</p>
+              <p className="text-[11px] text-muted-foreground">{language === 'de' ? 'Suchen, Favoriten & Rezepte' : 'Search, favorites & recipes'}</p>
+            </div>
+          </button>
+
+          {/* Photo */}
+          <div className="nutri-card w-full flex items-center gap-4 py-4 hover:border-primary/30 transition-colors">
+            <div className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <Camera className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="font-medium">{t('meals.takePhoto')}</p>
-              <p className="text-xs text-muted-foreground mb-2">{t('meals.aiDescription')}</p>
-              <Button type="button" onClick={handleOpenCamera} className="w-full" disabled={cameraLoading}>
+              <p className="font-semibold text-sm">{t('meals.takePhoto')}</p>
+              <p className="text-[11px] text-muted-foreground mb-2">{t('meals.aiDescription')}</p>
+              <Button type="button" size="sm" onClick={handleOpenCamera} className="w-full" disabled={cameraLoading}>
                 {cameraLoading ? 'Öffne Kamera…' : t('meals.takePhoto')}
               </Button>
-              {cameraError && <p className="text-xs text-destructive mt-2">{cameraError}</p>}
+              {cameraError && <p className="text-xs text-destructive mt-1">{cameraError}</p>}
             </div>
           </div>
 
           {cameraOpen && (
             <div className="nutri-card space-y-3">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-56 rounded-xl object-cover bg-muted"
-              />
+              <video ref={videoRef} autoPlay playsInline muted className="w-full h-48 rounded-xl object-cover bg-muted" />
               <div className="flex gap-2">
-                <Button type="button" className="flex-1" onClick={handleCapturePhoto}>
-                  Foto verwenden
-                </Button>
-                <Button type="button" variant="outline" className="flex-1" onClick={stopCamera}>
-                  {t('common.cancel')}
-                </Button>
+                <Button type="button" className="flex-1" onClick={handleCapturePhoto}>Foto verwenden</Button>
+                <Button type="button" variant="outline" className="flex-1" onClick={stopCamera}>{t('common.cancel')}</Button>
               </div>
             </div>
           )}
 
-          <div className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
-            <div className="w-12 h-12 rounded-2xl bg-info/10 flex items-center justify-center">
-              <Upload className="h-6 w-6 text-info" />
+          {/* Upload */}
+          <div className="nutri-card w-full flex items-center gap-4 py-4 hover:border-primary/30 transition-colors">
+            <div className="w-11 h-11 rounded-2xl bg-info/10 flex items-center justify-center">
+              <Upload className="h-5 w-5 text-info" />
             </div>
             <div className="flex-1">
-              <p className="font-medium">{t('meals.uploadImage')}</p>
-              <p className="text-xs text-muted-foreground mb-2">{t('meals.aiDescription')}</p>
-              <Button type="button" variant="outline" onClick={handleOpenFilePicker} className="w-full">
+              <p className="font-semibold text-sm">{t('meals.uploadImage')}</p>
+              <Button type="button" variant="outline" size="sm" onClick={handleOpenFilePicker} className="w-full mt-1">
                 {t('meals.uploadImage')}
               </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="w-full mt-2 text-xs text-muted-foreground file:mr-2 file:rounded-lg file:border-0 file:bg-secondary file:text-secondary-foreground file:px-3 file:py-1.5"
-                aria-label={t('meals.uploadImage')}
-              />
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
             </div>
           </div>
 
-          {/* Food Search - PRIMARY and ONLY entry point */}
-          <button onClick={() => setStep('search')} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors border-primary/20">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <Search className="h-6 w-6 text-primary" />
-            </div>
-            <div className="text-left flex-1">
-              <p className="font-medium">{language === 'de' ? 'Lebensmittel suchen' : 'Search Food'}</p>
-              <p className="text-xs text-muted-foreground">{language === 'de' ? 'Suchen, Favoriten & Stücklisten – alles an einem Ort' : 'Search, favorites & combos – all in one place'}</p>
-            </div>
-          </button>
-
-          <button onClick={() => setStep('barcode')} className="nutri-card w-full flex items-center gap-4 py-5 hover:border-primary/30 transition-colors">
-            <div className="w-12 h-12 rounded-2xl bg-accent/30 flex items-center justify-center">
-              <ScanBarcode className="h-6 w-6 text-foreground" />
+          {/* Barcode */}
+          <button onClick={() => setStep('barcode')} className="nutri-card w-full flex items-center gap-4 py-4 hover:border-primary/30 transition-colors">
+            <div className="w-11 h-11 rounded-2xl bg-accent/30 flex items-center justify-center">
+              <ScanBarcode className="h-5 w-5 text-foreground" />
             </div>
             <div className="text-left">
-              <p className="font-medium">{t('meals.scanBarcode')}</p>
-              <p className="text-xs text-muted-foreground">{t('meals.barcodeDescription')}</p>
+              <p className="font-semibold text-sm">{t('meals.scanBarcode')}</p>
+              <p className="text-[11px] text-muted-foreground">{t('meals.barcodeDescription')}</p>
             </div>
           </button>
 
-          <Button variant="ghost" onClick={handleReset} className="w-full">
+          {/* Manual */}
+          <Button variant="ghost" onClick={handleManualEntry} className="w-full text-sm">
+            {t('meals.manualEntry')}
+          </Button>
+
+          <Button variant="ghost" onClick={handleReset} className="w-full text-xs text-muted-foreground">
             {t('meals.cancel')}
           </Button>
         </div>
       )}
 
-      {/* Step: Food Search */}
+      {/* Search */}
       {step === 'search' && (
         <FoodSearchScreen
           onDone={(searchItems) => {
@@ -528,52 +551,39 @@ export default function MealsPage() {
             setStep('review');
           }}
           onCancel={() => {
-            if (returnToReview) {
-              setReturnToReview(false);
-              setStep('review');
-            } else {
-              setStep('select-method');
-            }
+            if (returnToReview) { setReturnToReview(false); setStep('review'); }
+            else setStep('select-method');
           }}
         />
       )}
 
-      {/* Step: Saved Recipes */}
+      {/* Recipes */}
       {step === 'recipes' && (
         <SavedRecipesScreen
           onSelect={(recipeItems, recipeMealType) => {
             setIsAiResult(false);
             setItems(recipeItems);
-            if (['breakfast', 'lunch', 'dinner', 'snack'].includes(recipeMealType)) {
-              setMealType(recipeMealType as MealType);
-            }
+            if (['breakfast', 'lunch', 'dinner', 'snack'].includes(recipeMealType)) setMealType(recipeMealType as MealType);
             setStep('review');
           }}
           onCancel={() => setStep('select-method')}
         />
       )}
 
-      {/* Step: Barcode */}
+      {/* Barcode */}
       {step === 'barcode' && (
         <BarcodeScanner
-          onResult={(item) => {
-            setIsAiResult(false);
-            setItems([item]);
-            setStep('review');
-          }}
+          onResult={(item) => { setIsAiResult(false); setItems([item]); setStep('review'); }}
           onCancel={handleReset}
         />
       )}
 
-      {/* Step: Analyzing */}
-      {step === 'analyzing' && (
-        <AnalyseScreen imagePreview={imagePreview} />
-      )}
+      {/* Analyzing */}
+      {step === 'analyzing' && <AnalyseScreen imagePreview={imagePreview} />}
 
-      {/* Step: Review */}
+      {/* Review */}
       {step === 'review' && (
         <div className="space-y-4 animate-fade-in">
-          {/* Image preview if available */}
           {imagePreview && (
             <div className="w-full rounded-2xl overflow-hidden border border-border">
               <img src={imagePreview} alt="Meal" className="w-full h-40 object-cover" />
@@ -581,24 +591,21 @@ export default function MealsPage() {
           )}
 
           <div className="flex items-center gap-2">
-            <span className="text-xl">{currentMealType?.emoji}</span>
-            <h2 className="font-semibold">{currentMealType?.label}</h2>
-            {isAiResult && (
-              <span className="text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">KI</span>
-            )}
+            <button onClick={() => setStep('select-method')} className="p-1.5 rounded-lg hover:bg-muted">
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="text-xl">{currentSlotInfo.emoji}</span>
+            <h2 className="font-semibold">{slotLabel(currentSlotInfo)}</h2>
+            {isAiResult && <span className="text-[10px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">KI</span>}
           </div>
 
           <EditableFoodItemsList
-            items={items}
-            isAiResult={isAiResult}
-            onUpdateItem={updateItem}
-            onReplaceItem={replaceItem}
-            onRemoveItem={removeItem}
-            onAddItem={addItem}
-            onEditItem={handleEditItem}
+            items={items} isAiResult={isAiResult}
+            onUpdateItem={updateItem} onReplaceItem={replaceItem}
+            onRemoveItem={removeItem} onAddItem={addItem}
+            onEditItem={(i) => setEditingIndex(i)}
           />
 
-          {/* Add more items — goes to search (which has favorites built in) */}
           <button
             onClick={() => { setReturnToReview(true); setStep('search'); }}
             className="w-full flex items-center justify-center gap-1.5 rounded-xl py-2.5 px-3 bg-muted hover:bg-muted/80 border border-border text-foreground font-medium text-sm transition-all active:scale-[0.98]"
@@ -607,7 +614,7 @@ export default function MealsPage() {
             {language === 'de' ? 'Weitere Lebensmittel hinzufügen' : 'Add more food'}
           </button>
 
-          {/* Totals bar */}
+          {/* Totals */}
           <div className="nutri-card-highlight">
             <div className="grid grid-cols-4 gap-2 text-center text-sm">
               <div>
@@ -629,41 +636,30 @@ export default function MealsPage() {
             </div>
           </div>
 
-          {/* Save as Favorite button — prominent */}
+          {/* Save as Favorite */}
           {items.length > 0 && items.some(i => i.food_name) && user && (
             <button
               onClick={async () => {
                 setSavingRecipe(true);
-                const recipeName = items.map(i => i.food_name).filter(Boolean).slice(0, 3).join(', ');
+                const name = items.map(i => i.food_name).filter(Boolean).slice(0, 3).join(', ');
                 const success = await saveAsRecipe({
-                  userId: user.id,
-                  name: recipeName || 'Rezept',
-                  emoji: currentMealType?.emoji || '🍽️',
-                  mealType,
-                  items,
+                  userId: user.id, name: name || 'Rezept',
+                  emoji: currentSlotInfo.emoji, mealType, items,
                 });
                 setSavingRecipe(false);
-                if (success) {
-                  hapticFeedback('success');
-                  toast.success(language === 'de' ? 'Als Favorit gespeichert! ⭐' : 'Saved as favorite! ⭐');
-                } else {
-                  toast.error(language === 'de' ? 'Fehler beim Speichern' : 'Failed to save');
-                }
+                if (success) { hapticFeedback('success'); toast.success(language === 'de' ? 'Als Favorit gespeichert! ⭐' : 'Saved as favorite! ⭐'); }
+                else toast.error(language === 'de' ? 'Fehler' : 'Failed');
               }}
               disabled={savingRecipe}
               className="w-full flex items-center justify-center gap-2 rounded-xl py-3 px-4 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-700 dark:text-amber-400 font-semibold text-sm transition-all active:scale-[0.98] disabled:opacity-50"
             >
-              <Star className="h-4.5 w-4.5 fill-amber-500 text-amber-500" />
-              {savingRecipe
-                ? (language === 'de' ? 'Wird gespeichert...' : 'Saving...')
-                : (language === 'de' ? 'Als Favorit speichern' : 'Save as Favorite')}
+              <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
+              {savingRecipe ? (language === 'de' ? 'Wird gespeichert...' : 'Saving...') : (language === 'de' ? 'Als Favorit speichern' : 'Save as Favorite')}
             </button>
           )}
 
           <div className="flex gap-3">
-            <Button variant="outline" onClick={handleReset} className="flex-1">
-              {t('meals.cancel')}
-            </Button>
+            <Button variant="outline" onClick={handleReset} className="flex-1">{t('meals.cancel')}</Button>
             <Button onClick={() => setStep('confirm')} disabled={items.length === 0 || items.some(i => !i.food_name)} className="flex-1">
               {t('meals.confirmSave')}
             </Button>
@@ -671,48 +667,18 @@ export default function MealsPage() {
         </div>
       )}
 
-      {/* Step: Confirmation */}
+      {/* Confirm */}
       {step === 'confirm' && (
         <div className="space-y-4 animate-fade-in">
           <SaveMealConfirmation
             items={items}
-            mealTypeLabel={currentMealType?.label || ''}
-            mealEmoji={currentMealType?.emoji || ''}
+            mealTypeLabel={slotLabel(currentSlotInfo)}
+            mealEmoji={currentSlotInfo.emoji}
             imagePreview={imagePreview}
             saving={saving}
             onConfirm={handleSave}
             onCancel={() => setStep('review')}
           />
-          {/* Favorite button also on confirmation screen */}
-          {user && items.length > 0 && (
-            <button
-              onClick={async () => {
-                setSavingRecipe(true);
-                const recipeName = items.map(i => i.food_name).filter(Boolean).slice(0, 3).join(', ');
-                const success = await saveAsRecipe({
-                  userId: user.id,
-                  name: recipeName || 'Rezept',
-                  emoji: currentMealType?.emoji || '🍽️',
-                  mealType,
-                  items,
-                });
-                setSavingRecipe(false);
-                if (success) {
-                  hapticFeedback('success');
-                  toast.success(language === 'de' ? 'Als Favorit gespeichert! ⭐' : 'Saved as favorite! ⭐');
-                } else {
-                  toast.error(language === 'de' ? 'Fehler beim Speichern' : 'Failed to save');
-                }
-              }}
-              disabled={savingRecipe || saving}
-              className="w-full flex items-center justify-center gap-2 rounded-xl py-3 px-4 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-700 dark:text-amber-400 font-semibold text-sm transition-all active:scale-[0.98] disabled:opacity-50"
-            >
-              <Star className="h-4.5 w-4.5 fill-amber-500 text-amber-500" />
-              {savingRecipe
-                ? (language === 'de' ? 'Wird gespeichert...' : 'Saving...')
-                : (language === 'de' ? 'Als Favorit speichern' : 'Save as Favorite')}
-            </button>
-          )}
         </div>
       )}
 
@@ -723,7 +689,6 @@ export default function MealsPage() {
         onClose={() => setEditingIndex(null)}
         onSave={handleSaveEditedItem}
       />
-
     </div>
   );
 }
