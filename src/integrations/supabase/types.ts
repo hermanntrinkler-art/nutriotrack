@@ -102,6 +102,7 @@ export type Database = {
         Row: {
           barcode: string | null
           brand: string | null
+          calcium_mg: number | null
           calories: number
           carbs_g: number
           contributor_avatar_emoji: string | null
@@ -109,20 +110,37 @@ export type Database = {
           contributor_id: string
           created_at: string
           fat_g: number
+          folate_ug: number | null
           food_name: string
           id: string
+          iron_mg: number | null
           is_hidden: boolean
+          magnesium_mg: number | null
+          phosphorus_mg: number | null
+          potassium_mg: number | null
           protein_g: number
           quantity: number
           reported_count: number
+          sodium_mg: number | null
           store: string | null
           unit: string
           updated_at: string
           verified_count: number
+          vitamin_a_ug: number | null
+          vitamin_b1_mg: number | null
+          vitamin_b12_ug: number | null
+          vitamin_b2_mg: number | null
+          vitamin_b6_mg: number | null
+          vitamin_c_mg: number | null
+          vitamin_d_ug: number | null
+          vitamin_e_mg: number | null
+          vitamin_k_ug: number | null
+          zinc_mg: number | null
         }
         Insert: {
           barcode?: string | null
           brand?: string | null
+          calcium_mg?: number | null
           calories?: number
           carbs_g?: number
           contributor_avatar_emoji?: string | null
@@ -130,20 +148,37 @@ export type Database = {
           contributor_id: string
           created_at?: string
           fat_g?: number
+          folate_ug?: number | null
           food_name: string
           id?: string
+          iron_mg?: number | null
           is_hidden?: boolean
+          magnesium_mg?: number | null
+          phosphorus_mg?: number | null
+          potassium_mg?: number | null
           protein_g?: number
           quantity?: number
           reported_count?: number
+          sodium_mg?: number | null
           store?: string | null
           unit?: string
           updated_at?: string
           verified_count?: number
+          vitamin_a_ug?: number | null
+          vitamin_b1_mg?: number | null
+          vitamin_b12_ug?: number | null
+          vitamin_b2_mg?: number | null
+          vitamin_b6_mg?: number | null
+          vitamin_c_mg?: number | null
+          vitamin_d_ug?: number | null
+          vitamin_e_mg?: number | null
+          vitamin_k_ug?: number | null
+          zinc_mg?: number | null
         }
         Update: {
           barcode?: string | null
           brand?: string | null
+          calcium_mg?: number | null
           calories?: number
           carbs_g?: number
           contributor_avatar_emoji?: string | null
@@ -151,61 +186,128 @@ export type Database = {
           contributor_id?: string
           created_at?: string
           fat_g?: number
+          folate_ug?: number | null
           food_name?: string
           id?: string
+          iron_mg?: number | null
           is_hidden?: boolean
+          magnesium_mg?: number | null
+          phosphorus_mg?: number | null
+          potassium_mg?: number | null
           protein_g?: number
           quantity?: number
           reported_count?: number
+          sodium_mg?: number | null
           store?: string | null
           unit?: string
           updated_at?: string
           verified_count?: number
+          vitamin_a_ug?: number | null
+          vitamin_b1_mg?: number | null
+          vitamin_b12_ug?: number | null
+          vitamin_b2_mg?: number | null
+          vitamin_b6_mg?: number | null
+          vitamin_c_mg?: number | null
+          vitamin_d_ug?: number | null
+          vitamin_e_mg?: number | null
+          vitamin_k_ug?: number | null
+          zinc_mg?: number | null
         }
         Relationships: []
       }
       custom_products: {
         Row: {
           barcode: string
+          calcium_mg: number | null
           calories: number
           carbs_g: number
           created_at: string
           default_quantity: number
           default_unit: string
           fat_g: number
+          folate_ug: number | null
           food_name: string
           id: string
+          iron_mg: number | null
+          magnesium_mg: number | null
+          phosphorus_mg: number | null
+          potassium_mg: number | null
           protein_g: number
+          sodium_mg: number | null
           updated_at: string
           user_id: string
+          vitamin_a_ug: number | null
+          vitamin_b1_mg: number | null
+          vitamin_b12_ug: number | null
+          vitamin_b2_mg: number | null
+          vitamin_b6_mg: number | null
+          vitamin_c_mg: number | null
+          vitamin_d_ug: number | null
+          vitamin_e_mg: number | null
+          vitamin_k_ug: number | null
+          zinc_mg: number | null
         }
         Insert: {
           barcode: string
+          calcium_mg?: number | null
           calories?: number
           carbs_g?: number
           created_at?: string
           default_quantity?: number
           default_unit?: string
           fat_g?: number
+          folate_ug?: number | null
           food_name: string
           id?: string
+          iron_mg?: number | null
+          magnesium_mg?: number | null
+          phosphorus_mg?: number | null
+          potassium_mg?: number | null
           protein_g?: number
+          sodium_mg?: number | null
           updated_at?: string
           user_id: string
+          vitamin_a_ug?: number | null
+          vitamin_b1_mg?: number | null
+          vitamin_b12_ug?: number | null
+          vitamin_b2_mg?: number | null
+          vitamin_b6_mg?: number | null
+          vitamin_c_mg?: number | null
+          vitamin_d_ug?: number | null
+          vitamin_e_mg?: number | null
+          vitamin_k_ug?: number | null
+          zinc_mg?: number | null
         }
         Update: {
           barcode?: string
+          calcium_mg?: number | null
           calories?: number
           carbs_g?: number
           created_at?: string
           default_quantity?: number
           default_unit?: string
           fat_g?: number
+          folate_ug?: number | null
           food_name?: string
           id?: string
+          iron_mg?: number | null
+          magnesium_mg?: number | null
+          phosphorus_mg?: number | null
+          potassium_mg?: number | null
           protein_g?: number
+          sodium_mg?: number | null
           updated_at?: string
           user_id?: string
+          vitamin_a_ug?: number | null
+          vitamin_b1_mg?: number | null
+          vitamin_b12_ug?: number | null
+          vitamin_b2_mg?: number | null
+          vitamin_b6_mg?: number | null
+          vitamin_c_mg?: number | null
+          vitamin_d_ug?: number | null
+          vitamin_e_mg?: number | null
+          vitamin_k_ug?: number | null
+          zinc_mg?: number | null
         }
         Relationships: []
       }
@@ -315,46 +417,97 @@ export type Database = {
       }
       meal_food_items: {
         Row: {
+          calcium_mg: number | null
           calories: number | null
           carbs_g: number | null
           confidence_score: number | null
           created_at: string
           fat_g: number | null
+          folate_ug: number | null
           food_name: string
           id: string
+          iron_mg: number | null
+          magnesium_mg: number | null
           meal_entry_id: string
+          phosphorus_mg: number | null
+          potassium_mg: number | null
           protein_g: number | null
           quantity: number | null
+          sodium_mg: number | null
           unit: string | null
+          vitamin_a_ug: number | null
+          vitamin_b1_mg: number | null
+          vitamin_b12_ug: number | null
+          vitamin_b2_mg: number | null
+          vitamin_b6_mg: number | null
+          vitamin_c_mg: number | null
+          vitamin_d_ug: number | null
+          vitamin_e_mg: number | null
+          vitamin_k_ug: number | null
           was_user_edited: boolean | null
+          zinc_mg: number | null
         }
         Insert: {
+          calcium_mg?: number | null
           calories?: number | null
           carbs_g?: number | null
           confidence_score?: number | null
           created_at?: string
           fat_g?: number | null
+          folate_ug?: number | null
           food_name: string
           id?: string
+          iron_mg?: number | null
+          magnesium_mg?: number | null
           meal_entry_id: string
+          phosphorus_mg?: number | null
+          potassium_mg?: number | null
           protein_g?: number | null
           quantity?: number | null
+          sodium_mg?: number | null
           unit?: string | null
+          vitamin_a_ug?: number | null
+          vitamin_b1_mg?: number | null
+          vitamin_b12_ug?: number | null
+          vitamin_b2_mg?: number | null
+          vitamin_b6_mg?: number | null
+          vitamin_c_mg?: number | null
+          vitamin_d_ug?: number | null
+          vitamin_e_mg?: number | null
+          vitamin_k_ug?: number | null
           was_user_edited?: boolean | null
+          zinc_mg?: number | null
         }
         Update: {
+          calcium_mg?: number | null
           calories?: number | null
           carbs_g?: number | null
           confidence_score?: number | null
           created_at?: string
           fat_g?: number | null
+          folate_ug?: number | null
           food_name?: string
           id?: string
+          iron_mg?: number | null
+          magnesium_mg?: number | null
           meal_entry_id?: string
+          phosphorus_mg?: number | null
+          potassium_mg?: number | null
           protein_g?: number | null
           quantity?: number | null
+          sodium_mg?: number | null
           unit?: string | null
+          vitamin_a_ug?: number | null
+          vitamin_b1_mg?: number | null
+          vitamin_b12_ug?: number | null
+          vitamin_b2_mg?: number | null
+          vitamin_b6_mg?: number | null
+          vitamin_c_mg?: number | null
+          vitamin_d_ug?: number | null
+          vitamin_e_mg?: number | null
+          vitamin_k_ug?: number | null
           was_user_edited?: boolean | null
+          zinc_mg?: number | null
         }
         Relationships: [
           {
