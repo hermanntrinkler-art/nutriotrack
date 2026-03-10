@@ -260,7 +260,7 @@ export default function FoodSearchScreen({
   const addItem = (food: FoodEntry) => {
     hapticFeedback('light');
     const name = language === 'de' ? food.name : food.name_en;
-    setSelectedItems(prev => [...prev, {
+    const item: AnalyzedFoodItem = {
       food_name: name,
       quantity: food.quantity,
       unit: food.unit,
@@ -269,7 +269,9 @@ export default function FoodSearchScreen({
       fat_g: food.fat_g,
       carbs_g: food.carbs_g,
       confidence_score: 1,
-    }]);
+    };
+    // Auto-save immediately
+    onSave([item]);
   };
 
   const removeItem = (index: number) => {
