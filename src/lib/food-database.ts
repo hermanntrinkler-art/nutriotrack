@@ -193,7 +193,7 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Clever Vollmilch', name_en: 'Clever Whole Milk', quantity: 200, unit: 'ml', calories: 128, protein_g: 7, fat_g: 7, carbs_g: 10, category: 'brands' },
   { name: 'Clever Butter', name_en: 'Clever Butter', quantity: 10, unit: 'g', calories: 74, protein_g: 0, fat_g: 8, carbs_g: 0, category: 'brands' },
   { name: 'Clever Gouda', name_en: 'Clever Gouda', quantity: 30, unit: 'g', calories: 105, protein_g: 7, fat_g: 8, carbs_g: 0, category: 'brands' },
-  { name: 'Clever Toastbrot', name_en: 'Clever Toast', quantity: 1, unit: 'Scheibe', calories: 65, protein_g: 2, fat_g: 1, carbs_g: 12, category: 'brands' },
+  { name: 'Clever Toastbrot', name_en: 'Clever Toast', quantity: 1, unit: 'Scheibe', calories: 65, protein_g: 2, fat_g: 1, carbs_g: 12, category: 'brands', gram_per_piece: 25 },
   { name: 'Clever Reis', name_en: 'Clever Rice', quantity: 200, unit: 'g', calories: 260, protein_g: 5, fat_g: 1, carbs_g: 57, category: 'brands' },
   { name: 'Clever Spaghetti (gekocht)', name_en: 'Clever Spaghetti (cooked)', quantity: 200, unit: 'g', calories: 280, protein_g: 10, fat_g: 2, carbs_g: 55, category: 'brands' },
   { name: 'Clever Kochschinken', name_en: 'Clever Cooked Ham', quantity: 30, unit: 'g', calories: 35, protein_g: 6, fat_g: 1, carbs_g: 0, category: 'brands' },
