@@ -346,11 +346,15 @@ export default function MealsPage() {
     const totalCarbs = items.reduce((s, i) => s + Number(i.carbs_g), 0);
 
     const now = new Date();
+    const currentTime = now.toTimeString().split(' ')[0];
+    const currentSlot = getSlotForTime(currentTime);
+    // Use current time if it matches the selected slot, otherwise use the slot's default time
+    const entryTime = currentSlot === activeSlot ? currentTime : getDefaultTimeForSlot(activeSlot);
     const mealName = items.map(i => i.food_name).filter(Boolean).slice(0, 3).join(', ');
     const { data: mealData, error: mealError } = await supabase.from('meal_entries').insert({
       user_id: user.id,
       entry_date: dateStr,
-      entry_time: now.toTimeString().split(' ')[0],
+      entry_time: entryTime,
       meal_type: mealType,
       image_url: imageUrl,
       notes: mealName || null,
