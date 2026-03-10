@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Shield, Users, Image, Upload, Trash2, ArrowLeft, Loader2, Flag, CheckCircle, XCircle } from 'lucide-react';
+import { Shield, Users, Image, Upload, Trash2, ArrowLeft, Loader2, Flag, CheckCircle, XCircle, ChevronDown, ChevronUp, Pencil, Save, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 // Static badge imports for preview
