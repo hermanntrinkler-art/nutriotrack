@@ -372,12 +372,6 @@ export async function shareToFacebook(blob: Blob, shareText: string, language: '
   // If we have a badgeId, call the edge function to generate a proper share page with OG tags
   if (badgeId) {
     try {
-      const { data, error } = await supabase.functions.invoke('share-badge', {
-        body: null,
-        headers: { 'Content-Type': 'application/json' },
-        method: 'GET',
-      });
-      // Use query params approach since GET with body isn't ideal
       const funcUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/share-badge?badge=${encodeURIComponent(badgeId)}&lang=${language}`;
       const resp = await fetch(funcUrl, {
         headers: {
