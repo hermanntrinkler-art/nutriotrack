@@ -774,10 +774,9 @@ export default function MealsPage() {
       {step === 'barcode' && (
         <BarcodeScanner
           onResult={(item) => {
+            // Auto-save barcode result immediately
             setIsAiResult(false);
-            setPendingItems([item]);
-            setStep('diary-entry');
-            setDiaryTab('search');
+            handleSave([item]);
           }}
           onCancel={handleReset}
         />
