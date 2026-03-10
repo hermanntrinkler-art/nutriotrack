@@ -619,7 +619,8 @@ function ReportCard({ report, onUpdateStatus, onDelete, onUpdate }: {
   }, [expanded]);
 
   const micros = useMemo(() => {
-    if (!productData) return null;
+
+
     const grams = productData.unit === 'g' || productData.unit === 'ml' ? productData.quantity : 100;
     return estimateMicronutrients(report.food_name, grams);
   }, [productData, report.food_name]);
