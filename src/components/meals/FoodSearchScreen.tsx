@@ -10,15 +10,20 @@ import { Input } from '@/components/ui/input';
 import { Search, Plus, Minus, Globe, Loader2, X, ArrowLeft, ChevronRight, Flame, Star, Users, ScanBarcode } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { hapticFeedback } from '@/lib/haptics';
-import { saveAsRecipe } from '@/components/meals/SavedRecipesScreen';
 import { toast } from 'sonner';
 import CommunityProductForm from '@/components/CommunityProductForm';
+import BottomCart from './BottomCart';
 
 interface FoodSearchScreenProps {
-  onDone: (items: AnalyzedFoodItem[]) => void;
   onCancel: () => void;
   hideHeader?: boolean;
   onBarcodeScan?: () => void;
+  // Direct save mode — no more review step
+  onSave: (items: AnalyzedFoodItem[]) => void;
+  saving: boolean;
+  initialItems?: AnalyzedFoodItem[];
+  isAiResult?: boolean;
+  onEditItem?: (index: number, items: AnalyzedFoodItem[]) => void;
 }
 
 interface SavedFavorite {
@@ -61,7 +66,16 @@ const CATEGORY_MAP: Record<string, string[]> = {
   snacks: ['snacks', 'sweets', 'brands'],
 };
 
-export default function FoodSearchScreen({ onDone, onCancel, hideHeader, onBarcodeScan }: FoodSearchScreenProps) {
+export default function FoodSearchScreen({
+  onCancel,
+  hideHeader,
+  onBarcodeScan,
+  onSave,
+  saving,
+  initialItems,
+  isAiResult,
+  onEditItem,
+}: FoodSearchScreenProps) {
   const { t, language } = useTranslation();
   const { user } = useAuth();
   const [query, setQuery] = useState('');
@@ -69,20 +83,26 @@ export default function FoodSearchScreen({ onDone, onCancel, hideHeader, onBarco
   const [onlineResults, setOnlineResults] = useState<FoodEntry[]>([]);
   const [searchingOnline, setSearchingOnline] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedItems, setSelectedItems] = useState<AnalyzedFoodItem[]>([]);
+  const [selectedItems, setSelectedItems] = useState<AnalyzedFoodItem[]>(initialItems || []);
   const [customProducts, setCustomProducts] = useState<FoodEntry[]>([]);
   const [communityProducts, setCommunityProducts] = useState<FoodEntry[]>([]);
   const [favorites, setFavorites] = useState<SavedFavorite[]>([]);
-  const [savingFav, setSavingFav] = useState(false);
-  const [showSaveFavInput, setShowSaveFavInput] = useState(false);
-  const [favName, setFavName] = useState('');
   const [showCommunityForm, setShowCommunityForm] = useState(false);
+  const [cartExpanded, setCartExpanded] = useState((initialItems?.length || 0) > 0);
   const inputRef = useRef<HTMLInputElement>(null);
   const onlineTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onlineController = useRef<AbortController | null>(null);
   const onlineRequestId = useRef(0);
 
   const labels = language === 'de' ? CATEGORY_LABELS_DE : CATEGORY_LABELS_EN;
+
+  // Sync initialItems when they change (e.g. AI results arriving)
+  useEffect(() => {
+    if (initialItems && initialItems.length > 0) {
+      setSelectedItems(initialItems);
+      setCartExpanded(true);
+    }
+  }, [initialItems]);
 
   const loadCommunityProducts = useCallback(async () => {
     const { data } = await supabase
@@ -109,7 +129,6 @@ export default function FoodSearchScreen({ onDone, onCancel, hideHeader, onBarco
     }
   }, []);
 
-  // Load custom products + favorites + community
   useEffect(() => {
     if (!user) return;
     supabase
@@ -140,7 +159,6 @@ export default function FoodSearchScreen({ onDone, onCancel, hideHeader, onBarco
     loadCommunityProducts();
   }, [user, loadCommunityProducts]);
 
-  // Cleanup
   useEffect(() => {
     return () => {
       if (onlineTimer.current) clearTimeout(onlineTimer.current);
@@ -174,7 +192,6 @@ export default function FoodSearchScreen({ onDone, onCancel, hideHeader, onBarco
       ? customProducts.filter(e => e.name.toLowerCase().includes(norm) || e.name_en.toLowerCase().includes(norm))
       : [];
 
-    // Community products search
     const communityMatches = norm
       ? communityProducts.filter(e => e.name.toLowerCase().includes(norm) || (e as any).communityBrand?.toLowerCase().includes(norm))
       : [];
@@ -248,6 +265,10 @@ export default function FoodSearchScreen({ onDone, onCancel, hideHeader, onBarco
     setSelectedItems(prev => prev.filter((_, i) => i !== index));
   };
 
+  const replaceItem = (index: number, newItem: AnalyzedFoodItem) => {
+    setSelectedItems(prev => prev.map((item, i) => i === index ? { ...newItem, confidence_score: 1 } : item));
+  };
+
   const handleSelectFavorite = async (fav: SavedFavorite) => {
     hapticFeedback('success');
     const { data: itemsData } = await supabase
@@ -258,7 +279,6 @@ export default function FoodSearchScreen({ onDone, onCancel, hideHeader, onBarco
       toast.error(language === 'de' ? 'Favorit ist leer' : 'Favorite is empty');
       return;
     }
-    // Increment use count
     await supabase.from('saved_recipes').update({ use_count: (fav.use_count || 0) + 1 } as any).eq('id', fav.id);
     
     const newItems: AnalyzedFoodItem[] = (itemsData as any[]).map(item => ({
@@ -274,45 +294,9 @@ export default function FoodSearchScreen({ onDone, onCancel, hideHeader, onBarco
     setSelectedItems(prev => [...prev, ...newItems]);
   };
 
-  const handleSaveAsFavorite = async () => {
-    if (!user || selectedItems.length === 0) return;
-    setSavingFav(true);
-    const name = favName.trim() || selectedItems.map(i => i.food_name).filter(Boolean).slice(0, 3).join(', ') || 'Favorit';
-    const success = await saveAsRecipe({
-      userId: user.id,
-      name,
-      emoji: '⭐',
-      mealType: 'snack',
-      items: selectedItems,
-    });
-    setSavingFav(false);
-    setShowSaveFavInput(false);
-    setFavName('');
-    if (success) {
-      hapticFeedback('success');
-      toast.success(language === 'de' ? 'Als Favorit gespeichert! ⭐' : 'Saved as favorite! ⭐');
-      // Reload favorites
-      const { data } = await supabase
-        .from('saved_recipes')
-        .select('id, name, emoji, meal_type, total_calories, total_protein_g, total_fat_g, total_carbs_g, use_count')
-        .eq('user_id', user.id)
-        .order('use_count', { ascending: false })
-        .limit(50);
-      setFavorites((data || []) as SavedFavorite[]);
-    } else {
-      toast.error(language === 'de' ? 'Fehler beim Speichern' : 'Failed to save');
-    }
-  };
-
-  // Filter favorites by search query
   const filteredFavorites = query.trim()
     ? favorites.filter(f => f.name.toLowerCase().includes(query.trim().toLowerCase()))
     : favorites;
-
-  const totalCal = selectedItems.reduce((s, i) => s + i.calories, 0);
-  const totalP = selectedItems.reduce((s, i) => s + i.protein_g, 0);
-  const totalF = selectedItems.reduce((s, i) => s + i.fat_g, 0);
-  const totalC = selectedItems.reduce((s, i) => s + i.carbs_g, 0);
 
   const showFavorites = filteredFavorites.length > 0 && selectedCategory === 'all';
 
@@ -423,7 +407,7 @@ export default function FoodSearchScreen({ onDone, onCancel, hideHeader, onBarco
       )}
 
       {/* Results */}
-      <div className="space-y-1.5 max-h-[40vh] overflow-y-auto rounded-2xl">
+      <div className={`space-y-1.5 overflow-y-auto rounded-2xl ${selectedItems.length > 0 ? 'max-h-[30vh]' : 'max-h-[40vh]'}`}>
         {results.length === 0 && !searchingOnline && query.trim().length > 0 && filteredFavorites.length === 0 && (
           <div className="text-center py-6 space-y-3">
             <p className="text-muted-foreground text-sm">
@@ -507,107 +491,20 @@ export default function FoodSearchScreen({ onDone, onCancel, hideHeader, onBarco
         )}
       </div>
 
-      {/* Selected items basket */}
+      {/* Bottom Cart */}
       <AnimatePresence>
         {selectedItems.length > 0 && (
-          <motion.div
-            className="nutri-card-highlight space-y-3"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-sm">
-                {language === 'de' ? `${selectedItems.length} ausgewählt` : `${selectedItems.length} selected`}
-              </h3>
-              <div className="flex items-center gap-3 text-xs font-semibold">
-                <span className="flex items-center gap-0.5"><Flame className="h-3 w-3 text-energy" />{Math.round(totalCal)}</span>
-                <span className="text-protein">{Math.round(totalP)}P</span>
-                <span className="text-fat">{Math.round(totalF)}F</span>
-                <span className="text-carbs">{Math.round(totalC)}C</span>
-              </div>
-            </div>
-
-            <div className="space-y-1.5 max-h-32 overflow-y-auto">
-              {selectedItems.map((item, i) => (
-                <motion.div
-                  key={`sel-${i}`}
-                  className="flex items-center justify-between py-1.5 px-1 text-sm"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 10 }}
-                >
-                  <span className="truncate flex-1 font-medium">{item.food_name}</span>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs text-muted-foreground">{item.quantity} {item.unit}</span>
-                    <button
-                      onClick={() => removeItem(i)}
-                      className="w-6 h-6 rounded-full bg-destructive/10 flex items-center justify-center hover:bg-destructive/20 transition-colors"
-                    >
-                      <Minus className="h-3 w-3 text-destructive" />
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Save as favorite inline */}
-            {selectedItems.length >= 1 && user && (
-              <AnimatePresence>
-                {showSaveFavInput ? (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="flex gap-2"
-                  >
-                    <Input
-                      value={favName}
-                      onChange={e => setFavName(e.target.value)}
-                      placeholder={language === 'de' ? 'Name z.B. Mein Kaffee' : 'Name e.g. My Coffee'}
-                      className="h-9 rounded-xl text-sm flex-1"
-                      autoFocus
-                      onKeyDown={e => e.key === 'Enter' && handleSaveAsFavorite()}
-                    />
-                    <Button
-                      size="sm"
-                      onClick={handleSaveAsFavorite}
-                      disabled={savingFav}
-                      className="rounded-xl h-9 px-3 bg-amber-500 hover:bg-amber-600 text-white"
-                    >
-                      {savingFav ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Star className="h-3.5 w-3.5 fill-white" />}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => { setShowSaveFavInput(false); setFavName(''); }}
-                      className="rounded-xl h-9 px-2"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
-                  </motion.div>
-                ) : (
-                  <motion.button
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    onClick={() => setShowSaveFavInput(true)}
-                    className="w-full flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition-all active:scale-[0.98]"
-                  >
-                    <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
-                    {language === 'de' ? 'Als Favorit speichern' : 'Save as Favorite'}
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            )}
-
-            <Button
-              onClick={() => onDone(selectedItems)}
-              className="w-full rounded-xl h-11 font-bold text-base"
-            >
-              {language === 'de' ? 'Weiter zur Überprüfung' : 'Continue to Review'}
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </motion.div>
+          <BottomCart
+            items={selectedItems}
+            isAiResult={isAiResult || false}
+            onRemoveItem={removeItem}
+            onReplaceItem={replaceItem}
+            onEditItem={(i) => onEditItem?.(i, selectedItems)}
+            onSave={() => onSave(selectedItems)}
+            saving={saving}
+            expanded={cartExpanded}
+            onToggleExpanded={() => setCartExpanded(prev => !prev)}
+          />
         )}
       </AnimatePresence>
 
