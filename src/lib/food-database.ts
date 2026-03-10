@@ -404,6 +404,17 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Feta', name_en: 'Feta Cheese', quantity: 30, unit: 'g', calories: 79, protein_g: 4, fat_g: 6, carbs_g: 1, category: 'dairy' },
   { name: 'Ziegenkäse', name_en: 'Goat Cheese', quantity: 30, unit: 'g', calories: 103, protein_g: 7, fat_g: 8, carbs_g: 0, category: 'dairy' },
   { name: 'Hüttenkäse', name_en: 'Cottage Cheese', quantity: 100, unit: 'g', calories: 98, protein_g: 11, fat_g: 4, carbs_g: 3, category: 'dairy' },
+  { name: 'Raclettekäse', name_en: 'Raclette Cheese', quantity: 50, unit: 'g', calories: 175, protein_g: 12, fat_g: 14, carbs_g: 0, category: 'dairy' },
+  { name: 'Fonduekäse (Mischung)', name_en: 'Fondue Cheese (Mix)', quantity: 100, unit: 'g', calories: 330, protein_g: 24, fat_g: 25, carbs_g: 2, category: 'dairy' },
+  { name: 'Gruyère', name_en: 'Gruyère Cheese', quantity: 30, unit: 'g', calories: 117, protein_g: 8, fat_g: 9, carbs_g: 0, category: 'dairy' },
+  { name: 'Appenzeller', name_en: 'Appenzeller Cheese', quantity: 30, unit: 'g', calories: 115, protein_g: 8, fat_g: 9, carbs_g: 0, category: 'dairy' },
+  { name: 'Cheddar', name_en: 'Cheddar Cheese', quantity: 30, unit: 'g', calories: 121, protein_g: 7, fat_g: 10, carbs_g: 0, category: 'dairy' },
+  { name: 'Camembert', name_en: 'Camembert', quantity: 30, unit: 'g', calories: 85, protein_g: 6, fat_g: 7, carbs_g: 0, category: 'dairy' },
+  { name: 'Brie', name_en: 'Brie Cheese', quantity: 30, unit: 'g', calories: 100, protein_g: 6, fat_g: 8, carbs_g: 0, category: 'dairy' },
+  { name: 'Edamer', name_en: 'Edam Cheese', quantity: 30, unit: 'g', calories: 100, protein_g: 7, fat_g: 8, carbs_g: 0, category: 'dairy' },
+  { name: 'Tilsiter', name_en: 'Tilsit Cheese', quantity: 30, unit: 'g', calories: 110, protein_g: 8, fat_g: 9, carbs_g: 0, category: 'dairy' },
+  { name: 'Bergkäse', name_en: 'Mountain Cheese', quantity: 30, unit: 'g', calories: 120, protein_g: 8, fat_g: 10, carbs_g: 0, category: 'dairy' },
+  { name: 'Sbrinz', name_en: 'Sbrinz Cheese', quantity: 10, unit: 'g', calories: 45, protein_g: 5, fat_g: 3, carbs_g: 0, category: 'dairy' },
 ];
 
 // Synonym / slang map: keys are normalized aliases, values are normalized canonical names
