@@ -515,6 +515,10 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
                 ? (language === 'de'
                     ? `1 Stück ≈ ${getPieceWeight(form.food_name)}g · Nährwerte skalieren automatisch`
                     : `1 piece ≈ ${getPieceWeight(form.food_name)}g · Nutrition scales automatically`)
+                : form.unit === 'Portion' && getPortionWeight(form.food_name) > 0
+                ? (language === 'de'
+                    ? `1 Portion ≈ ${getPortionWeight(form.food_name)}g · Nährwerte skalieren automatisch`
+                    : `1 portion ≈ ${getPortionWeight(form.food_name)}g · Nutrition scales automatically`)
                 : (language === 'de'
                     ? `Nährwerte skalieren automatisch (Basis: ${baseNutrition.baseQuantity} ${baseNutrition.baseUnit})`
                     : `Nutrition scales automatically (base: ${baseNutrition.baseQuantity} ${baseNutrition.baseUnit})`)}
