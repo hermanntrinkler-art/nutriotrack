@@ -857,8 +857,8 @@ export default function MealsPage() {
 
           <div className="flex gap-3">
             <Button variant="outline" onClick={handleReset} className="flex-1">{t('meals.cancel')}</Button>
-            <Button onClick={() => setStep('confirm')} disabled={items.length === 0 || items.some(i => !i.food_name)} className="flex-1">
-              {t('meals.confirmSave')}
+            <Button onClick={handleSave} disabled={saving || items.length === 0 || items.some(i => !i.food_name)} className="flex-1">
+              {saving ? (language === 'de' ? 'Speichert...' : 'Saving...') : (language === 'de' ? 'Mahlzeit speichern' : 'Save Meal')}
             </Button>
           </div>
         </div>
