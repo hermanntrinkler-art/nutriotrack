@@ -353,7 +353,14 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
       if (pw > 0) {
         newQuantity = Math.round((currentGrams / pw) * 10) / 10;
       } else {
-        // Unknown piece weight: keep quantity and nutrition unchanged
+        setForm(prev => ({ ...prev, unit: newUnit }));
+        return;
+      }
+    } else if (newUnit === 'Portion') {
+      const pw = getPortionWeight(form.food_name);
+      if (pw > 0) {
+        newQuantity = Math.round((currentGrams / pw) * 10) / 10;
+      } else {
         setForm(prev => ({ ...prev, unit: newUnit }));
         return;
       }
