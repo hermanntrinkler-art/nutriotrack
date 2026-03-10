@@ -181,7 +181,7 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'S-Budget Butter', name_en: 'S-Budget Butter', quantity: 10, unit: 'g', calories: 74, protein_g: 0, fat_g: 8, carbs_g: 0, category: 'brands' },
   { name: 'S-Budget Gouda', name_en: 'S-Budget Gouda', quantity: 30, unit: 'g', calories: 105, protein_g: 7, fat_g: 8, carbs_g: 0, category: 'brands' },
   { name: 'S-Budget Joghurt Natur', name_en: 'S-Budget Plain Yogurt', quantity: 150, unit: 'g', calories: 92, protein_g: 5, fat_g: 5, carbs_g: 7, category: 'brands' },
-  { name: 'S-Budget Toast', name_en: 'S-Budget Toast', quantity: 1, unit: 'Scheibe', calories: 65, protein_g: 2, fat_g: 1, carbs_g: 12, category: 'brands' },
+  { name: 'S-Budget Toast', name_en: 'S-Budget Toast', quantity: 1, unit: 'Scheibe', calories: 65, protein_g: 2, fat_g: 1, carbs_g: 12, category: 'brands', gram_per_piece: 25 },
   { name: 'S-Budget Reis', name_en: 'S-Budget Rice', quantity: 200, unit: 'g', calories: 260, protein_g: 5, fat_g: 1, carbs_g: 57, category: 'brands' },
   { name: 'S-Budget Spaghetti (gekocht)', name_en: 'S-Budget Spaghetti (cooked)', quantity: 200, unit: 'g', calories: 280, protein_g: 10, fat_g: 2, carbs_g: 55, category: 'brands' },
   { name: 'S-Budget Kochschinken', name_en: 'S-Budget Cooked Ham', quantity: 30, unit: 'g', calories: 35, protein_g: 6, fat_g: 1, carbs_g: 0, category: 'brands' },
