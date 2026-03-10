@@ -550,11 +550,7 @@ export default function FoodSearchScreen({
         onClose={() => setDetailFood(null)}
         onAdd={(item) => {
           hapticFeedback('light');
-          if (singleAddMode) {
-            onSave([item]);
-          } else {
-            setSelectedItems(prev => [...prev, item]);
-          }
+          onSave([item]);
         }}
         onShowCommunityForm={() => setShowCommunityForm(true)}
       />
