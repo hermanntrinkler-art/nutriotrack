@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Minus, Users, Globe, ChevronDown, ChevronUp, Pencil, BookOpen, Link2 } from 'lucide-react';
+import { Plus, Minus, Users, Globe, ChevronDown, ChevronUp, Pencil, BookOpen, Link2, Star, Flag } from 'lucide-react';
 import { hapticFeedback } from '@/lib/haptics';
 import { estimateMicronutrients, MICRO_LABELS, DAILY_TARGETS } from '@/lib/micronutrients';
 
@@ -146,12 +146,16 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
   const { language } = useTranslation();
   const [quantity, setQuantity] = useState<number>(food?.quantity || 100);
   const [unit, setUnit] = useState<string>(food?.unit === 'Scheibe' || food?.unit === 'Stück' || food?.unit === 'piece' ? food.unit : 'g');
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [reported, setReported] = useState(false);
 
   // Reset when food changes
   const foodKey = food ? `${food.name}-${food.unit}` : '';
   const [prevKey, setPrevKey] = useState(foodKey);
   if (foodKey !== prevKey) {
     setPrevKey(foodKey);
+    setIsFavorite(false);
+    setReported(false);
     if (food) {
       const isPiece = food.unit === 'Scheibe' || food.unit === 'Stück' || food.unit === 'piece';
       if (isPiece) {
@@ -265,12 +269,40 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
     <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
       <DrawerContent className="max-h-[90vh]">
         <DrawerHeader className="pb-2">
-          <DrawerTitle className="text-left text-lg">{name}</DrawerTitle>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            {isCommunity && <Users className="h-3 w-3 text-primary" />}
-            {isOnline && <Globe className="h-3 w-3" />}
-            <span>{source}</span>
-            {food.communityBrand && <span>· {food.communityBrand}</span>}
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <DrawerTitle className="text-left text-lg">{name}</DrawerTitle>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                {isCommunity && <Users className="h-3 w-3 text-primary" />}
+                {isOnline && <Globe className="h-3 w-3" />}
+                <span>{source}</span>
+                {food.communityBrand && <span>· {food.communityBrand}</span>}
+              </div>
+            </div>
+            <button
+              onClick={() => { setIsFavorite(!isFavorite); hapticFeedback('light'); }}
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-accent transition-colors shrink-0"
+              aria-label={isFavorite ? 'Favorit entfernen' : 'Als Favorit speichern'}
+            >
+              <Star className={`h-5 w-5 transition-colors ${isFavorite ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} />
+            </button>
+          </div>
+          {/* Contributed by / Report */}
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-1">
+            <span>
+              {isCommunity
+                ? `${language === 'de' ? 'Beigetragen von' : 'Contributed by'}: ${food.communityContributor || 'User'}`
+                : `${language === 'de' ? 'Quelle' : 'Source'}: ${source}`}
+            </span>
+            <span>·</span>
+            <button
+              onClick={() => { setReported(true); hapticFeedback('light'); }}
+              className={`flex items-center gap-0.5 ${reported ? 'text-destructive' : 'hover:text-destructive'} transition-colors`}
+              disabled={reported}
+            >
+              <Flag className="h-3 w-3" />
+              <span>{reported ? (language === 'de' ? 'Gemeldet' : 'Reported') : (language === 'de' ? 'Problem melden' : 'Report')}</span>
+            </button>
           </div>
         </DrawerHeader>
 
