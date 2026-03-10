@@ -363,12 +363,33 @@ function downloadBlob(blob: Blob, filename = 'nutriotrack-achievement.png') {
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
-export async function shareToFacebook(blob: Blob, shareText: string, language: 'de' | 'en') {
+export async function shareToFacebook(blob: Blob, shareText: string, language: 'de' | 'en', badgeId?: string) {
   downloadBlob(blob);
-  const appUrl = window.location.origin;
-  const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(appUrl)}&quote=${encodeURIComponent(shareText)}`;
-  window.open(fbUrl, '_blank', 'noopener,noreferrer');
   const { toast } = await import('sonner');
+
+  let shareUrl = window.location.origin;
+
+  // If we have a badgeId, call the edge function to generate a proper share page with OG tags
+  if (badgeId) {
+    try {
+      const funcUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/share-badge?badge=${encodeURIComponent(badgeId)}&lang=${language}`;
+      const resp = await fetch(funcUrl, {
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+      });
+      if (resp.ok) {
+        const result = await resp.json();
+        if (result.url) shareUrl = result.url;
+      }
+    } catch (e) {
+      console.warn('Failed to generate share page, using fallback URL', e);
+    }
+  }
+
+  const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+  window.open(fbUrl, '_blank', 'noopener,noreferrer');
   toast.success(
     language === 'de'
       ? '📋 Bild heruntergeladen — füge es als Foto zu deinem Facebook-Post hinzu!'
