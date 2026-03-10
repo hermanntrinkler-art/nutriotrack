@@ -13,6 +13,7 @@ import { hapticFeedback } from '@/lib/haptics';
 import { toast } from 'sonner';
 import CommunityProductForm from '@/components/CommunityProductForm';
 import BottomCart from './BottomCart';
+import FoodDetailDrawer from './FoodDetailDrawer';
 
 interface FoodSearchScreenProps {
   onCancel: () => void;
