@@ -100,6 +100,35 @@ export default function EditMealPage() {
     navigate('/dashboard');
   };
 
+  const handleShareToCommunity = async (index: number) => {
+    if (!user || !profile) return;
+    const item = items[index];
+    if (!item.food_name) return;
+    setSharingIndex(index);
+
+    const { error } = await supabase.from('community_products').insert({
+      contributor_id: user.id,
+      contributor_display_name: profile.display_name || profile.name || 'Anonym',
+      contributor_avatar_emoji: profile.avatar_emoji || '😊',
+      food_name: item.food_name,
+      quantity: item.quantity,
+      unit: item.unit,
+      calories: item.calories,
+      protein_g: item.protein_g,
+      fat_g: item.fat_g,
+      carbs_g: item.carbs_g,
+      barcode: item.barcode || null,
+    });
+
+    if (error) {
+      toast.error(t('common.error'));
+    } else {
+      toast.success('👥 ' + t('meals.shared_to_community') || 'Zur Community geteilt!');
+      setSharedIndices(prev => new Set(prev).add(index));
+    }
+    setSharingIndex(null);
+  };
+
   const mealTypeLabel = (type: string) => {
     const map: Record<string, string> = {
       breakfast: t('meals.breakfast'), lunch: t('meals.lunch'),
