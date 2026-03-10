@@ -369,7 +369,7 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
   };
 
   const handleSave = () => {
-    onSave({ ...form, confidence_score: 1 });
+    onSave({ ...form, confidence_score: 1, was_user_edited: form.was_user_edited || false });
     onClose();
   };
 

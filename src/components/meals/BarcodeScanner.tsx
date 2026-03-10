@@ -120,6 +120,7 @@ async function lookupCustomProduct(code: string, userId: string): Promise<Analyz
     fat_g: Number((data as any).fat_g) || 0,
     carbs_g: Number((data as any).carbs_g) || 0,
     confidence_score: 1,
+    barcode: code,
   });
 }
 
