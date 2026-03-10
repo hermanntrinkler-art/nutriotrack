@@ -83,6 +83,7 @@ async function lookupOpenFoodFacts(code: string): Promise<OFFResult> {
         fat_g: fat100,
         carbs_g: carbs100,
         confidence_score: 0.95,
+        barcode: code,
       },
       hasNutrition: true,
     };
