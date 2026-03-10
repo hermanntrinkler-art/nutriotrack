@@ -97,6 +97,7 @@ export default function MealsPage() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [savingRecipe, setSavingRecipe] = useState(false);
   const [returnToReview, setReturnToReview] = useState(false);
+  const [diaryTab, setDiaryTab] = useState<DiaryTab>('search');
   const [dayMeals, setDayMeals] = useState<MealEntry[]>([]);
   const [goals, setGoals] = useState<UserGoals | null>(null);
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
