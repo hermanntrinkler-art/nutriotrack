@@ -50,7 +50,7 @@ export default function DailyView({ meals, selectedDate, goals }: DailyViewProps
   };
 
   const calTarget = goals?.calorie_target || 2000;
-  const calRemaining = calTarget - totals.calories;
+  const calRemaining = calTarget - totals.calories + totalBurned;
   const calPct = Math.min((totals.calories / calTarget) * 100, 100);
 
   const mealEmoji: Record<string, string> = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍎' };
