@@ -117,7 +117,7 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Gut & Günstig Vollmilch', name_en: 'Gut & Günstig Whole Milk', quantity: 200, unit: 'ml', calories: 128, protein_g: 7, fat_g: 7, carbs_g: 10, category: 'brands' },
   { name: 'Gut & Günstig Butter', name_en: 'Gut & Günstig Butter', quantity: 10, unit: 'g', calories: 74, protein_g: 0, fat_g: 8, carbs_g: 0, category: 'brands' },
   { name: 'Gut & Günstig Gouda', name_en: 'Gut & Günstig Gouda', quantity: 30, unit: 'g', calories: 105, protein_g: 7, fat_g: 8, carbs_g: 0, category: 'brands' },
-  { name: 'Gut & Günstig Toastbrot', name_en: 'Gut & Günstig Toast', quantity: 1, unit: 'Scheibe', calories: 65, protein_g: 2, fat_g: 1, carbs_g: 12, category: 'brands' },
+  { name: 'Gut & Günstig Toastbrot', name_en: 'Gut & Günstig Toast', quantity: 1, unit: 'Scheibe', calories: 65, protein_g: 2, fat_g: 1, carbs_g: 12, category: 'brands', gram_per_piece: 25 },
   { name: 'Gut & Günstig Reis', name_en: 'Gut & Günstig Rice', quantity: 200, unit: 'g', calories: 260, protein_g: 5, fat_g: 1, carbs_g: 57, category: 'brands' },
   { name: 'Gut & Günstig Spaghetti (gekocht)', name_en: 'Gut & Günstig Spaghetti (cooked)', quantity: 200, unit: 'g', calories: 280, protein_g: 10, fat_g: 2, carbs_g: 55, category: 'brands' },
   { name: 'Gut & Günstig Hähnchenbrust', name_en: 'Gut & Günstig Chicken Breast', quantity: 150, unit: 'g', calories: 165, protein_g: 31, fat_g: 4, carbs_g: 0, category: 'brands' },
