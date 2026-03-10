@@ -9,7 +9,6 @@ import { Camera, Upload, ScanBarcode, Search, Star, Flame, Plus, ChevronLeft, Ch
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useSubscription } from '@/hooks/useSubscription';
 import PaywallScreen from '@/components/PaywallScreen';
 import { hapticFeedback } from '@/lib/haptics';
 import { motion } from 'framer-motion';
