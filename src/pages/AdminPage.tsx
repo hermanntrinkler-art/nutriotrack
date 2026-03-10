@@ -888,8 +888,6 @@ function ReportCard({ report, onUpdateStatus, onDelete, onUpdate }: {
   );
 }
 
-
-      food_name: editName,
       reason: editReason || null,
       food_source: editSource,
     });
