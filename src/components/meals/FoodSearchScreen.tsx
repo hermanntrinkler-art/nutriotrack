@@ -565,46 +565,18 @@ export default function FoodSearchScreen({
             </DialogTitle>
           </DialogHeader>
           {portionFav && (
-            <div className="space-y-3 py-2">
-              <p className="text-sm text-muted-foreground">
-                {language === 'de' ? 'Gesamtmenge anpassen:' : 'Adjust total amount:'}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {(() => {
-                  const orig = portionOriginalTotal;
-                  const presets = [
-                    Math.round(orig * 0.5),
-                    Math.round(orig * 0.75),
-                    orig,
-                    Math.round(orig * 1.5),
-                    Math.round(orig * 2),
-                  ].filter((v, i, arr) => v > 0 && arr.indexOf(v) === i);
-                  const displayUnit = (portionFav as any)._unit || 'g';
-                  return presets.map(val => (
-                    <button
-                      key={val}
-                      onClick={() => setPortionAmount(val)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                        portionAmount === val
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted hover:bg-accent text-foreground'
-                      }`}
-                    >
-                      {val} {displayUnit}
-                    </button>
-                  ));
-                })()}
-              </div>
-              <div className="flex items-center gap-2">
+            <div className="space-y-4 py-2">
+              <div className="flex items-center gap-3">
                 <Input
                   type="number"
                   step="10"
                   min="1"
                   value={portionAmount}
                   onChange={e => setPortionAmount(Math.max(1, Number(e.target.value)))}
-                  className="w-24 text-center"
+                  className="w-24 text-center text-lg font-medium"
+                  autoFocus
                 />
-                <span className="text-sm text-muted-foreground">
+                <span className="text-base text-muted-foreground">
                   {(portionFav as any)._unit || 'g'}
                 </span>
               </div>
@@ -614,16 +586,11 @@ export default function FoodSearchScreen({
                   return `≈ ${Math.round((portionFav.total_calories || 0) * scale)} kcal · P:${Math.round((portionFav.total_protein_g || 0) * scale)}g F:${Math.round((portionFav.total_fat_g || 0) * scale)}g C:${Math.round((portionFav.total_carbs_g || 0) * scale)}g`;
                 })()}
               </p>
+              <Button onClick={confirmFavoritePortion} className="w-full">
+                {language === 'de' ? 'Hinzufügen' : 'Add'}
+              </Button>
             </div>
           )}
-          <DialogFooter className="flex gap-2">
-            <Button variant="outline" onClick={() => { setPortionFav(null); setPortionFavItems(null); }} className="flex-1">
-              {language === 'de' ? 'Abbrechen' : 'Cancel'}
-            </Button>
-            <Button onClick={confirmFavoritePortion} className="flex-1">
-              {language === 'de' ? 'Hinzufügen' : 'Add'}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
