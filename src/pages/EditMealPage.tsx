@@ -123,7 +123,7 @@ export default function EditMealPage() {
     if (error) {
       toast.error(t('common.error'));
     } else {
-      toast.success('👥 ' + t('meals.shared_to_community') || 'Zur Community geteilt!');
+      toast.success('👥 Zur Community geteilt!');
       setSharedIndices(prev => new Set(prev).add(index));
     }
     setSharingIndex(null);
