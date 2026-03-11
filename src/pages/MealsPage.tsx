@@ -572,7 +572,7 @@ export default function MealsPage() {
                                     toast.success(language === 'de' ? 'Gelöscht' : 'Deleted');
                                     loadDayMeals();
                                   }}
-                                  className="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-destructive/10 transition-all sm:opacity-100"
+                                  className="p-1 rounded-lg hover:bg-destructive/10 transition-all"
                                 >
                                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
                                 </button>
