@@ -315,7 +315,9 @@ export default function MealsPage() {
 
   const handleSaveEditedItem = (updatedItem: AnalyzedFoodItem) => {
     if (editingIndex !== null) {
-      setEditingItems(prev => prev.map((item, i) => i === editingIndex ? updatedItem : item));
+      const updater = (prev: AnalyzedFoodItem[]) => prev.map((item, i) => i === editingIndex ? updatedItem : item);
+      setEditingItems(updater);
+      setPendingItems(updater);
     }
     setEditingIndex(null);
   };
