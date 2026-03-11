@@ -110,6 +110,20 @@ export default function MealsPage() {
   const dateStr = formatDateStr(selectedDate);
   const weekDays = useMemo(() => getWeekDays(selectedDate), [dateStr]);
 
+  // Quick-add mode: skip overview, auto-select slot by time
+  useEffect(() => {
+    if (searchParams.get('quick') === '1') {
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const slot = getSlotForTime(timeStr);
+      const slotInfo = MEAL_SLOTS.find(s => s.slot === slot);
+      setActiveSlot(slot);
+      setMealType(slotInfo?.type || 'lunch');
+      setStep('diary-entry');
+      setSearchParams({}, { replace: true });
+    }
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     supabase.from('user_goals').select('*').eq('user_id', user.id).single()
