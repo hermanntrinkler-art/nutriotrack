@@ -283,6 +283,9 @@ export default function DashboardPage() {
       initial="hidden"
       animate="show"
     >
+      {/* Trial Banner */}
+      <TrialBanner />
+
       {/* Header */}
       <motion.div className="flex items-center justify-between" variants={fadeUp}>
         <div>
