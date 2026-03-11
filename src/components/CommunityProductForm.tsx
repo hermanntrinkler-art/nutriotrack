@@ -5,7 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { X, Upload, Loader2 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { X, Upload, Loader2, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { hapticFeedback } from '@/lib/haptics';
 import { motion } from 'framer-motion';
@@ -17,10 +18,33 @@ interface CommunityProductFormProps {
   prefillBarcode?: string;
 }
 
+const MICRO_FIELDS = [
+  { key: 'vitamin_a_ug', label: 'Vit. A (µg)', labelEn: 'Vit. A (µg)' },
+  { key: 'vitamin_b1_mg', label: 'Vit. B1 (mg)', labelEn: 'Vit. B1 (mg)' },
+  { key: 'vitamin_b2_mg', label: 'Vit. B2 (mg)', labelEn: 'Vit. B2 (mg)' },
+  { key: 'vitamin_b6_mg', label: 'Vit. B6 (mg)', labelEn: 'Vit. B6 (mg)' },
+  { key: 'vitamin_b12_ug', label: 'Vit. B12 (µg)', labelEn: 'Vit. B12 (µg)' },
+  { key: 'vitamin_c_mg', label: 'Vit. C (mg)', labelEn: 'Vit. C (mg)' },
+  { key: 'vitamin_d_ug', label: 'Vit. D (µg)', labelEn: 'Vit. D (µg)' },
+  { key: 'vitamin_e_mg', label: 'Vit. E (mg)', labelEn: 'Vit. E (mg)' },
+  { key: 'vitamin_k_ug', label: 'Vit. K (µg)', labelEn: 'Vit. K (µg)' },
+  { key: 'folate_ug', label: 'Folat (µg)', labelEn: 'Folate (µg)' },
+  { key: 'iron_mg', label: 'Eisen (mg)', labelEn: 'Iron (mg)' },
+  { key: 'potassium_mg', label: 'Kalium (mg)', labelEn: 'Potassium (mg)' },
+  { key: 'calcium_mg', label: 'Calcium (mg)', labelEn: 'Calcium (mg)' },
+  { key: 'magnesium_mg', label: 'Magnesium (mg)', labelEn: 'Magnesium (mg)' },
+  { key: 'sodium_mg', label: 'Natrium (mg)', labelEn: 'Sodium (mg)' },
+  { key: 'phosphorus_mg', label: 'Phosphor (mg)', labelEn: 'Phosphorus (mg)' },
+  { key: 'zinc_mg', label: 'Zink (mg)', labelEn: 'Zinc (mg)' },
+] as const;
+
+type MicroKey = typeof MICRO_FIELDS[number]['key'];
+
 export default function CommunityProductForm({ onClose, onSaved, prefillName, prefillBarcode }: CommunityProductFormProps) {
   const { user, profile } = useAuth();
   const { language } = useTranslation();
   const [saving, setSaving] = useState(false);
+  const [microsOpen, setMicrosOpen] = useState(false);
 
   const [foodName, setFoodName] = useState(prefillName || '');
   const [brand, setBrand] = useState('');
@@ -32,6 +56,14 @@ export default function CommunityProductForm({ onClose, onSaved, prefillName, pr
   const [protein, setProtein] = useState('');
   const [fat, setFat] = useState('');
   const [carbs, setCarbs] = useState('');
+
+  const [micros, setMicros] = useState<Record<MicroKey, string>>(
+    () => Object.fromEntries(MICRO_FIELDS.map(f => [f.key, ''])) as Record<MicroKey, string>
+  );
+
+  const updateMicro = (key: MicroKey, value: string) => {
+    setMicros(prev => ({ ...prev, [key]: value }));
+  };
 
   const displayName = profile?.display_name || profile?.name || 'Anonym';
   const avatarEmoji = profile?.avatar_emoji || '😊';
@@ -48,6 +80,11 @@ export default function CommunityProductForm({ onClose, onSaved, prefillName, pr
     }
 
     setSaving(true);
+
+    const microData = Object.fromEntries(
+      MICRO_FIELDS.map(f => [f.key, micros[f.key] ? Number(micros[f.key]) || null : null])
+    );
+
     const { error } = await supabase.from('community_products').insert({
       contributor_id: user.id,
       contributor_display_name: displayName,
@@ -62,6 +99,7 @@ export default function CommunityProductForm({ onClose, onSaved, prefillName, pr
       protein_g: Number(protein) || 0,
       fat_g: Number(fat) || 0,
       carbs_g: Number(carbs) || 0,
+      ...microData,
     } as any);
 
     if (error) {
@@ -148,6 +186,32 @@ export default function CommunityProductForm({ onClose, onSaved, prefillName, pr
             <Input type="number" value={carbs} onChange={e => setCarbs(e.target.value)} className="h-9 rounded-xl text-sm mt-1" />
           </div>
         </div>
+
+        {/* Micronutrients collapsible */}
+        <Collapsible open={microsOpen} onOpenChange={setMicrosOpen}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <span>💊 {de ? 'Vitamine & Mineralstoffe' : 'Vitamins & Minerals'}</span>
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${microsOpen ? 'rotate-180' : ''}`} />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              {MICRO_FIELDS.map(field => (
+                <div key={field.key}>
+                  <Label className="text-[10px] text-muted-foreground">{de ? field.label : field.labelEn}</Label>
+                  <Input
+                    type="number"
+                    step="any"
+                    min="0"
+                    value={micros[field.key]}
+                    onChange={e => updateMicro(field.key, e.target.value)}
+                    placeholder="0"
+                    className="h-8 rounded-xl text-xs mt-0.5"
+                  />
+                </div>
+              ))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
 
       <Button onClick={handleSave} disabled={saving || !foodName.trim() || !calories} className="w-full rounded-xl">
