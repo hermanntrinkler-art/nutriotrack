@@ -204,6 +204,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
   });
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastCandidateRef = useRef<string | null>(null);
   const processedRef = useRef(false);
   const [foodSuggestions, setFoodSuggestions] = useState<FoodEntry[]>([]);
 
@@ -378,8 +379,17 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
 
         await html5Qrcode.start(
           { facingMode: 'environment' },
-          { fps: 10, qrbox: { width: 280, height: 150 }, aspectRatio: 1.5 },
-          (decodedText) => handleCode(decodedText),
+          { fps: 5, qrbox: { width: 280, height: 150 }, aspectRatio: 1.5 },
+          (decodedText) => {
+            // Validate: only accept EAN-8, EAN-13, UPC-A (8, 12, or 13 digits)
+            if (!/^\d{8}$|^\d{12,13}$/.test(decodedText)) return;
+            // Debounce: require same code twice in a row
+            if (lastCandidateRef.current === decodedText) {
+              handleCode(decodedText);
+            } else {
+              lastCandidateRef.current = decodedText;
+            }
+          },
           () => {}
         );
       } catch (err) {
