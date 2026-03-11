@@ -47,6 +47,7 @@ export default function SavedRecipesScreen({ onSelect, onCancel, hideHeader }: S
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [editingRecipe, setEditingRecipe] = useState<SavedRecipe | null>(null);
 
   const loadRecipes = async () => {
     if (!user) return;
@@ -61,6 +62,24 @@ export default function SavedRecipesScreen({ onSelect, onCancel, hideHeader }: S
   };
 
   useEffect(() => { loadRecipes(); }, [user]);
+
+  if (editingRecipe) {
+    return (
+      <CreateRecipeScreen
+        onClose={() => setEditingRecipe(null)}
+        onCreated={() => {
+          setEditingRecipe(null);
+          loadRecipes();
+        }}
+        editRecipe={{
+          id: editingRecipe.id,
+          name: editingRecipe.name,
+          emoji: editingRecipe.emoji,
+          meal_type: editingRecipe.meal_type,
+        }}
+      />
+    );
+  }
 
   if (showCreate) {
     return (
