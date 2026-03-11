@@ -655,6 +655,103 @@ const SYNONYMS: Record<string, string[]> = {
   'lammbraten': ['lammkeule', 'leg of lamb'],
   'gigot': ['lammkeule', 'leg of lamb'],
 
+  // === Ente / Duck ===
+  'ente': ['entenbrust', 'duck breast'],
+  'duck': ['entenbrust', 'duck breast'],
+  'entenfleisch': ['entenbrust', 'duck breast'],
+  'entenbraten': ['ente (ganz, gebraten)', 'roast duck'],
+  'pekingente': ['ente (ganz, gebraten)', 'roast duck'],
+  'canard': ['entenbrust', 'duck breast'],
+  'duck breast': ['entenbrust', 'duck breast'],
+  'duck leg': ['entenkeule', 'duck leg'],
+
+  // === Gans / Goose ===
+  'gans': ['gänsebrust', 'goose breast'],
+  'goose': ['gänsebrust', 'goose breast'],
+  'gaensebrust': ['gänsebrust', 'goose breast'],
+  'gaensekeule': ['gänsekeule', 'goose leg'],
+  'gaensebraten': ['gänsebraten', 'roast goose'],
+  'martinsgans': ['gänsebraten', 'roast goose'],
+  'weihnachtsgans': ['gänsebraten', 'roast goose'],
+  'gaenseschmalz': ['gänseschmalz', 'goose fat'],
+  'gaenseleber': ['gänseleber', 'goose liver'],
+  'foie gras': ['foie gras'],
+  'stopfleber': ['foie gras'],
+
+  // === Kaninchen / Rabbit ===
+  'kaninchen': ['kaninchenfleisch', 'rabbit meat'],
+  'rabbit': ['kaninchenfleisch', 'rabbit meat'],
+  'hase': ['hasenfleisch', 'hare meat'],
+  'hare': ['hasenfleisch', 'hare meat'],
+  'hasenpfeffer': ['hasenfleisch', 'hare meat'],
+  'lapin': ['kaninchenfleisch', 'rabbit meat'],
+
+  // === Wild / Game ===
+  'wild': ['wildbraten', 'roast game'],
+  'game': ['wildbraten', 'roast game'],
+  'wildfleisch': ['wildbraten', 'roast game'],
+  'wildschwein': ['wildschwein', 'wild boar'],
+  'wild boar': ['wildschwein', 'wild boar'],
+  'wildschweingulasch': ['wildgulasch', 'game goulash'],
+  'wildragout': ['wildragout', 'game ragout'],
+  'wildgulasch': ['wildgulasch', 'game goulash'],
+  'wildsalami': ['wildsalami', 'game salami'],
+  'wildwurst': ['wildsalami', 'game salami'],
+  'venison': ['rehkeule', 'venison leg'],
+
+  // === Reh / Roe Deer ===
+  'reh': ['rehkeule', 'venison leg'],
+  'rehfleisch': ['rehkeule', 'venison leg'],
+  'rehbraten': ['rehbraten', 'roast venison'],
+  'rehruecken': ['rehrücken', 'venison saddle'],
+  'rehschnitzel': ['rehschnitzel', 'venison schnitzel'],
+  'rehgulasch': ['rehgulasch', 'venison goulash'],
+  'roe deer': ['rehkeule', 'venison leg'],
+
+  // === Hirsch / Red Deer ===
+  'hirsch': ['hirschfleisch', 'red deer meat'],
+  'hirschfleisch': ['hirschfleisch', 'red deer meat'],
+  'hirschbraten': ['hirschkeule', 'red deer leg'],
+  'hirschgulasch': ['hirschgulasch', 'red deer goulash'],
+  'hirschruecken': ['hirschrücken', 'red deer saddle'],
+  'hirschsalami': ['hirschsalami', 'deer salami'],
+  'red deer': ['hirschfleisch', 'red deer meat'],
+  'deer': ['hirschfleisch', 'red deer meat'],
+
+  // === Fasan, Wachtel, Strauß / Pheasant, Quail, Ostrich ===
+  'fasan': ['fasanenbrust', 'pheasant breast'],
+  'pheasant': ['fasanenbrust', 'pheasant breast'],
+  'wachtel': ['wachtel', 'quail'],
+  'quail': ['wachtelbrust', 'quail breast'],
+  'strauss': ['straußensteak', 'ostrich steak'],
+  'straussfleisch': ['straußensteak', 'ostrich steak'],
+  'ostrich': ['straußensteak', 'ostrich steak'],
+
+  // === Pute / Turkey ===
+  'pute': ['putenbrust', 'turkey breast'],
+  'turkey': ['putenbrust', 'turkey breast'],
+  'putenfleisch': ['putenbrust', 'turkey breast'],
+  'truthahn': ['truthahnbrust', 'turkey breast'],
+  'putenschnitzel': ['putenschnitzel', 'turkey schnitzel'],
+  'putenhack': ['putenhackfleisch', 'ground turkey'],
+
+  // === Weitere Fleisch-Synonyme ===
+  'schweinebraten': ['schweinebraten', 'roast pork'],
+  'kassler': ['kassler', 'kassler (smoked pork)'],
+  'kasseler': ['kassler', 'kassler (smoked pork)'],
+  'pulled pork': ['pulled pork'],
+  'rinderfilet': ['rinderfilet', 'beef fillet'],
+  'steak': ['rindersteak', 'beef steak'],
+  'rindersteak': ['rindersteak', 'beef steak'],
+  'gulasch': ['rindergulasch', 'beef goulash'],
+  'roulade': ['rinderroulade', 'beef roulade'],
+  'rinderroulade': ['rinderroulade', 'beef roulade'],
+  'gyros': ['gyros'],
+  'doener': ['döner fleisch', 'doner meat'],
+  'doenerfleisch': ['döner fleisch', 'doner meat'],
+  'kebab': ['döner fleisch', 'doner meat'],
+  'cordon bleu': ['cordon bleu'],
+
   // === Streichfette & Öle / Spreads & Oils ===
   'rama': ['rama original'],
   'laetta': ['lätta'],
