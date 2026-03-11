@@ -65,6 +65,7 @@ export default function EditMealPage() {
       sodium_mg: Number(fi.sodium_mg) || 0,
       phosphorus_mg: Number(fi.phosphorus_mg) || 0,
       zinc_mg: Number(fi.zinc_mg) || 0,
+      barcode: fi.barcode || undefined,
     })));
     setLoading(false);
   };
