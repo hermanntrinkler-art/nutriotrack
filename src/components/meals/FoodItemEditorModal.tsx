@@ -411,7 +411,7 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
       carbs_g: food.carbs_g,
     };
     setBaseNutrition(base);
-    setForm({
+    setForm(prev => ({
       food_name: name,
       quantity: food.quantity,
       unit: food.unit,
@@ -420,7 +420,8 @@ export default function FoodItemEditorModal({ item, open, onClose, onSave }: Foo
       fat_g: food.fat_g,
       carbs_g: food.carbs_g,
       confidence_score: 1,
-    });
+      barcode: prev.barcode,
+    }));
     setSuggestions([]);
     setShowSuggestions(false);
   };
