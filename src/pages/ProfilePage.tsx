@@ -7,7 +7,7 @@ import { calculateNutrition } from '@/lib/nutrition';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull, Activity, Crown, Sun, Moon, Monitor, Shield, BarChart3 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
@@ -488,6 +488,17 @@ export default function ProfilePage() {
           <LogOut className="h-4 w-4 mr-2" />
           {t('auth.logout')}
         </Button>
+      </motion.div>
+
+      {/* Legal Links */}
+      <motion.div variants={fadeUp} className="flex flex-wrap justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground pt-2 pb-4">
+        <Link to="/impressum" className="hover:text-foreground transition-colors">Impressum</Link>
+        <span>·</span>
+        <Link to="/datenschutz" className="hover:text-foreground transition-colors">{language === 'en' ? 'Privacy Policy' : 'Datenschutz'}</Link>
+        <span>·</span>
+        <Link to="/agb" className="hover:text-foreground transition-colors">{language === 'en' ? 'Terms' : 'AGB'}</Link>
+        <span>·</span>
+        <Link to="/datenloeschung" className="hover:text-foreground transition-colors">{language === 'en' ? 'Data Deletion' : 'Datenlöschung'}</Link>
       </motion.div>
 
       {showPaywall && (
