@@ -1,0 +1,1 @@
+ALTER TABLE public.meal_food_items ADD COLUMN barcode text;
