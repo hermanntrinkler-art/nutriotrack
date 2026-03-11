@@ -49,7 +49,7 @@ export async function searchOpenFoodFacts(
 
     // Dynamically include the localized product_name field
     const extraLangFields = !['de', 'en'].includes(lang) ? `,product_name_${lang}` : '';
-    const fields = `product_name,product_name_de,product_name_en${extraLangFields},energy-kcal_100g,proteins_100g,fat_100g,carbohydrates_100g,serving_size,product_quantity`;
+    const fields = `product_name,product_name_de,product_name_en${extraLangFields},brands,energy-kcal_100g,energy-kj_100g,energy_100g,proteins_100g,fat_100g,carbohydrates_100g,serving_size,serving_quantity,product_quantity,quantity,image_front_small_url`;
 
     const buildUrl = (page: number) =>
       `https://${domain}/cgi/search.pl?search_terms=${searchTerms}&search_simple=1&action=process&json=1&page_size=30&page=${page}&sort_by=unique_scans_n&fields=${fields}`;
