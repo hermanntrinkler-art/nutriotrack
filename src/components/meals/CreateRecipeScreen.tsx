@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import type { AnalyzedFoodItem } from '@/lib/types';
@@ -8,6 +8,7 @@ import { ArrowLeft, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { hapticFeedback } from '@/lib/haptics';
 import { saveAsRecipe } from './SavedRecipesScreen';
+import { supabase } from '@/integrations/supabase/client';
 import FoodSearchScreen from './FoodSearchScreen';
 import BarcodeScanner from './BarcodeScanner';
 
@@ -16,17 +17,49 @@ const EMOJI_OPTIONS = ['🥛', '🥣', '🍲', '🥗', '🍳', '🥤', '🍜', '
 interface CreateRecipeScreenProps {
   onClose: () => void;
   onCreated: () => void;
+  /** If provided, we're editing an existing recipe */
+  editRecipe?: {
+    id: string;
+    name: string;
+    emoji: string;
+    meal_type: string;
+  };
 }
 
-export default function CreateRecipeScreen({ onClose, onCreated }: CreateRecipeScreenProps) {
+export default function CreateRecipeScreen({ onClose, onCreated, editRecipe }: CreateRecipeScreenProps) {
   const { user } = useAuth();
   const { language } = useTranslation();
-  const [name, setName] = useState('');
-  const [emoji, setEmoji] = useState('🍽️');
+  const [name, setName] = useState(editRecipe?.name || '');
+  const [emoji, setEmoji] = useState(editRecipe?.emoji || '🍽️');
   const [saving, setSaving] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showBarcode, setShowBarcode] = useState(false);
   const [items, setItems] = useState<AnalyzedFoodItem[]>([]);
+  const [loadingItems, setLoadingItems] = useState(!!editRecipe);
+
+  // Load existing items when editing
+  useEffect(() => {
+    if (!editRecipe) return;
+    supabase
+      .from('saved_recipe_items')
+      .select('*')
+      .eq('recipe_id', editRecipe.id)
+      .then(({ data }) => {
+        if (data) {
+          setItems(data.map((item: any) => ({
+            food_name: item.food_name,
+            quantity: Number(item.quantity),
+            unit: item.unit,
+            calories: Number(item.calories),
+            protein_g: Number(item.protein_g),
+            fat_g: Number(item.fat_g),
+            carbs_g: Number(item.carbs_g),
+            confidence_score: 1,
+          })));
+        }
+        setLoadingItems(false);
+      });
+  }, [editRecipe]);
 
   const handleSaveFromSearch = (searchItems: AnalyzedFoodItem[]) => {
     setItems(prev => [...prev, ...searchItems]);
@@ -36,20 +69,67 @@ export default function CreateRecipeScreen({ onClose, onCreated }: CreateRecipeS
   const handleSaveRecipe = async () => {
     if (!user || !name.trim() || items.length === 0) return;
     setSaving(true);
-    const ok = await saveAsRecipe({
-      userId: user.id,
-      name: name.trim(),
-      emoji,
-      mealType: 'snack',
-      items,
-    });
-    setSaving(false);
-    if (ok) {
+
+    if (editRecipe) {
+      // Update existing recipe
+      const totalCalories = items.reduce((s, i) => s + Number(i.calories), 0);
+      const totalProtein = items.reduce((s, i) => s + Number(i.protein_g), 0);
+      const totalFat = items.reduce((s, i) => s + Number(i.fat_g), 0);
+      const totalCarbs = items.reduce((s, i) => s + Number(i.carbs_g), 0);
+
+      const { error: updateError } = await supabase
+        .from('saved_recipes')
+        .update({
+          name: name.trim(),
+          emoji,
+          total_calories: totalCalories,
+          total_protein_g: totalProtein,
+          total_fat_g: totalFat,
+          total_carbs_g: totalCarbs,
+        } as any)
+        .eq('id', editRecipe.id);
+
+      if (updateError) {
+        setSaving(false);
+        toast.error(language === 'de' ? 'Fehler beim Speichern' : 'Error saving recipe');
+        return;
+      }
+
+      // Delete old items & insert new ones
+      await supabase.from('saved_recipe_items').delete().eq('recipe_id', editRecipe.id);
+      const recipeItems = items.map(item => ({
+        recipe_id: editRecipe.id,
+        food_name: item.food_name,
+        quantity: item.quantity,
+        unit: item.unit,
+        calories: item.calories,
+        protein_g: item.protein_g,
+        fat_g: item.fat_g,
+        carbs_g: item.carbs_g,
+      }));
+      await supabase.from('saved_recipe_items').insert(recipeItems as any);
+
+      setSaving(false);
       hapticFeedback('success');
-      toast.success(language === 'de' ? 'Rezept gespeichert!' : 'Recipe saved!');
+      toast.success(language === 'de' ? 'Rezept aktualisiert!' : 'Recipe updated!');
       onCreated();
     } else {
-      toast.error(language === 'de' ? 'Fehler beim Speichern' : 'Error saving recipe');
+      // Create new recipe
+      const ok = await saveAsRecipe({
+        userId: user.id,
+        name: name.trim(),
+        emoji,
+        mealType: 'snack',
+        items,
+      });
+      setSaving(false);
+      if (ok) {
+        hapticFeedback('success');
+        toast.success(language === 'de' ? 'Rezept gespeichert!' : 'Recipe saved!');
+        onCreated();
+      } else {
+        toast.error(language === 'de' ? 'Fehler beim Speichern' : 'Error saving recipe');
+      }
     }
   };
 
@@ -91,7 +171,9 @@ export default function CreateRecipeScreen({ onClose, onCreated }: CreateRecipeS
         <div className="flex items-center gap-2 flex-1">
           <Sparkles className="h-5 w-5 text-primary" />
           <h2 className="font-bold text-lg">
-            {language === 'de' ? 'Neues Rezept' : 'New Recipe'}
+            {editRecipe
+              ? (language === 'de' ? 'Rezept bearbeiten' : 'Edit Recipe')
+              : (language === 'de' ? 'Neues Rezept' : 'New Recipe')}
           </h2>
         </div>
       </div>
@@ -123,7 +205,11 @@ export default function CreateRecipeScreen({ onClose, onCreated }: CreateRecipeS
       </div>
 
       {/* Added items list */}
-      {items.length > 0 && (
+      {loadingItems ? (
+        <div className="text-center py-6 text-muted-foreground text-sm">
+          {language === 'de' ? 'Lade Zutaten...' : 'Loading ingredients...'}
+        </div>
+      ) : items.length > 0 && (
         <div className="space-y-1.5">
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide px-1">
             {language === 'de' ? 'Zutaten' : 'Ingredients'} ({items.length})
@@ -175,7 +261,9 @@ export default function CreateRecipeScreen({ onClose, onCreated }: CreateRecipeS
         >
           {saving
             ? (language === 'de' ? 'Speichern...' : 'Saving...')
-            : (language === 'de' ? `${emoji} Rezept speichern` : `${emoji} Save Recipe`)}
+            : editRecipe
+              ? (language === 'de' ? `${emoji} Rezept aktualisieren` : `${emoji} Update Recipe`)
+              : (language === 'de' ? `${emoji} Rezept speichern` : `${emoji} Save Recipe`)}
         </Button>
       )}
     </div>
