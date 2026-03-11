@@ -15,6 +15,7 @@ import WeeklySummaryReport from '@/components/WeeklySummaryReport';
 import MicronutrientCard from '@/components/MicronutrientCard';
 import { fireConfetti } from '@/lib/confetti';
 import { markTodayHasMeals, initReminders } from '@/components/ReminderSettings';
+import TrialBanner from '@/components/TrialBanner';
 
 // --- Animated Macro Ring ---
 function MacroRing({ label, current, target, color, icon: Icon, delay = 0 }: {
