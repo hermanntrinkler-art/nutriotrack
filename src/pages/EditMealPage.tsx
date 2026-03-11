@@ -142,6 +142,7 @@ export default function EditMealPage() {
     if (!item.food_name) return;
     setSharingIndex(index);
 
+    // 1. Update/insert community product
     const { error } = await supabase.from('community_products').insert({
       contributor_id: user.id,
       contributor_display_name: profile.display_name || profile.name || 'Anonym',
@@ -172,6 +173,19 @@ export default function EditMealPage() {
       phosphorus_mg: item.phosphorus_mg || 0,
       zinc_mg: item.zinc_mg || 0,
     });
+
+    // 2. Also update the personal custom_product so scanning returns updated values
+    if (item.barcode) {
+      await supabase.from('custom_products').update({
+        food_name: item.food_name,
+        calories: Number(item.calories) || 0,
+        protein_g: Number(item.protein_g) || 0,
+        fat_g: Number(item.fat_g) || 0,
+        carbs_g: Number(item.carbs_g) || 0,
+        default_quantity: Number(item.quantity) || 100,
+        default_unit: item.unit || 'g',
+      } as any).eq('user_id', user.id).eq('barcode', item.barcode);
+    }
 
     if (error) {
       toast.error(t('common.error'));
