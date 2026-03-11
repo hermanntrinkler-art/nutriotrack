@@ -401,6 +401,7 @@ export function offProductToFoodEntry(product: OFFProduct): FoodEntry {
       category: 'openfoodfacts',
       gram_per_piece: weight!,
       communityBrand: product.brand || undefined,
+      imageUrl: product.imageUrl || undefined,
     };
   }
 
@@ -416,6 +417,7 @@ export function offProductToFoodEntry(product: OFFProduct): FoodEntry {
     category: 'openfoodfacts',
     gram_per_piece: weight || undefined,
     communityBrand: product.brand || undefined,
+    imageUrl: product.imageUrl || undefined,
   };
 }
 
