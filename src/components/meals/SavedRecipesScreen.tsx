@@ -4,7 +4,7 @@ import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen, Trash2, Flame, Loader2, ChefHat, Plus } from 'lucide-react';
+import { ArrowLeft, BookOpen, Trash2, Flame, Loader2, ChefHat, Plus, Pencil } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { hapticFeedback } from '@/lib/haptics';
 import { toast } from 'sonner';
