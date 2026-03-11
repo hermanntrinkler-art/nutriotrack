@@ -141,6 +141,40 @@ export default function EditMealPage() {
     }));
     await supabase.from('meal_food_items').insert(foodItems as any);
 
+    // Update custom_products for all barcode items so next scan returns edited values
+    for (const item of items) {
+      if (item.barcode) {
+        await supabase.from('custom_products').upsert({
+          user_id: user.id,
+          barcode: item.barcode,
+          food_name: item.food_name,
+          calories: Number(item.calories) || 0,
+          protein_g: Number(item.protein_g) || 0,
+          fat_g: Number(item.fat_g) || 0,
+          carbs_g: Number(item.carbs_g) || 0,
+          default_quantity: Number(item.quantity) || 100,
+          default_unit: item.unit || 'g',
+          vitamin_a_ug: Number(item.vitamin_a_ug) || 0,
+          vitamin_b1_mg: Number(item.vitamin_b1_mg) || 0,
+          vitamin_b2_mg: Number(item.vitamin_b2_mg) || 0,
+          vitamin_b6_mg: Number(item.vitamin_b6_mg) || 0,
+          vitamin_b12_ug: Number(item.vitamin_b12_ug) || 0,
+          vitamin_c_mg: Number(item.vitamin_c_mg) || 0,
+          vitamin_d_ug: Number(item.vitamin_d_ug) || 0,
+          vitamin_e_mg: Number(item.vitamin_e_mg) || 0,
+          vitamin_k_ug: Number(item.vitamin_k_ug) || 0,
+          folate_ug: Number(item.folate_ug) || 0,
+          iron_mg: Number(item.iron_mg) || 0,
+          potassium_mg: Number(item.potassium_mg) || 0,
+          calcium_mg: Number(item.calcium_mg) || 0,
+          magnesium_mg: Number(item.magnesium_mg) || 0,
+          sodium_mg: Number(item.sodium_mg) || 0,
+          phosphorus_mg: Number(item.phosphorus_mg) || 0,
+          zinc_mg: Number(item.zinc_mg) || 0,
+        } as any, { onConflict: 'user_id,barcode' });
+      }
+    }
+
     toast.success(t('meals.saved'));
     setSaving(false);
     navigate('/dashboard');
