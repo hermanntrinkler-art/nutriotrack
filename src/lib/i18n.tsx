@@ -205,6 +205,13 @@ const translations = {
     'profile.themeLight': 'Hell',
     'profile.themeDark': 'Dunkel',
     'profile.themeSystem': 'System',
+    'profile.deleteAccount': 'Konto löschen',
+    'profile.deleteAccountConfirm': 'Bist du sicher, dass du dein Konto und alle Daten unwiderruflich löschen möchtest?',
+    'profile.deleteAccountButton': 'Ja, Konto endgültig löschen',
+    'profile.deleteAccountCancel': 'Abbrechen',
+    'profile.deleteAccountSuccess': 'Dein Konto wurde gelöscht.',
+    'profile.deleteAccountError': 'Fehler beim Löschen. Bitte versuche es erneut.',
+    'profile.deleteAccountTitle': 'Konto löschen',
 
     // Streak
     'dashboard.streak': 'Tage-Streak',
