@@ -554,6 +554,19 @@ const SYNONYMS: Record<string, string[]> = {
   'geschmackspulver': ['chunky flavour'],
   'flavour pulver': ['chunky flavour'],
 
+  // === Streichfette & Öle / Spreads & Oils ===
+  'rama': ['rama original'],
+  'laetta': ['lätta'],
+  'latta': ['lätta'],
+  'ghee': ['butterschmalz / ghee', 'clarified butter / ghee'],
+  'butterschmalz': ['butterschmalz / ghee', 'clarified butter / ghee'],
+  'kokosoel': ['kokosöl', 'coconut oil'],
+  'kokosfett': ['kokosöl', 'coconut oil'],
+  'olivenoel': ['olivenöl', 'olive oil'],
+  'sonnenblumenoel': ['sonnenblumenöl', 'sunflower oil'],
+  'rapsoel': ['rapsöl', 'rapeseed oil'],
+  'halbfettbutter': ['halbfettbutter', 'half-fat butter'],
+
   // === Frischkäse / Cream Cheese brands ===
   'philadelphia': ['frischkaese', 'cream cheese', 'philadelphia'],
   'buko': ['frischkaese', 'cream cheese'],
