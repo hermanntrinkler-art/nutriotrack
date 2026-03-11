@@ -50,7 +50,7 @@ export default function DatenloeschungPage() {
 
           <section className="space-y-2">
             <h2 className="text-lg font-semibold text-foreground">4. Was bei der Löschung passiert</h2>
-            <p>Nach Eingang deiner Anfrage werden folgende Daten gelöscht:</p>
+            <p>Nach der Löschung (ob in der App oder per Anfrage) werden folgende Daten gelöscht:</p>
             <ul className="list-disc list-inside space-y-1">
               <li>dein Benutzerkonto</li>
               <li>alle gespeicherten Ernährungs- und Mahlzeitendaten</li>
