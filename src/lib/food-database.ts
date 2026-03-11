@@ -272,6 +272,12 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Schweinefilet', name_en: 'Pork Tenderloin', quantity: 150, unit: 'g', calories: 185, protein_g: 30, fat_g: 6, carbs_g: 0, category: 'meat' },
   { name: 'Bratwurst', name_en: 'Bratwurst', quantity: 1, unit: 'Stück', calories: 310, protein_g: 14, fat_g: 27, carbs_g: 2, category: 'meat', gram_per_piece: 120 },
   { name: 'Frikadelle', name_en: 'Meatball', quantity: 1, unit: 'Stück', calories: 220, protein_g: 15, fat_g: 15, carbs_g: 8, category: 'meat', gram_per_piece: 100 },
+  { name: 'Lammkeule', name_en: 'Leg of Lamb', quantity: 150, unit: 'g', calories: 290, protein_g: 25, fat_g: 21, carbs_g: 0, category: 'meat' },
+  { name: 'Lammkotelett', name_en: 'Lamb Chop', quantity: 1, unit: 'Stück', calories: 230, protein_g: 20, fat_g: 16, carbs_g: 0, category: 'meat', gram_per_piece: 100 },
+  { name: 'Lammfilet', name_en: 'Lamb Fillet', quantity: 150, unit: 'g', calories: 240, protein_g: 28, fat_g: 14, carbs_g: 0, category: 'meat' },
+  { name: 'Lammhackfleisch', name_en: 'Ground Lamb', quantity: 150, unit: 'g', calories: 375, protein_g: 24, fat_g: 30, carbs_g: 0, category: 'meat' },
+  { name: 'Lammschulter', name_en: 'Lamb Shoulder', quantity: 150, unit: 'g', calories: 310, protein_g: 24, fat_g: 23, carbs_g: 0, category: 'meat' },
+  { name: 'Lammrücken', name_en: 'Lamb Rack', quantity: 150, unit: 'g', calories: 270, protein_g: 26, fat_g: 18, carbs_g: 0, category: 'meat' },
 
   // Fisch / Fish
   { name: 'Lachs', name_en: 'Salmon', quantity: 150, unit: 'g', calories: 310, protein_g: 30, fat_g: 20, carbs_g: 0, category: 'fish' },
@@ -553,6 +559,16 @@ const SYNONYMS: Record<string, string[]> = {
   'chunky flavor': ['chunky flavour'],
   'geschmackspulver': ['chunky flavour'],
   'flavour pulver': ['chunky flavour'],
+
+  // === Lamm / Lamb ===
+  'lamb': ['lammkeule', 'leg of lamb'],
+  'lamm': ['lammkeule', 'leg of lamb'],
+  'lamb chop': ['lammkotelett', 'lamb chop'],
+  'lamb leg': ['lammkeule', 'leg of lamb'],
+  'lamb fillet': ['lammfilet', 'lamb fillet'],
+  'lammfleisch': ['lammkeule', 'leg of lamb'],
+  'lammbraten': ['lammkeule', 'leg of lamb'],
+  'gigot': ['lammkeule', 'leg of lamb'],
 
   // === Streichfette & Öle / Spreads & Oils ===
   'rama': ['rama original'],
