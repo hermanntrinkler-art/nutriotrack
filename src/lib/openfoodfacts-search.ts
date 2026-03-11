@@ -17,7 +17,7 @@ function getCacheKey(query: string, lang: 'de' | 'en') {
 
 export async function searchOpenFoodFacts(
   query: string,
-  lang: 'de' | 'en',
+  lang: string,
   options?: { signal?: AbortSignal },
 ): Promise<FoodEntry[]> {
   const normalizedQuery = query.trim();
