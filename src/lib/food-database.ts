@@ -560,6 +560,16 @@ const SYNONYMS: Record<string, string[]> = {
   'geschmackspulver': ['chunky flavour'],
   'flavour pulver': ['chunky flavour'],
 
+  // === Lamm / Lamb ===
+  'lamb': ['lammkeule', 'leg of lamb'],
+  'lamm': ['lammkeule', 'leg of lamb'],
+  'lamb chop': ['lammkotelett', 'lamb chop'],
+  'lamb leg': ['lammkeule', 'leg of lamb'],
+  'lamb fillet': ['lammfilet', 'lamb fillet'],
+  'lammfleisch': ['lammkeule', 'leg of lamb'],
+  'lammbraten': ['lammkeule', 'leg of lamb'],
+  'gigot': ['lammkeule', 'leg of lamb'],
+
   // === Streichfette & Öle / Spreads & Oils ===
   'rama': ['rama original'],
   'laetta': ['lätta'],
