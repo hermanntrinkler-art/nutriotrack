@@ -46,30 +46,18 @@ export async function searchOpenFoodFacts(
       nl: 'nl.openfoodfacts.org',
     };
     const domain = domainMap[lang] || 'world.openfoodfacts.org';
-    const url = `https://${domain}/cgi/search.pl?search_terms=${searchTerms}&search_simple=1&action=process&json=1&page_size=20&page=1&sort_by=unique_scans_n&fields=product_name,product_name_de,product_name_en,energy-kcal_100g,proteins_100g,fat_100g,carbohydrates_100g,serving_size,product_quantity`;
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    // Dynamically include the localized product_name field
+    const extraLangFields = !['de', 'en'].includes(lang) ? `,product_name_${lang}` : '';
+    const fields = `product_name,product_name_de,product_name_en${extraLangFields},energy-kcal_100g,proteins_100g,fat_100g,carbohydrates_100g,serving_size,product_quantity`;
 
-    const onAbort = () => controller.abort();
-    if (options?.signal) {
-      if (options.signal.aborted) {
-        clearTimeout(timeoutId);
-        return [];
-      }
-      options.signal.addEventListener('abort', onAbort, { once: true });
-    }
+    const buildUrl = (page: number) =>
+      `https://${domain}/cgi/search.pl?search_terms=${searchTerms}&search_simple=1&action=process&json=1&page_size=30&page=${page}&sort_by=unique_scans_n&fields=${fields}`;
 
-    try {
-      const res = await fetch(url, { signal: controller.signal });
-      if (!res.ok) return [];
-
-      const data = await res.json();
-      if (!Array.isArray(data?.products)) return [];
-
-      const mapped = data.products
+    const mapProducts = (products: any[]): FoodEntry[] =>
+      products
         .filter((p: any) => {
-          const name = p.product_name || p.product_name_de || p.product_name_en;
+          const name = p[`product_name_${lang}`] || p.product_name || p.product_name_de || p.product_name_en;
           return typeof name === 'string' && name.trim().length > 0;
         })
         .map((p: any) => {
@@ -78,13 +66,17 @@ export async function searchOpenFoodFacts(
           const fat = toNumber(p.fat_100g);
           const carbs = toNumber(p.carbohydrates_100g);
 
-          const fallbackName = p.product_name || p.product_name_de || p.product_name_en || '';
-          const nameDe = p.product_name_de || p.product_name || fallbackName;
-          const nameEn = p.product_name_en || p.product_name || fallbackName;
+          // Prioritize localized name, then generic, then english
+          const localizedName = p[`product_name_${lang}`];
+          const genericName = p.product_name;
+          const deName = p.product_name_de;
+          const enName = p.product_name_en;
+
+          const displayName = localizedName || genericName || (lang === 'de' ? deName : enName) || deName || enName || '';
 
           return {
-            name: lang === 'de' ? nameDe : fallbackName,
-            name_en: nameEn,
+            name: displayName,
+            name_en: enName || genericName || displayName,
             quantity: 100,
             unit: 'g',
             calories: Math.round(calories),
@@ -94,8 +86,7 @@ export async function searchOpenFoodFacts(
             category: 'openfoodfacts',
           } as FoodEntry;
         })
-        .filter((e: FoodEntry) => e.calories > 0 || e.protein_g > 0 || e.fat_g > 0 || e.carbs_g > 0)
-        .slice(0, 15);
+        .filter((e: FoodEntry) => e.calories > 0 || e.protein_g > 0 || e.fat_g > 0 || e.carbs_g > 0);
 
       searchCache.set(cacheKey, { timestamp: Date.now(), results: mapped });
       return mapped;
