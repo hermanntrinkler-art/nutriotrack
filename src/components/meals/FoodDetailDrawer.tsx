@@ -281,7 +281,7 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
   const fiber100 = Math.round(per100.carbs_g * 0.15 * 10) / 10;
 
   return (
-    <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
+    <Drawer open={open} onOpenChange={(o) => !o && onClose()} handleOnly={true}>
       <DrawerContent className="max-h-[90vh]">
         <DrawerHeader className="pb-2">
           <div className="flex items-center justify-between">
