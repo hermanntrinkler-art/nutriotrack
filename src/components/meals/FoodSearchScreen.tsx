@@ -78,6 +78,7 @@ export default function FoodSearchScreen({
   onCancel,
   hideHeader,
   onBarcodeScan,
+  onCameraOpen,
   onSave,
   saving,
   initialItems,
