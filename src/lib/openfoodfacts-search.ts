@@ -66,7 +66,6 @@ export async function searchOpenFoodFacts(
           const fat = toNumber(p.fat_100g);
           const carbs = toNumber(p.carbohydrates_100g);
 
-          // Prioritize localized name, then generic, then english
           const localizedName = p[`product_name_${lang}`];
           const genericName = p.product_name;
           const deName = p.product_name_de;
@@ -88,6 +87,36 @@ export async function searchOpenFoodFacts(
         })
         .filter((e: FoodEntry) => e.calories > 0 || e.protein_g > 0 || e.fat_g > 0 || e.carbs_g > 0);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    const onAbort = () => controller.abort();
+    if (options?.signal) {
+      if (options.signal.aborted) {
+        clearTimeout(timeoutId);
+        return [];
+      }
+      options.signal.addEventListener('abort', onAbort, { once: true });
+    }
+
+    try {
+      const fetchPage = async (page: number) => {
+        const res = await fetch(buildUrl(page), { signal: controller.signal });
+        if (!res.ok) return [];
+        const data = await res.json();
+        if (!Array.isArray(data?.products)) return [];
+        return mapProducts(data.products);
+      };
+
+      let results = await fetchPage(1);
+
+      // If too few results after filtering, try page 2
+      if (results.length < 5) {
+        const page2 = await fetchPage(2);
+        results = [...results, ...page2];
+      }
+
+      const mapped = results.slice(0, 15);
       searchCache.set(cacheKey, { timestamp: Date.now(), results: mapped });
       return mapped;
     } catch {
@@ -104,4 +133,3 @@ export async function searchOpenFoodFacts(
   pendingRequests.set(cacheKey, requestPromise);
   return requestPromise;
 }
-
