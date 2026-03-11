@@ -6,126 +6,26 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ScanBarcode, Keyboard, Save } from 'lucide-react';
+import { Loader2, ScanBarcode, Keyboard, Save, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { searchFoods, type FoodEntry } from '@/lib/food-database';
+import {
+  lookupBarcode,
+  offProductToAnalyzedItem,
+  type OFFProduct,
+  type OFFLookupResult,
+} from '@/lib/openfoodfacts-service';
 
 interface BarcodeScannerProps {
   onResult: (item: AnalyzedFoodItem) => void;
   onCancel: () => void;
 }
 
-interface OFFResult {
-  item: AnalyzedFoodItem | null;
-  productName?: string;
-  hasNutrition: boolean;
-}
+// ─── DB lookups (custom + community) ──────────────────────────────────────────
 
-async function lookupOpenFoodFacts(code: string): Promise<OFFResult> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 5000);
-  try {
-    const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${code}.json`, { signal: controller.signal });
-    if (!res.ok) return { item: null, hasNutrition: false };
-    const data = await res.json();
-    
-    // Some products don't have a status field, check for product object directly
-    const p = data.product;
-    if (!p) return { item: null, hasNutrition: false };
-
-    const n = p.nutriments || {};
-    // Try multiple field name variants for calories (OFF is inconsistent)
-    const kcalRaw = n['energy-kcal_100g'] ?? n['energy-kcal_value'] ?? 0;
-    const kjRaw = n['energy-kj_100g'] ?? n['energy_100g'] ?? n['energy_value'] ?? 0;
-    const calories100 = Math.round(kcalRaw > 0 ? kcalRaw : (kjRaw > 0 ? kjRaw / 4.184 : 0));
-    const protein100 = Math.round((n.proteins_100g ?? n.proteins_value ?? 0) * 10) / 10;
-    const fat100 = Math.round((n.fat_100g ?? n.fat_value ?? 0) * 10) / 10;
-    const carbs100 = Math.round((n.carbohydrates_100g ?? n.carbohydrates_value ?? 0) * 10) / 10;
-    const productName = p.product_name_de || p.product_name || p.product_name_en || '';
-    const hasNutrition = calories100 > 0 || protein100 > 0 || fat100 > 0 || carbs100 > 0;
-
-    if (!hasNutrition) {
-      // Still return the product with 0 values so user can correct in the drawer
-      return {
-        item: {
-          food_name: productName || code,
-          quantity: 100,
-          unit: 'g',
-          calories: 0,
-          protein_g: 0,
-          fat_g: 0,
-          carbs_g: 0,
-          confidence_score: 0.5,
-          barcode: code,
-        },
-        productName: productName || undefined,
-        hasNutrition: false,
-      };
-    }
-
-    // Detect per-piece products using serving_size from OFF
-    const servingSize = p.serving_size || '';
-    const servingMatch = servingSize.match(/([\d.,]+)\s*g/i);
-    const servingGrams = servingMatch ? parseFloat(servingMatch[1].replace(',', '.')) : 0;
-    const servingQuantity = Number(p.serving_quantity) || 0;
-
-    // Calculate gram_per_piece from serving data
-    let gramPerPiece: number | undefined;
-    if (servingGrams > 0 && servingGrams < 100) {
-      gramPerPiece = servingGrams;
-    } else if (servingQuantity > 0 && servingQuantity < 100) {
-      gramPerPiece = servingQuantity;
-    }
-
-    // If a single serving is very small (< 15g), default to piece display
-    const isPieceProduct = gramPerPiece !== undefined && gramPerPiece < 15;
-
-    if (isPieceProduct) {
-      const factor = gramPerPiece! / 100;
-      return {
-        item: {
-          food_name: productName || code,
-          quantity: 1,
-          unit: 'Stück',
-          calories: Math.round(calories100 * factor),
-          protein_g: Math.round(protein100 * factor * 10) / 10,
-          fat_g: Math.round(fat100 * factor * 10) / 10,
-          carbs_g: Math.round(carbs100 * factor * 10) / 10,
-          confidence_score: 0.95,
-          barcode: code,
-          gram_per_piece: gramPerPiece,
-        },
-        hasNutrition: true,
-      };
-    }
-
-    return {
-      item: {
-        food_name: productName || code,
-        quantity: 100,
-        unit: 'g',
-        calories: calories100,
-        protein_g: protein100,
-        fat_g: fat100,
-        carbs_g: carbs100,
-        confidence_score: 0.95,
-        barcode: code,
-        gram_per_piece: gramPerPiece,
-      },
-      hasNutrition: true,
-    };
-  } catch {
-    return { item: null, hasNutrition: false };
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-// Auto-detect piece products: if stored quantity is very small in grams, treat as 1 piece
 function autoPieceDetect(item: AnalyzedFoodItem): AnalyzedFoodItem {
   if (item.unit === 'g' && item.quantity > 0 && item.quantity < 15) {
-    // This is likely a per-piece value stored in grams — convert to 1 Stück
     return { ...item, quantity: 1, unit: 'Stück' };
   }
   return item;
@@ -187,8 +87,21 @@ async function lookupCommunityProduct(code: string): Promise<CommunityResult | n
   };
 }
 
+// ─── Result item type ─────────────────────────────────────────────────────────
+
+interface BarcodeResultItem {
+  item: AnalyzedFoodItem;
+  source: string;
+  label: string;
+  imageUrl?: string | null;
+  brand?: string;
+  servingInfo?: string;
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { user } = useAuth();
   const [scanning, setScanning] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -196,7 +109,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
   const [showManual, setShowManual] = useState(false);
   const [notFound, setNotFound] = useState<string | null>(null);
   const [savingCustom, setSavingCustom] = useState(false);
-  const [barcodeResults, setBarcodeResults] = useState<{ item: AnalyzedFoodItem; source: string; label: string }[]>([]);
+  const [barcodeResults, setBarcodeResults] = useState<BarcodeResultItem[]>([]);
   const [customForm, setCustomForm] = useState({
     food_name: '',
     calories: '',
@@ -214,12 +127,11 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
 
   const handleFoodNameChange = (value: string) => {
     setCustomForm(f => ({ ...f, food_name: value }));
-    const lang = (document.documentElement.lang === 'en' ? 'en' : 'de') as 'de' | 'en';
-    setFoodSuggestions(searchFoods(value, lang));
+    setFoodSuggestions(searchFoods(value, language as 'de' | 'en'));
   };
 
   const selectFoodSuggestion = (entry: FoodEntry) => {
-    const lang = (document.documentElement.lang === 'en' ? 'en' : 'de') as 'de' | 'en';
+    const lang = language as 'de' | 'en';
     setCustomForm({
       food_name: lang === 'de' ? entry.name : entry.name_en,
       calories: String(entry.calories),
@@ -232,6 +144,8 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     setFoodSuggestions([]);
   };
 
+  // ─── Main barcode handler ──────────────────────────────────────────────────
+
   const handleCode = async (code: string) => {
     if (processedRef.current) return;
     processedRef.current = true;
@@ -239,8 +153,8 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     setNotFound(null);
     setBarcodeResults([]);
 
-    // Stop scanner FIRST, before any state changes that trigger effect cleanup
-    try { 
+    // Stop scanner
+    try {
       const s = scannerRef.current;
       if (s) {
         try {
@@ -251,11 +165,9 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
         scannerRef.current = null;
       }
     } catch {}
-
-    // Now safe to change scanning state
     setScanning(false);
 
-    const results: { item: AnalyzedFoodItem; source: string; label: string }[] = [];
+    const results: BarcodeResultItem[] = [];
 
     // 1. Check personal DB
     if (user) {
@@ -279,15 +191,47 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
       }
     } catch {}
 
-    // 3. Check Open Food Facts
+    // 3. Check Open Food Facts (new robust service)
     try {
-      const offResult = await lookupOpenFoodFacts(code);
-      if (offResult.item) {
-        results.push({ item: offResult.item, source: 'off', label: '🌐 Open Food Facts' });
-      } else if (offResult.productName) {
-        setCustomForm(f => ({ ...f, food_name: offResult.productName! }));
+      const offResult: OFFLookupResult = await lookupBarcode(code, { lang: language });
+
+      if (offResult.product) {
+        // Exact barcode match with nutrition data
+        const item = offProductToAnalyzedItem(offResult.product);
+        results.push({
+          item,
+          source: 'off',
+          label: '🌐 Open Food Facts',
+          imageUrl: offResult.product.imageUrl,
+          brand: offResult.product.brand,
+          servingInfo: offResult.product.calculatedWeightG
+            ? `${offResult.product.calculatedWeightG}g pro Stück`
+            : offResult.product.quantity || undefined,
+        });
+      } else if (offResult.alternatives.length > 0) {
+        // No exact match, but search found alternatives
+        for (const alt of offResult.alternatives.slice(0, 5)) {
+          const item = offProductToAnalyzedItem(alt);
+          results.push({
+            item,
+            source: 'off-search',
+            label: `🔍 ${alt.brand || 'Open Food Facts'}`,
+            imageUrl: alt.imageUrl,
+            brand: alt.brand,
+            servingInfo: alt.calculatedWeightG
+              ? `${alt.calculatedWeightG}g pro Stück`
+              : alt.quantity || undefined,
+          });
+        }
       }
-    } catch {}
+
+      // If no results at all, set partial name for custom form
+      if (results.length === 0 && offResult.partialName) {
+        setCustomForm(f => ({ ...f, food_name: offResult.partialName! }));
+      }
+    } catch (err) {
+      console.warn('OFF lookup failed:', err);
+    }
 
     if (results.length === 0) {
       setNotFound(code);
@@ -295,31 +239,32 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
       return;
     }
 
-    // If only 1 result, auto-select it
-    if (results.length === 1) {
+    // If only 1 result with good nutrition, auto-select
+    if (results.length === 1 && results[0].item.calories > 0) {
       toast.success(`${results[0].item.food_name} ${t('meals.barcodeFound')}`);
       onResult(results[0].item);
       return;
     }
 
-    // Multiple results → show selection
+    // Multiple results or single result without nutrition → show selection
     setBarcodeResults(results);
     setLoading(false);
   };
+
+  // ─── Save custom product ──────────────────────────────────────────────────
 
   const handleSaveCustomProduct = async () => {
     if (!user || !notFound || !customForm.food_name.trim()) return;
     setSavingCustom(true);
 
     const qty = Number(customForm.quantity) || 100;
-    const cal = Number(customForm.calories) || 0;
-    const prot = Number(customForm.protein_g) || 0;
-    const fat = Number(customForm.fat_g) || 0;
-    const carbs = Number(customForm.carbs_g) || 0;
+    const cal = Math.max(0, Number(customForm.calories) || 0);
+    const prot = Math.max(0, Number(customForm.protein_g) || 0);
+    const fat = Math.max(0, Number(customForm.fat_g) || 0);
+    const carbs = Math.max(0, Number(customForm.carbs_g) || 0);
     const foodName = customForm.food_name.trim();
     const unit = customForm.unit || 'g';
 
-    // Save to personal DB
     const { error } = await supabase.from('custom_products').insert({
       user_id: user.id,
       barcode: notFound,
@@ -338,7 +283,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
       return;
     }
 
-    // Also save to community DB so other users can find it
+    // Share to community
     const { data: profile } = await supabase
       .from('profiles')
       .select('display_name, avatar_emoji')
@@ -373,8 +318,11 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
       fat_g: fat,
       carbs_g: carbs,
       confidence_score: 1,
+      barcode: notFound,
     });
   };
+
+  // ─── Scanner effect ────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!scanning || showManual || notFound) return;
@@ -395,16 +343,14 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
           { facingMode: 'environment' },
           { fps: 5, qrbox: { width: 280, height: 150 }, aspectRatio: 1.5 },
           (decodedText) => {
-            // Validate: only accept EAN-8, EAN-13, UPC-A (8, 12, or 13 digits)
             if (!/^\d{8}$|^\d{12,13}$/.test(decodedText)) return;
-            // Debounce: require same code twice in a row
             if (lastCandidateRef.current === decodedText) {
               handleCode(decodedText);
             } else {
               lastCandidateRef.current = decodedText;
             }
           },
-          () => {}
+          () => {},
         );
       } catch (err) {
         console.error('Barcode scanner error:', err);
@@ -420,19 +366,14 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     return () => {
       mounted = false;
       clearTimeout(timer);
-      // Defensive cleanup — scanner may already be stopped/cleared by handleCode
       if (html5Qrcode) {
         try {
           const state = html5Qrcode.getState();
-          if (state === 2 || state === 3) {
-            html5Qrcode.stop().catch(() => {});
-          }
+          if (state === 2 || state === 3) html5Qrcode.stop().catch(() => {});
         } catch {}
         try { html5Qrcode.clear(); } catch {}
       }
-      if (scannerRef.current === html5Qrcode) {
-        scannerRef.current = null;
-      }
+      if (scannerRef.current === html5Qrcode) scannerRef.current = null;
     };
   }, [scanning, showManual, notFound]);
 
@@ -450,15 +391,22 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     setCustomForm({ food_name: '', calories: '', protein_g: '', fat_g: '', carbs_g: '', quantity: '100', unit: 'g' });
   };
 
-  // --- Multiple results: show selection ---
+  // ─── Multiple results: show selection ──────────────────────────────────────
+
   if (barcodeResults.length > 0) {
     return (
       <div className="space-y-4 animate-fade-in">
         <div className="flex items-center gap-2 mb-1">
           <ScanBarcode className="h-5 w-5 text-primary" />
-          <h2 className="font-semibold">Produkt wählen</h2>
+          <h2 className="font-semibold">
+            {language === 'de' ? 'Produkt wählen' : 'Choose product'}
+          </h2>
         </div>
-        <p className="text-sm text-muted-foreground">Mehrere Einträge gefunden — wähle den passenden:</p>
+        <p className="text-sm text-muted-foreground">
+          {language === 'de'
+            ? 'Mehrere Einträge gefunden — wähle den passenden:'
+            : 'Multiple entries found — choose the right one:'}
+        </p>
 
         <div className="space-y-2">
           {barcodeResults.map((result, i) => (
@@ -470,16 +418,44 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
               }}
               className="w-full text-left rounded-xl border border-border bg-card p-3 hover:bg-accent/50 active:scale-[0.98] transition-all"
             >
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-medium text-sm">{result.item.food_name}</span>
-                <span className="text-xs text-muted-foreground">{result.label}</span>
-              </div>
-              <div className="flex gap-3 text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground">{Math.round(result.item.calories)} kcal</span>
-                <span>P {Math.round(result.item.protein_g * 10) / 10}g</span>
-                <span>F {Math.round(result.item.fat_g * 10) / 10}g</span>
-                <span>K {Math.round(result.item.carbs_g * 10) / 10}g</span>
-                <span>/ {result.item.quantity}{result.item.unit}</span>
+              <div className="flex gap-3">
+                {/* Product image */}
+                {result.imageUrl ? (
+                  <img
+                    src={result.imageUrl}
+                    alt={result.item.food_name}
+                    className="w-14 h-14 rounded-lg object-cover bg-muted shrink-0"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                )}
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="font-medium text-sm truncate">{result.item.food_name}</span>
+                  </div>
+                  {result.brand && (
+                    <span className="text-xs text-muted-foreground block">{result.brand}</span>
+                  )}
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                      {result.label}
+                    </span>
+                    {result.servingInfo && (
+                      <span className="text-[10px] text-muted-foreground">· {result.servingInfo}</span>
+                    )}
+                  </div>
+                  <div className="flex gap-3 text-xs text-muted-foreground mt-1">
+                    <span className="font-semibold text-foreground">{Math.round(result.item.calories)} kcal</span>
+                    <span>P {Math.round(result.item.protein_g * 10) / 10}g</span>
+                    <span>F {Math.round(result.item.fat_g * 10) / 10}g</span>
+                    <span>K {Math.round(result.item.carbs_g * 10) / 10}g</span>
+                    <span>/ {result.item.quantity}{result.item.unit}</span>
+                  </div>
+                </div>
               </div>
             </button>
           ))}
@@ -497,7 +473,8 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     );
   }
 
-  // --- Not found: show create form ---
+  // ─── Not found: show create form ───────────────────────────────────────────
+
   if (notFound) {
     return (
       <div className="space-y-4 animate-fade-in">
@@ -520,8 +497,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
               value={customForm.food_name}
               onChange={(e) => handleFoodNameChange(e.target.value)}
               onFocus={() => {
-                const lang = (document.documentElement.lang === 'en' ? 'en' : 'de') as 'de' | 'en';
-                setFoodSuggestions(searchFoods(customForm.food_name, lang));
+                setFoodSuggestions(searchFoods(customForm.food_name, language as 'de' | 'en'));
               }}
               placeholder="z.B. Prosecco, Hafermilch"
               autoComplete="off"
@@ -529,7 +505,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
             {foodSuggestions.length > 0 && (
               <div className="bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                 {foodSuggestions.map((entry, i) => {
-                  const lang = (document.documentElement.lang === 'en' ? 'en' : 'de') as 'de' | 'en';
+                  const lang = language as 'de' | 'en';
                   const displayName = lang === 'de' ? entry.name : entry.name_en;
                   return (
                     <button
@@ -550,7 +526,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
                 <p className="text-xs text-muted-foreground">Schnellauswahl:</p>
                 <div className="flex flex-wrap gap-1.5">
                   {(() => {
-                    const lang = (document.documentElement.lang === 'en' ? 'en' : 'de') as 'de' | 'en';
+                    const lang = language as 'de' | 'en';
                     const quickItems = ['Prosecco', 'Bier (Pils)', 'Weißwein', 'Rotwein', 'Aperol Spritz', 'Radler'];
                     return quickItems.map((name) => {
                       const entry = searchFoods(name, lang).find(e => e.name === name);
@@ -659,7 +635,8 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     );
   }
 
-  // --- Normal scan view ---
+  // ─── Normal scan view ──────────────────────────────────────────────────────
+
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center gap-2 mb-2">

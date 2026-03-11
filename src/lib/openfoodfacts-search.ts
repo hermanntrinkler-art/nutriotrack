@@ -49,7 +49,7 @@ export async function searchOpenFoodFacts(
 
     // Dynamically include the localized product_name field
     const extraLangFields = !['de', 'en'].includes(lang) ? `,product_name_${lang}` : '';
-    const fields = `product_name,product_name_de,product_name_en${extraLangFields},energy-kcal_100g,proteins_100g,fat_100g,carbohydrates_100g,serving_size,product_quantity`;
+    const fields = `product_name,product_name_de,product_name_en${extraLangFields},brands,energy-kcal_100g,energy-kj_100g,energy_100g,proteins_100g,fat_100g,carbohydrates_100g,serving_size,serving_quantity,product_quantity,quantity,image_front_small_url`;
 
     const buildUrl = (page: number) =>
       `https://${domain}/cgi/search.pl?search_terms=${searchTerms}&search_simple=1&action=process&json=1&page_size=30&page=${page}&sort_by=unique_scans_n&fields=${fields}`;
@@ -61,7 +61,9 @@ export async function searchOpenFoodFacts(
           return typeof name === 'string' && name.trim().length > 0;
         })
         .map((p: any) => {
-          const calories = toNumber(p['energy-kcal_100g']);
+          const kcalRaw = toNumber(p['energy-kcal_100g']);
+          const kjRaw = toNumber(p['energy-kj_100g']) || toNumber(p['energy_100g']);
+          const calories = kcalRaw > 0 ? Math.round(kcalRaw) : (kjRaw > 0 ? Math.round(kjRaw / 4.184) : 0);
           const protein = toNumber(p.proteins_100g);
           const fat = toNumber(p.fat_100g);
           const carbs = toNumber(p.carbohydrates_100g);
@@ -70,19 +72,32 @@ export async function searchOpenFoodFacts(
           const genericName = p.product_name;
           const deName = p.product_name_de;
           const enName = p.product_name_en;
+          const brand = p.brands || '';
 
           const displayName = localizedName || genericName || (lang === 'de' ? deName : enName) || deName || enName || '';
+
+          // Parse serving weight for gram_per_piece
+          let gramPerPiece: number | undefined;
+          const sq = toNumber(p.serving_quantity);
+          if (sq > 0 && sq < 500) gramPerPiece = sq;
+          else if (typeof p.serving_size === 'string') {
+            const m = p.serving_size.match(/([\d.,]+)\s*g/i);
+            if (m) { const w = toNumber(m[1]); if (w > 0 && w < 500) gramPerPiece = w; }
+          }
 
           return {
             name: displayName,
             name_en: enName || genericName || displayName,
             quantity: 100,
             unit: 'g',
-            calories: Math.round(calories),
+            calories,
             protein_g: Math.round(protein * 10) / 10,
             fat_g: Math.round(fat * 10) / 10,
             carbs_g: Math.round(carbs * 10) / 10,
             category: 'openfoodfacts',
+            communityBrand: brand || undefined,
+            imageUrl: p.image_front_small_url || undefined,
+            gram_per_piece: gramPerPiece,
           } as FoodEntry;
         })
         .filter((e: FoodEntry) => e.calories > 0 || e.protein_g > 0 || e.fat_g > 0 || e.carbs_g > 0);
