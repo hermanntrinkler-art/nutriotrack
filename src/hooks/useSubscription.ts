@@ -109,6 +109,10 @@ export function useSubscription(): SubscriptionInfo {
   }, [checkStripeSubscription, fetchSubscription]);
 
   const isPro = status === 'pro' || status === 'lifetime';
+  const isInTrial = !isPro && (() => {
+    // Trial is based on profile created_at — not stored in subscription
+    return true; // computed in components using profile.created_at
+  })();
   const canScanPhoto = isPro || dailyPhotoScans < FREE_DAILY_SCAN_LIMIT;
   const remainingScans = isPro ? Infinity : Math.max(0, FREE_DAILY_SCAN_LIMIT - dailyPhotoScans);
 
