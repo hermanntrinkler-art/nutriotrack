@@ -419,16 +419,6 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
             </button>
           </div>
 
-          {/* Add button */}
-          <Button
-            onClick={handleAdd}
-            className="w-full h-12 rounded-xl font-bold text-base"
-            disabled={quantity <= 0}
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            {language === 'de' ? 'Eintragen' : 'Add'}
-          </Button>
-
           {/* Quick presets */}
           {presets.length > 0 && (
             <div className="space-y-2">
