@@ -597,6 +597,16 @@ const SYNONYMS: Record<string, string[]> = {
   'brezel': ['broetchen', 'roll'],
 
   // === Getränke ===
+  'nescafe': ['nescafe gold', 'instantkaffee (pulver)', 'instant coffee'],
+  'nescaffe': ['nescafe gold', 'instantkaffee (pulver)', 'instant coffee'],
+  'instant kaffee': ['instantkaffee (pulver)', 'nescafe gold'],
+  'loeslicher kaffee': ['instantkaffee (pulver)', 'nescafe gold'],
+  'kaffeepulver': ['instantkaffee (pulver)', 'nescafe gold'],
+  'kaffee pulver': ['instantkaffee (pulver)', 'nescafe gold'],
+  'jacobs': ['instantkaffee (pulver)', 'nescafe gold'],
+  'dallmayr': ['kaffee schwarz', 'black coffee'],
+  'senseo': ['kaffee schwarz', 'black coffee'],
+  'dolce gusto': ['cappuccino pulver', 'cappuccino powder'],
   'cola zero': ['cola'],
   'pepsi': ['cola'],
   'fanta': ['orangensaft', 'orange juice'],
@@ -608,8 +618,8 @@ const SYNONYMS: Record<string, string[]> = {
   'apfelschorle': ['apfelsaft', 'apple juice'],
   'limo': ['cola'],
   'limonade': ['cola'],
-  'kakao': ['milch', 'milk'],
-  'heisse schokolade': ['milch', 'milk'],
+  'kakao': ['kakaopulver', 'cocoa powder', 'milch'],
+  'heisse schokolade': ['kakaopulver', 'cocoa powder', 'milch'],
 
   // === Fleisch ===
   'haehnchen': ['haehnchenbrust', 'chicken breast'],
