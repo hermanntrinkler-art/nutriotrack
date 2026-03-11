@@ -417,6 +417,7 @@ export type Database = {
       }
       meal_food_items: {
         Row: {
+          barcode: string | null
           calcium_mg: number | null
           calories: number | null
           carbs_g: number | null
@@ -448,6 +449,7 @@ export type Database = {
           zinc_mg: number | null
         }
         Insert: {
+          barcode?: string | null
           calcium_mg?: number | null
           calories?: number | null
           carbs_g?: number | null
@@ -479,6 +481,7 @@ export type Database = {
           zinc_mg?: number | null
         }
         Update: {
+          barcode?: string | null
           calcium_mg?: number | null
           calories?: number | null
           carbs_g?: number | null
