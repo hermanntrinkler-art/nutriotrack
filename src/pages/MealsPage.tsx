@@ -697,25 +697,8 @@ export default function MealsPage() {
                 initialItem={initialSearchItem}
               />
 
-              {/* Photo & Upload secondary options */}
-              <div className="flex gap-2 pt-2 border-t border-border/50">
-                <button
-                  onClick={handleOpenCamera}
-                  disabled={cameraLoading}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 bg-muted hover:bg-muted/80 border border-border text-sm font-medium transition-all active:scale-[0.98]"
-                >
-                  <Camera className="h-4 w-4 text-primary" />
-                  {language === 'de' ? 'Foto' : 'Photo'}
-                </button>
-                <button
-                  onClick={handleOpenFilePicker}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 bg-muted hover:bg-muted/80 border border-border text-sm font-medium transition-all active:scale-[0.98]"
-                >
-                  <Upload className="h-4 w-4 text-primary" />
-                  {language === 'de' ? 'Hochladen' : 'Upload'}
-                </button>
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-              </div>
+              {/* Hidden file input for photo upload */}
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
 
               {cameraError && <p className="text-xs text-destructive">{cameraError}</p>}
 

@@ -401,6 +401,15 @@ export default function FoodSearchScreen({
             </button>
           )}
         </div>
+        {onCameraOpen && (
+          <button
+            onClick={onCameraOpen}
+            className="h-12 w-12 rounded-2xl border border-border bg-card flex items-center justify-center hover:bg-muted transition-colors shrink-0"
+            title={language === 'de' ? 'Foto aufnehmen' : 'Take photo'}
+          >
+            <Camera className="h-5 w-5 text-muted-foreground" />
+          </button>
+        )}
         {onBarcodeScan && (
           <button
             onClick={onBarcodeScan}
