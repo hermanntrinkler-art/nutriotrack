@@ -279,7 +279,92 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Lammschulter', name_en: 'Lamb Shoulder', quantity: 150, unit: 'g', calories: 310, protein_g: 24, fat_g: 23, carbs_g: 0, category: 'meat' },
   { name: 'Lammrücken', name_en: 'Lamb Rack', quantity: 150, unit: 'g', calories: 270, protein_g: 26, fat_g: 18, carbs_g: 0, category: 'meat' },
 
-  // Fisch / Fish
+  // Ente / Duck
+  { name: 'Entenbrust', name_en: 'Duck Breast', quantity: 150, unit: 'g', calories: 337, protein_g: 28, fat_g: 24, carbs_g: 0, category: 'meat' },
+  { name: 'Entenbrust ohne Haut', name_en: 'Duck Breast (skinless)', quantity: 150, unit: 'g', calories: 200, protein_g: 30, fat_g: 9, carbs_g: 0, category: 'meat' },
+  { name: 'Entenkeule', name_en: 'Duck Leg', quantity: 1, unit: 'Stück', calories: 430, protein_g: 28, fat_g: 35, carbs_g: 0, category: 'meat', gram_per_piece: 200 },
+  { name: 'Ente (ganz, gebraten)', name_en: 'Roast Duck', quantity: 150, unit: 'g', calories: 340, protein_g: 26, fat_g: 26, carbs_g: 0, category: 'meat' },
+  { name: 'Entenbrustfilet geräuchert', name_en: 'Smoked Duck Breast', quantity: 50, unit: 'g', calories: 105, protein_g: 15, fat_g: 5, carbs_g: 0, category: 'meat' },
+  { name: 'Entenleber', name_en: 'Duck Liver', quantity: 100, unit: 'g', calories: 136, protein_g: 19, fat_g: 5, carbs_g: 3, category: 'meat' },
+
+  // Gans / Goose
+  { name: 'Gänsebrust', name_en: 'Goose Breast', quantity: 150, unit: 'g', calories: 350, protein_g: 29, fat_g: 25, carbs_g: 0, category: 'meat' },
+  { name: 'Gänsekeule', name_en: 'Goose Leg', quantity: 1, unit: 'Stück', calories: 530, protein_g: 30, fat_g: 45, carbs_g: 0, category: 'meat', gram_per_piece: 250 },
+  { name: 'Gänsebraten', name_en: 'Roast Goose', quantity: 150, unit: 'g', calories: 360, protein_g: 27, fat_g: 28, carbs_g: 0, category: 'meat' },
+  { name: 'Gänseschmalz', name_en: 'Goose Fat', quantity: 15, unit: 'g', calories: 135, protein_g: 0, fat_g: 15, carbs_g: 0, category: 'meat' },
+  { name: 'Gänseleber', name_en: 'Goose Liver', quantity: 100, unit: 'g', calories: 133, protein_g: 16, fat_g: 4, carbs_g: 6, category: 'meat' },
+  { name: 'Foie Gras', name_en: 'Foie Gras', quantity: 50, unit: 'g', calories: 230, protein_g: 6, fat_g: 22, carbs_g: 2, category: 'meat' },
+
+  // Kaninchen / Rabbit
+  { name: 'Kaninchenfleisch', name_en: 'Rabbit Meat', quantity: 150, unit: 'g', calories: 215, protein_g: 32, fat_g: 9, carbs_g: 0, category: 'meat' },
+  { name: 'Kaninchenkeule', name_en: 'Rabbit Leg', quantity: 1, unit: 'Stück', calories: 280, protein_g: 33, fat_g: 16, carbs_g: 0, category: 'meat', gram_per_piece: 180 },
+  { name: 'Kaninchenrücken', name_en: 'Rabbit Saddle', quantity: 150, unit: 'g', calories: 195, protein_g: 33, fat_g: 7, carbs_g: 0, category: 'meat' },
+  { name: 'Hasenfleisch', name_en: 'Hare Meat', quantity: 150, unit: 'g', calories: 230, protein_g: 30, fat_g: 12, carbs_g: 0, category: 'meat' },
+  { name: 'Hasenkeule', name_en: 'Hare Leg', quantity: 1, unit: 'Stück', calories: 310, protein_g: 32, fat_g: 20, carbs_g: 0, category: 'meat', gram_per_piece: 200 },
+
+  // Wild / Game
+  { name: 'Wildschwein', name_en: 'Wild Boar', quantity: 150, unit: 'g', calories: 250, protein_g: 29, fat_g: 14, carbs_g: 0, category: 'meat' },
+  { name: 'Wildschweinkeule', name_en: 'Wild Boar Leg', quantity: 150, unit: 'g', calories: 260, protein_g: 28, fat_g: 16, carbs_g: 0, category: 'meat' },
+  { name: 'Wildgulasch', name_en: 'Game Goulash', quantity: 200, unit: 'g', calories: 340, protein_g: 36, fat_g: 16, carbs_g: 8, category: 'meat' },
+  { name: 'Wildbraten', name_en: 'Roast Game', quantity: 150, unit: 'g', calories: 240, protein_g: 30, fat_g: 13, carbs_g: 0, category: 'meat' },
+  { name: 'Wildragout', name_en: 'Game Ragout', quantity: 200, unit: 'g', calories: 320, protein_g: 34, fat_g: 14, carbs_g: 8, category: 'meat' },
+  { name: 'Wildsalami', name_en: 'Game Salami', quantity: 30, unit: 'g', calories: 110, protein_g: 8, fat_g: 9, carbs_g: 0, category: 'meat' },
+
+  // Reh / Venison (Roe Deer)
+  { name: 'Rehkeule', name_en: 'Venison Leg', quantity: 150, unit: 'g', calories: 200, protein_g: 33, fat_g: 7, carbs_g: 0, category: 'meat' },
+  { name: 'Rehrücken', name_en: 'Venison Saddle', quantity: 150, unit: 'g', calories: 185, protein_g: 34, fat_g: 5, carbs_g: 0, category: 'meat' },
+  { name: 'Rehfilet', name_en: 'Venison Fillet', quantity: 150, unit: 'g', calories: 175, protein_g: 34, fat_g: 4, carbs_g: 0, category: 'meat' },
+  { name: 'Rehschnitzel', name_en: 'Venison Schnitzel', quantity: 150, unit: 'g', calories: 190, protein_g: 33, fat_g: 6, carbs_g: 0, category: 'meat' },
+  { name: 'Rehgulasch', name_en: 'Venison Goulash', quantity: 200, unit: 'g', calories: 310, protein_g: 38, fat_g: 10, carbs_g: 8, category: 'meat' },
+  { name: 'Rehragout', name_en: 'Venison Ragout', quantity: 200, unit: 'g', calories: 290, protein_g: 36, fat_g: 8, carbs_g: 8, category: 'meat' },
+  { name: 'Rehbraten', name_en: 'Roast Venison', quantity: 150, unit: 'g', calories: 195, protein_g: 33, fat_g: 6, carbs_g: 0, category: 'meat' },
+
+  // Hirsch / Red Deer
+  { name: 'Hirschfleisch', name_en: 'Red Deer Meat', quantity: 150, unit: 'g', calories: 210, protein_g: 32, fat_g: 9, carbs_g: 0, category: 'meat' },
+  { name: 'Hirschkeule', name_en: 'Red Deer Leg', quantity: 150, unit: 'g', calories: 220, protein_g: 31, fat_g: 10, carbs_g: 0, category: 'meat' },
+  { name: 'Hirschrücken', name_en: 'Red Deer Saddle', quantity: 150, unit: 'g', calories: 195, protein_g: 33, fat_g: 7, carbs_g: 0, category: 'meat' },
+  { name: 'Hirschgulasch', name_en: 'Red Deer Goulash', quantity: 200, unit: 'g', calories: 330, protein_g: 36, fat_g: 12, carbs_g: 8, category: 'meat' },
+  { name: 'Hirschsalami', name_en: 'Deer Salami', quantity: 30, unit: 'g', calories: 105, protein_g: 8, fat_g: 8, carbs_g: 0, category: 'meat' },
+
+  // Fasan / Pheasant
+  { name: 'Fasanenbrust', name_en: 'Pheasant Breast', quantity: 150, unit: 'g', calories: 195, protein_g: 33, fat_g: 7, carbs_g: 0, category: 'meat' },
+  { name: 'Fasan (ganz)', name_en: 'Whole Pheasant', quantity: 150, unit: 'g', calories: 220, protein_g: 30, fat_g: 11, carbs_g: 0, category: 'meat' },
+
+  // Wachtel / Quail
+  { name: 'Wachtel', name_en: 'Quail', quantity: 1, unit: 'Stück', calories: 230, protein_g: 25, fat_g: 14, carbs_g: 0, category: 'meat', gram_per_piece: 150 },
+  { name: 'Wachtelbrust', name_en: 'Quail Breast', quantity: 100, unit: 'g', calories: 134, protein_g: 22, fat_g: 5, carbs_g: 0, category: 'meat' },
+
+  // Strauss / Ostrich
+  { name: 'Straußensteak', name_en: 'Ostrich Steak', quantity: 150, unit: 'g', calories: 195, protein_g: 32, fat_g: 7, carbs_g: 0, category: 'meat' },
+  { name: 'Straußenfilet', name_en: 'Ostrich Fillet', quantity: 150, unit: 'g', calories: 180, protein_g: 34, fat_g: 4, carbs_g: 0, category: 'meat' },
+
+  // Pute / Truthahn / Turkey
+  { name: 'Putenbrust', name_en: 'Turkey Breast', quantity: 150, unit: 'g', calories: 165, protein_g: 32, fat_g: 3, carbs_g: 0, category: 'meat' },
+  { name: 'Putenkeule', name_en: 'Turkey Leg', quantity: 150, unit: 'g', calories: 230, protein_g: 28, fat_g: 13, carbs_g: 0, category: 'meat' },
+  { name: 'Putenschnitzel', name_en: 'Turkey Schnitzel', quantity: 150, unit: 'g', calories: 170, protein_g: 33, fat_g: 3, carbs_g: 0, category: 'meat' },
+  { name: 'Putenhackfleisch', name_en: 'Ground Turkey', quantity: 150, unit: 'g', calories: 240, protein_g: 27, fat_g: 14, carbs_g: 0, category: 'meat' },
+  { name: 'Truthahnbrust', name_en: 'Turkey Breast', quantity: 150, unit: 'g', calories: 165, protein_g: 32, fat_g: 3, carbs_g: 0, category: 'meat' },
+
+  // Weitere Fleischsorten / More Meats
+  { name: 'Schweinebraten', name_en: 'Roast Pork', quantity: 150, unit: 'g', calories: 375, protein_g: 25, fat_g: 30, carbs_g: 0, category: 'meat' },
+  { name: 'Schweineschnitzel', name_en: 'Pork Schnitzel', quantity: 150, unit: 'g', calories: 280, protein_g: 28, fat_g: 16, carbs_g: 5, category: 'meat' },
+  { name: 'Schweinekotelett', name_en: 'Pork Chop', quantity: 1, unit: 'Stück', calories: 290, protein_g: 26, fat_g: 20, carbs_g: 0, category: 'meat', gram_per_piece: 150 },
+  { name: 'Schweinehackfleisch', name_en: 'Ground Pork', quantity: 150, unit: 'g', calories: 390, protein_g: 22, fat_g: 33, carbs_g: 0, category: 'meat' },
+  { name: 'Schweinebauch', name_en: 'Pork Belly', quantity: 150, unit: 'g', calories: 510, protein_g: 15, fat_g: 50, carbs_g: 0, category: 'meat' },
+  { name: 'Kassler', name_en: 'Kassler (Smoked Pork)', quantity: 150, unit: 'g', calories: 260, protein_g: 28, fat_g: 16, carbs_g: 0, category: 'meat' },
+  { name: 'Pulled Pork', name_en: 'Pulled Pork', quantity: 150, unit: 'g', calories: 340, protein_g: 26, fat_g: 24, carbs_g: 4, category: 'meat' },
+  { name: 'Rinderfilet', name_en: 'Beef Fillet', quantity: 150, unit: 'g', calories: 270, protein_g: 32, fat_g: 15, carbs_g: 0, category: 'meat' },
+  { name: 'Rindersteak', name_en: 'Beef Steak', quantity: 200, unit: 'g', calories: 370, protein_g: 40, fat_g: 22, carbs_g: 0, category: 'meat' },
+  { name: 'Rindergulasch', name_en: 'Beef Goulash', quantity: 200, unit: 'g', calories: 350, protein_g: 30, fat_g: 18, carbs_g: 8, category: 'meat' },
+  { name: 'Rinderhackfleisch', name_en: 'Ground Beef', quantity: 150, unit: 'g', calories: 340, protein_g: 26, fat_g: 26, carbs_g: 0, category: 'meat' },
+  { name: 'Rinderroulade', name_en: 'Beef Roulade', quantity: 200, unit: 'g', calories: 360, protein_g: 32, fat_g: 20, carbs_g: 6, category: 'meat' },
+  { name: 'Fleischkäse', name_en: 'Leberkäse', quantity: 1, unit: 'Stück', calories: 310, protein_g: 12, fat_g: 27, carbs_g: 3, category: 'meat', gram_per_piece: 100 },
+  { name: 'Leberkäse', name_en: 'Leberkäse', quantity: 1, unit: 'Stück', calories: 310, protein_g: 12, fat_g: 27, carbs_g: 3, category: 'meat', gram_per_piece: 100 },
+  { name: 'Gyros', name_en: 'Gyros', quantity: 150, unit: 'g', calories: 340, protein_g: 24, fat_g: 22, carbs_g: 8, category: 'meat' },
+  { name: 'Döner Fleisch', name_en: 'Doner Meat', quantity: 150, unit: 'g', calories: 330, protein_g: 23, fat_g: 22, carbs_g: 6, category: 'meat' },
+  { name: 'Cordon Bleu', name_en: 'Cordon Bleu', quantity: 1, unit: 'Stück', calories: 450, protein_g: 30, fat_g: 28, carbs_g: 14, category: 'meat', gram_per_piece: 200 },
+
+
   { name: 'Lachs', name_en: 'Salmon', quantity: 150, unit: 'g', calories: 310, protein_g: 30, fat_g: 20, carbs_g: 0, category: 'fish' },
   { name: 'Thunfisch (Dose)', name_en: 'Canned Tuna', quantity: 100, unit: 'g', calories: 110, protein_g: 25, fat_g: 1, carbs_g: 0, category: 'fish' },
   { name: 'Garnelen', name_en: 'Shrimp', quantity: 100, unit: 'g', calories: 85, protein_g: 18, fat_g: 1, carbs_g: 0, category: 'fish' },
@@ -570,6 +655,103 @@ const SYNONYMS: Record<string, string[]> = {
   'lammbraten': ['lammkeule', 'leg of lamb'],
   'gigot': ['lammkeule', 'leg of lamb'],
 
+  // === Ente / Duck ===
+  'ente': ['entenbrust', 'duck breast'],
+  'duck': ['entenbrust', 'duck breast'],
+  'entenfleisch': ['entenbrust', 'duck breast'],
+  'entenbraten': ['ente (ganz, gebraten)', 'roast duck'],
+  'pekingente': ['ente (ganz, gebraten)', 'roast duck'],
+  'canard': ['entenbrust', 'duck breast'],
+  'duck breast': ['entenbrust', 'duck breast'],
+  'duck leg': ['entenkeule', 'duck leg'],
+
+  // === Gans / Goose ===
+  'gans': ['gänsebrust', 'goose breast'],
+  'goose': ['gänsebrust', 'goose breast'],
+  'gaensebrust': ['gänsebrust', 'goose breast'],
+  'gaensekeule': ['gänsekeule', 'goose leg'],
+  'gaensebraten': ['gänsebraten', 'roast goose'],
+  'martinsgans': ['gänsebraten', 'roast goose'],
+  'weihnachtsgans': ['gänsebraten', 'roast goose'],
+  'gaenseschmalz': ['gänseschmalz', 'goose fat'],
+  'gaenseleber': ['gänseleber', 'goose liver'],
+  'foie gras': ['foie gras'],
+  'stopfleber': ['foie gras'],
+
+  // === Kaninchen / Rabbit ===
+  'kaninchen': ['kaninchenfleisch', 'rabbit meat'],
+  'rabbit': ['kaninchenfleisch', 'rabbit meat'],
+  'hase': ['hasenfleisch', 'hare meat'],
+  'hare': ['hasenfleisch', 'hare meat'],
+  'hasenpfeffer': ['hasenfleisch', 'hare meat'],
+  'lapin': ['kaninchenfleisch', 'rabbit meat'],
+
+  // === Wild / Game ===
+  'wild': ['wildbraten', 'roast game'],
+  'game': ['wildbraten', 'roast game'],
+  'wildfleisch': ['wildbraten', 'roast game'],
+  'wildschwein': ['wildschwein', 'wild boar'],
+  'wild boar': ['wildschwein', 'wild boar'],
+  'wildschweingulasch': ['wildgulasch', 'game goulash'],
+  'wildragout': ['wildragout', 'game ragout'],
+  'wildgulasch': ['wildgulasch', 'game goulash'],
+  'wildsalami': ['wildsalami', 'game salami'],
+  'wildwurst': ['wildsalami', 'game salami'],
+  'venison': ['rehkeule', 'venison leg'],
+
+  // === Reh / Roe Deer ===
+  'reh': ['rehkeule', 'venison leg'],
+  'rehfleisch': ['rehkeule', 'venison leg'],
+  'rehbraten': ['rehbraten', 'roast venison'],
+  'rehruecken': ['rehrücken', 'venison saddle'],
+  'rehschnitzel': ['rehschnitzel', 'venison schnitzel'],
+  'rehgulasch': ['rehgulasch', 'venison goulash'],
+  'roe deer': ['rehkeule', 'venison leg'],
+
+  // === Hirsch / Red Deer ===
+  'hirsch': ['hirschfleisch', 'red deer meat'],
+  'hirschfleisch': ['hirschfleisch', 'red deer meat'],
+  'hirschbraten': ['hirschkeule', 'red deer leg'],
+  'hirschgulasch': ['hirschgulasch', 'red deer goulash'],
+  'hirschruecken': ['hirschrücken', 'red deer saddle'],
+  'hirschsalami': ['hirschsalami', 'deer salami'],
+  'red deer': ['hirschfleisch', 'red deer meat'],
+  'deer': ['hirschfleisch', 'red deer meat'],
+
+  // === Fasan, Wachtel, Strauß / Pheasant, Quail, Ostrich ===
+  'fasan': ['fasanenbrust', 'pheasant breast'],
+  'pheasant': ['fasanenbrust', 'pheasant breast'],
+  'wachtel': ['wachtel', 'quail'],
+  'quail': ['wachtelbrust', 'quail breast'],
+  'strauss': ['straußensteak', 'ostrich steak'],
+  'straussfleisch': ['straußensteak', 'ostrich steak'],
+  'ostrich': ['straußensteak', 'ostrich steak'],
+
+  // === Pute / Turkey ===
+  'pute': ['putenbrust', 'turkey breast'],
+  'turkey': ['putenbrust', 'turkey breast'],
+  'putenfleisch': ['putenbrust', 'turkey breast'],
+  'truthahn': ['truthahnbrust', 'turkey breast'],
+  'putenschnitzel': ['putenschnitzel', 'turkey schnitzel'],
+  'putenhack': ['putenhackfleisch', 'ground turkey'],
+
+  // === Weitere Fleisch-Synonyme ===
+  'schweinebraten': ['schweinebraten', 'roast pork'],
+  'kassler': ['kassler', 'kassler (smoked pork)'],
+  'kasseler': ['kassler', 'kassler (smoked pork)'],
+  'pulled pork': ['pulled pork'],
+  'rinderfilet': ['rinderfilet', 'beef fillet'],
+  'steak': ['rindersteak', 'beef steak'],
+  'rindersteak': ['rindersteak', 'beef steak'],
+  'gulasch': ['rindergulasch', 'beef goulash'],
+  'roulade': ['rinderroulade', 'beef roulade'],
+  'rinderroulade': ['rinderroulade', 'beef roulade'],
+  'gyros': ['gyros'],
+  'doener': ['döner fleisch', 'doner meat'],
+  'doenerfleisch': ['döner fleisch', 'doner meat'],
+  'kebab': ['döner fleisch', 'doner meat'],
+  'cordon bleu': ['cordon bleu'],
+
   // === Streichfette & Öle / Spreads & Oils ===
   'rama': ['rama original'],
   'laetta': ['lätta'],
@@ -619,8 +801,6 @@ const SYNONYMS: Record<string, string[]> = {
   // === Wurst / Aufschnitt ===
   'fleischwurst': ['salami'],
   'mortadella': ['salami'],
-  'putenbrust': ['schinken', 'ham'],
-  'truthahn': ['schinken', 'ham'],
   'lyoner': ['salami'],
   'leberwurst': ['salami'],
   'extrawurst': ['schinken', 'ham'],
@@ -665,7 +845,7 @@ const SYNONYMS: Record<string, string[]> = {
   'chicken': ['haehnchenbrust', 'chicken breast'],
   'huhn': ['haehnchenbrust', 'chicken breast'],
   'rind': ['rindfleisch', 'beef'],
-  'steak': ['rindfleisch', 'beef'],
+  'beef steak': ['rindfleisch', 'beef'],
   'hackfleisch': ['hackfleisch (gemischt)', 'mixed ground meat'],
   'gehacktes': ['hackfleisch (gemischt)', 'mixed ground meat'],
   'bulette': ['frikadelle', 'meatball'],
@@ -716,11 +896,7 @@ const SYNONYMS: Record<string, string[]> = {
   'ruehrei': ['ruehrei (2 eier)', 'scrambled eggs (2)'],
 
   // === Fertiggerichte ===
-  'kebab': ['doener kebab'],
-  'doener': ['doener kebab'],
-  'gyros': ['doener kebab'],
   'currywurst': ['bratwurst'],
-  'cordon bleu': ['schnitzel'],
   'wiener schnitzel': ['schnitzel'],
 
   // === Müsli / Cereal ===
