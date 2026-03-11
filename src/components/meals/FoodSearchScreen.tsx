@@ -433,31 +433,47 @@ export default function FoodSearchScreen({
           </div>
           <div className="space-y-1.5">
             {filteredFavorites.slice(0, query.trim() ? 10 : 3).map((fav) => (
-              <motion.button
+              <motion.div
                 key={fav.id}
-                type="button"
-                onClick={() => handleSelectFavorite(fav)}
-                className="w-full text-left px-3.5 py-3 rounded-xl bg-amber-500/5 border border-amber-500/20 hover:border-amber-500/40 hover:bg-amber-500/10 transition-all flex items-center gap-3 active:scale-[0.98]"
-                whileTap={{ scale: 0.98 }}
+                className="w-full text-left px-3.5 py-3 rounded-xl bg-amber-500/5 border border-amber-500/20 hover:border-amber-500/40 hover:bg-amber-500/10 transition-all flex items-center gap-3"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
               >
-                <span className="text-lg">{fav.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-semibold text-foreground truncate block">{fav.name}</span>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    <span className="text-protein">{Math.round(fav.total_protein_g)}P</span>{' '}
-                    <span className="text-fat">{Math.round(fav.total_fat_g)}F</span>{' '}
-                    <span className="text-carbs">{Math.round(fav.total_carbs_g)}C</span>
-                  </p>
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <Flame className="h-3 w-3 text-energy" />
-                  <span className="text-sm font-bold tabular-nums text-foreground">{Math.round(fav.total_calories)}</span>
-                  <span className="text-[10px] text-muted-foreground">kcal</span>
-                  <div className="w-7 h-7 rounded-full bg-amber-500/15 flex items-center justify-center ml-1">
-                    <Plus className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteFavorite(fav.id);
+                  }}
+                  className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors shrink-0"
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSelectFavorite(fav)}
+                  className="flex items-center gap-3 flex-1 min-w-0 active:scale-[0.98]"
+                >
+                  <span className="text-lg">{fav.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold text-foreground truncate block">{fav.name}</span>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      <span className="text-protein">{Math.round(fav.total_protein_g)}P</span>{' '}
+                      <span className="text-fat">{Math.round(fav.total_fat_g)}F</span>{' '}
+                      <span className="text-carbs">{Math.round(fav.total_carbs_g)}C</span>
+                    </p>
                   </div>
-                </div>
-              </motion.button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Flame className="h-3 w-3 text-energy" />
+                    <span className="text-sm font-bold tabular-nums text-foreground">{Math.round(fav.total_calories)}</span>
+                    <span className="text-[10px] text-muted-foreground">kcal</span>
+                    <div className="w-7 h-7 rounded-full bg-amber-500/15 flex items-center justify-center ml-1">
+                      <Plus className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                    </div>
+                  </div>
+                </button>
+              </motion.div>
             ))}
           </div>
         </div>
