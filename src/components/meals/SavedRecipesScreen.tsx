@@ -4,7 +4,7 @@ import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, BookOpen, Trash2, Flame, Loader2, ChefHat, Plus } from 'lucide-react';
+import { ArrowLeft, BookOpen, Trash2, Flame, Loader2, ChefHat, Plus, Pencil } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { hapticFeedback } from '@/lib/haptics';
 import { toast } from 'sonner';
@@ -47,6 +47,7 @@ export default function SavedRecipesScreen({ onSelect, onCancel, hideHeader }: S
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [editingRecipe, setEditingRecipe] = useState<SavedRecipe | null>(null);
 
   const loadRecipes = async () => {
     if (!user) return;
@@ -61,6 +62,24 @@ export default function SavedRecipesScreen({ onSelect, onCancel, hideHeader }: S
   };
 
   useEffect(() => { loadRecipes(); }, [user]);
+
+  if (editingRecipe) {
+    return (
+      <CreateRecipeScreen
+        onClose={() => setEditingRecipe(null)}
+        onCreated={() => {
+          setEditingRecipe(null);
+          loadRecipes();
+        }}
+        editRecipe={{
+          id: editingRecipe.id,
+          name: editingRecipe.name,
+          emoji: editingRecipe.emoji,
+          meal_type: editingRecipe.meal_type,
+        }}
+      />
+    );
+  }
 
   if (showCreate) {
     return (
@@ -204,20 +223,31 @@ export default function SavedRecipesScreen({ onSelect, onCancel, hideHeader }: S
                   </p>
                 )}
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(recipe.id);
-                }}
-                disabled={deletingId === recipe.id}
-                className="p-2 rounded-lg hover:bg-destructive/10 transition-colors"
-              >
-                {deletingId === recipe.id ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                ) : (
-                  <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                )}
-              </button>
+              <div className="flex items-center gap-0.5">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingRecipe(recipe);
+                  }}
+                  className="p-2 rounded-lg hover:bg-accent transition-colors"
+                >
+                  <Pencil className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(recipe.id);
+                  }}
+                  disabled={deletingId === recipe.id}
+                  className="p-2 rounded-lg hover:bg-destructive/10 transition-colors"
+                >
+                  {deletingId === recipe.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                  )}
+                </button>
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>
