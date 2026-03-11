@@ -403,14 +403,37 @@ export default function FoodSearchScreen({
             </button>
           )}
         </div>
-        {onCameraOpen && (
-          <button
-            onClick={onCameraOpen}
-            className="h-12 w-12 rounded-2xl border border-border bg-card flex items-center justify-center hover:bg-muted transition-colors shrink-0"
-            title={language === 'de' ? 'Foto aufnehmen' : 'Take photo'}
-          >
-            <Camera className="h-5 w-5 text-muted-foreground" />
-          </button>
+        {(onCameraOpen || onPhotoUpload) && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                className="h-12 w-12 rounded-2xl border border-border bg-card flex items-center justify-center hover:bg-muted transition-colors shrink-0"
+                title={language === 'de' ? 'Foto' : 'Photo'}
+              >
+                <Camera className="h-5 w-5 text-muted-foreground" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-1.5" align="end" sideOffset={6}>
+              {onCameraOpen && (
+                <button
+                  onClick={onCameraOpen}
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm rounded-lg hover:bg-muted transition-colors"
+                >
+                  <Camera className="h-4 w-4 text-muted-foreground" />
+                  {language === 'de' ? 'Foto aufnehmen' : 'Take photo'}
+                </button>
+              )}
+              {onPhotoUpload && (
+                <button
+                  onClick={onPhotoUpload}
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm rounded-lg hover:bg-muted transition-colors"
+                >
+                  <Upload className="h-4 w-4 text-muted-foreground" />
+                  {language === 'de' ? 'Bild hochladen' : 'Upload image'}
+                </button>
+              )}
+            </PopoverContent>
+          </Popover>
         )}
         {onBarcodeScan && (
           <button
