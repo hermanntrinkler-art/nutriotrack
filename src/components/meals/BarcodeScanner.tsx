@@ -35,11 +35,14 @@ async function lookupOpenFoodFacts(code: string): Promise<OFFResult> {
     if (!p) return { item: null, hasNutrition: false };
 
     const n = p.nutriments || {};
-    const calories100 = Math.round(n['energy-kcal_100g'] || 0);
-    const protein100 = Math.round((n.proteins_100g || 0) * 10) / 10;
-    const fat100 = Math.round((n.fat_100g || 0) * 10) / 10;
-    const carbs100 = Math.round((n.carbohydrates_100g || 0) * 10) / 10;
-    const productName = p.product_name || p.product_name_de || p.product_name_en || '';
+    // Try multiple field name variants for calories (OFF is inconsistent)
+    const kcalRaw = n['energy-kcal_100g'] ?? n['energy-kcal_value'] ?? 0;
+    const kjRaw = n['energy-kj_100g'] ?? n['energy_100g'] ?? n['energy_value'] ?? 0;
+    const calories100 = Math.round(kcalRaw > 0 ? kcalRaw : (kjRaw > 0 ? kjRaw / 4.184 : 0));
+    const protein100 = Math.round((n.proteins_100g ?? n.proteins_value ?? 0) * 10) / 10;
+    const fat100 = Math.round((n.fat_100g ?? n.fat_value ?? 0) * 10) / 10;
+    const carbs100 = Math.round((n.carbohydrates_100g ?? n.carbohydrates_value ?? 0) * 10) / 10;
+    const productName = p.product_name_de || p.product_name || p.product_name_en || '';
     const hasNutrition = calories100 > 0 || protein100 > 0 || fat100 > 0 || carbs100 > 0;
 
     if (!hasNutrition) {
