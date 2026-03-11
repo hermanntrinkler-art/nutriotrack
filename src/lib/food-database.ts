@@ -845,7 +845,7 @@ const SYNONYMS: Record<string, string[]> = {
   'chicken': ['haehnchenbrust', 'chicken breast'],
   'huhn': ['haehnchenbrust', 'chicken breast'],
   'rind': ['rindfleisch', 'beef'],
-  'steak': ['rindfleisch', 'beef'],
+  'beef steak': ['rindfleisch', 'beef'],
   'hackfleisch': ['hackfleisch (gemischt)', 'mixed ground meat'],
   'gehacktes': ['hackfleisch (gemischt)', 'mixed ground meat'],
   'bulette': ['frikadelle', 'meatball'],
