@@ -442,6 +442,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     setNotFound(null);
     setShowManual(false);
     setScanning(true);
+    setBarcodeResults([]);
     processedRef.current = false;
     setCustomForm({ food_name: '', calories: '', protein_g: '', fat_g: '', carbs_g: '', quantity: '100', unit: 'g' });
   };
