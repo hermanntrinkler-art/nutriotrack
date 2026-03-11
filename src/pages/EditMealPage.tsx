@@ -39,7 +39,7 @@ export default function EditMealPage() {
     setMealType((meal as any).meal_type);
 
     const { data: foodItems } = await supabase.from('meal_food_items').select('*').eq('meal_entry_id', id);
-    setItems((foodItems || []).map((fi: any) => ({
+    const mappedItems = (foodItems || []).map((fi: any) => ({
       food_name: fi.food_name,
       quantity: Number(fi.quantity) || 0,
       unit: fi.unit || 'g',
@@ -66,7 +66,27 @@ export default function EditMealPage() {
       phosphorus_mg: Number(fi.phosphorus_mg) || 0,
       zinc_mg: Number(fi.zinc_mg) || 0,
       barcode: fi.barcode || undefined,
-    })));
+    }));
+
+    // Recover missing barcodes from custom_products for old meals
+    if (user) {
+      for (const item of mappedItems) {
+        if (!item.barcode && item.food_name) {
+          const { data: cp } = await supabase
+            .from('custom_products')
+            .select('barcode')
+            .eq('user_id', user.id)
+            .eq('food_name', item.food_name)
+            .limit(1)
+            .maybeSingle();
+          if (cp?.barcode) {
+            item.barcode = cp.barcode;
+          }
+        }
+      }
+    }
+
+    setItems(mappedItems);
     setLoading(false);
   };
 
