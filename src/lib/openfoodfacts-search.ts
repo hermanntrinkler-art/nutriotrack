@@ -11,13 +11,13 @@ const toNumber = (value: unknown) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-function getCacheKey(query: string, lang: 'de' | 'en') {
+function getCacheKey(query: string, lang: string) {
   return `${lang}:${query.trim().toLowerCase()}`;
 }
 
 export async function searchOpenFoodFacts(
   query: string,
-  lang: 'de' | 'en',
+  lang: string,
   options?: { signal?: AbortSignal },
 ): Promise<FoodEntry[]> {
   const normalizedQuery = query.trim();
@@ -36,7 +36,16 @@ export async function searchOpenFoodFacts(
 
   const requestPromise = (async () => {
     const searchTerms = encodeURIComponent(normalizedQuery);
-    const domain = lang === 'de' ? 'de.openfoodfacts.org' : 'world.openfoodfacts.org';
+    const domainMap: Record<string, string> = {
+      de: 'de.openfoodfacts.org',
+      fr: 'fr.openfoodfacts.org',
+      es: 'es.openfoodfacts.org',
+      it: 'it.openfoodfacts.org',
+      pt: 'pt.openfoodfacts.org',
+      pl: 'pl.openfoodfacts.org',
+      nl: 'nl.openfoodfacts.org',
+    };
+    const domain = domainMap[lang] || 'world.openfoodfacts.org';
     const url = `https://${domain}/cgi/search.pl?search_terms=${searchTerms}&search_simple=1&action=process&json=1&page_size=20&page=1&sort_by=unique_scans_n&fields=product_name,product_name_de,product_name_en,energy-kcal_100g,proteins_100g,fat_100g,carbohydrates_100g,serving_size,product_quantity`;
 
     const controller = new AbortController();

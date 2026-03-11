@@ -446,23 +446,27 @@ export default function ProfilePage() {
             <Globe className="h-5 w-5 text-muted-foreground" />
             <span className="font-medium text-sm">{t('profile.language')}</span>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => setLanguage('de')}
-              className={`py-2.5 rounded-xl text-sm font-medium transition-colors border ${
-                language === 'de' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:bg-accent'
-              }`}
-            >
-              🇩🇪 {t('profile.german')}
-            </button>
-            <button
-              onClick={() => setLanguage('en')}
-              className={`py-2.5 rounded-xl text-sm font-medium transition-colors border ${
-                language === 'en' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:bg-accent'
-              }`}
-            >
-              🇬🇧 {t('profile.english')}
-            </button>
+          <div className="grid grid-cols-4 gap-2">
+            {([
+              { code: 'de' as const, flag: '🇩🇪', label: 'DE' },
+              { code: 'en' as const, flag: '🇬🇧', label: 'EN' },
+              { code: 'es' as const, flag: '🇪🇸', label: 'ES' },
+              { code: 'fr' as const, flag: '🇫🇷', label: 'FR' },
+              { code: 'it' as const, flag: '🇮🇹', label: 'IT' },
+              { code: 'pt' as const, flag: '🇵🇹', label: 'PT' },
+              { code: 'pl' as const, flag: '🇵🇱', label: 'PL' },
+              { code: 'nl' as const, flag: '🇳🇱', label: 'NL' },
+            ]).map(({ code, flag, label }) => (
+              <button
+                key={code}
+                onClick={() => setLanguage(code)}
+                className={`py-2 rounded-xl text-xs font-medium transition-colors border ${
+                  language === code ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:bg-accent'
+                }`}
+              >
+                {flag} {label}
+              </button>
+            ))}
           </div>
         </div>
 
