@@ -490,6 +490,9 @@ export default function ProfilePage() {
         </Button>
       </motion.div>
 
+      {/* Delete Account */}
+      <DeleteAccountSection />
+
       {/* Legal Links */}
       <motion.div variants={fadeUp} className="flex flex-wrap justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground pt-2 pb-4">
         <Link to="/impressum" className="hover:text-foreground transition-colors">Impressum</Link>
