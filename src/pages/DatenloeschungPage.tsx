@@ -39,7 +39,7 @@ export default function DatenloeschungPage() {
             <p>Du kannst dein Benutzerkonto und alle damit verbundenen Daten jederzeit löschen lassen.</p>
             <p>Dafür stehen dir folgende Möglichkeiten zur Verfügung:</p>
             <h3 className="text-base font-semibold text-foreground">Löschung innerhalb der App</h3>
-            <p>Wenn die entsprechende Funktion verfügbar ist, kannst du dein Konto direkt innerhalb der NutrioTrack-App löschen.</p>
+            <p>Du kannst dein Konto direkt in der NutrioTrack-App löschen. Gehe dazu in dein <strong>Profil</strong> und tippe ganz unten auf <strong>„Konto löschen"</strong>. Nach Bestätigung werden alle deine Daten unwiderruflich gelöscht.</p>
             <h3 className="text-base font-semibold text-foreground">Löschung per Anfrage</h3>
             <p>Alternativ kannst du eine Löschanfrage per E-Mail senden an:</p>
             <p><a href="mailto:support@harborstudios.app" className="text-primary hover:underline">support@harborstudios.app</a></p>
