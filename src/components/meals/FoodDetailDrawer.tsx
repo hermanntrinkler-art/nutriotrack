@@ -389,6 +389,11 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
               type="number"
               value={quantity}
               onChange={(e) => setQuantity(Math.max(0, Number(e.target.value)))}
+              onFocus={(e) => {
+                setTimeout(() => {
+                  e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+              }}
               className="h-11 text-center text-lg font-bold rounded-xl flex-1"
               min={0}
             />
