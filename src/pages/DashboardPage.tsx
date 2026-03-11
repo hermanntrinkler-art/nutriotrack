@@ -15,6 +15,7 @@ import WeeklySummaryReport from '@/components/WeeklySummaryReport';
 import MicronutrientCard from '@/components/MicronutrientCard';
 import { fireConfetti } from '@/lib/confetti';
 import { markTodayHasMeals, initReminders } from '@/components/ReminderSettings';
+import TrialBanner from '@/components/TrialBanner';
 
 // --- Animated Macro Ring ---
 function MacroRing({ label, current, target, color, icon: Icon, delay = 0 }: {
@@ -282,6 +283,9 @@ export default function DashboardPage() {
       initial="hidden"
       animate="show"
     >
+      {/* Trial Banner */}
+      <TrialBanner />
+
       {/* Header */}
       <motion.div className="flex items-center justify-between" variants={fadeUp}>
         <div>
