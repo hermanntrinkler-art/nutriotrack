@@ -9,7 +9,7 @@ import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import { Search, Plus, Minus, Globe, Loader2, X, ArrowLeft, ChevronRight, Flame, Star, Users, ScanBarcode, Trash2 } from 'lucide-react';
+import { Search, Plus, Minus, Globe, Loader2, X, ArrowLeft, ChevronRight, Flame, Star, Users, ScanBarcode, Trash2, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { hapticFeedback } from '@/lib/haptics';
 import { toast } from 'sonner';
@@ -21,6 +21,7 @@ interface FoodSearchScreenProps {
   onCancel: () => void;
   hideHeader?: boolean;
   onBarcodeScan?: () => void;
+  onCameraOpen?: () => void;
   // Direct save mode — no more review step
   onSave: (items: AnalyzedFoodItem[]) => void;
   saving: boolean;
@@ -77,6 +78,7 @@ export default function FoodSearchScreen({
   onCancel,
   hideHeader,
   onBarcodeScan,
+  onCameraOpen,
   onSave,
   saving,
   initialItems,
@@ -399,6 +401,15 @@ export default function FoodSearchScreen({
             </button>
           )}
         </div>
+        {onCameraOpen && (
+          <button
+            onClick={onCameraOpen}
+            className="h-12 w-12 rounded-2xl border border-border bg-card flex items-center justify-center hover:bg-muted transition-colors shrink-0"
+            title={language === 'de' ? 'Foto aufnehmen' : 'Take photo'}
+          >
+            <Camera className="h-5 w-5 text-muted-foreground" />
+          </button>
+        )}
         {onBarcodeScan && (
           <button
             onClick={onBarcodeScan}
