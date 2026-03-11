@@ -75,6 +75,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
+      <FloatingAddButton />
       <BottomNav />
     </>
   );
