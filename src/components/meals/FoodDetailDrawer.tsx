@@ -285,6 +285,15 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
       <DrawerContent className="max-h-[90vh] flex flex-col">
         <DrawerHeader className="pb-2">
           <div className="flex items-center justify-between">
+            {/* Product image */}
+            {food.imageUrl && (
+              <img
+                src={food.imageUrl}
+                alt={name}
+                className="w-14 h-14 rounded-lg object-cover bg-muted shrink-0 mr-3"
+                loading="lazy"
+              />
+            )}
             <div className="flex-1 min-w-0">
               <DrawerTitle className="text-left text-lg">{name}</DrawerTitle>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
