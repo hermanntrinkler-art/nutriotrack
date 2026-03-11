@@ -554,6 +554,13 @@ const translations = {
     'profile.themeLight': 'Light',
     'profile.themeDark': 'Dark',
     'profile.themeSystem': 'System',
+    'profile.deleteAccount': 'Delete Account',
+    'profile.deleteAccountConfirm': 'Are you sure you want to permanently delete your account and all data?',
+    'profile.deleteAccountButton': 'Yes, permanently delete',
+    'profile.deleteAccountCancel': 'Cancel',
+    'profile.deleteAccountSuccess': 'Your account has been deleted.',
+    'profile.deleteAccountError': 'Error deleting account. Please try again.',
+    'profile.deleteAccountTitle': 'Delete Account',
 
     // Streak
     'dashboard.streak': 'Day Streak',
