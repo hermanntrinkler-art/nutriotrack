@@ -896,11 +896,7 @@ const SYNONYMS: Record<string, string[]> = {
   'ruehrei': ['ruehrei (2 eier)', 'scrambled eggs (2)'],
 
   // === Fertiggerichte ===
-  'kebab': ['doener kebab'],
-  'doener': ['doener kebab'],
-  'gyros': ['doener kebab'],
   'currywurst': ['bratwurst'],
-  'cordon bleu': ['schnitzel'],
   'wiener schnitzel': ['schnitzel'],
 
   // === Müsli / Cereal ===
