@@ -205,6 +205,13 @@ const translations = {
     'profile.themeLight': 'Hell',
     'profile.themeDark': 'Dunkel',
     'profile.themeSystem': 'System',
+    'profile.deleteAccount': 'Konto löschen',
+    'profile.deleteAccountConfirm': 'Bist du sicher, dass du dein Konto und alle Daten unwiderruflich löschen möchtest?',
+    'profile.deleteAccountButton': 'Ja, Konto endgültig löschen',
+    'profile.deleteAccountCancel': 'Abbrechen',
+    'profile.deleteAccountSuccess': 'Dein Konto wurde gelöscht.',
+    'profile.deleteAccountError': 'Fehler beim Löschen. Bitte versuche es erneut.',
+    'profile.deleteAccountTitle': 'Konto löschen',
 
     // Streak
     'dashboard.streak': 'Tage-Streak',
@@ -547,6 +554,13 @@ const translations = {
     'profile.themeLight': 'Light',
     'profile.themeDark': 'Dark',
     'profile.themeSystem': 'System',
+    'profile.deleteAccount': 'Delete Account',
+    'profile.deleteAccountConfirm': 'Are you sure you want to permanently delete your account and all data?',
+    'profile.deleteAccountButton': 'Yes, permanently delete',
+    'profile.deleteAccountCancel': 'Cancel',
+    'profile.deleteAccountSuccess': 'Your account has been deleted.',
+    'profile.deleteAccountError': 'Error deleting account. Please try again.',
+    'profile.deleteAccountTitle': 'Delete Account',
 
     // Streak
     'dashboard.streak': 'Day Streak',

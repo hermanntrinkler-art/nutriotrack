@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull, Activity, Crown, Sun, Moon, Monitor, Shield, BarChart3 } from 'lucide-react';
+import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull, Activity, Crown, Sun, Moon, Monitor, Shield, BarChart3, Trash2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -490,6 +490,9 @@ export default function ProfilePage() {
         </Button>
       </motion.div>
 
+      {/* Delete Account */}
+      <DeleteAccountSection />
+
       {/* Legal Links */}
       <motion.div variants={fadeUp} className="flex flex-wrap justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground pt-2 pb-4">
         <Link to="/impressum" className="hover:text-foreground transition-colors">Impressum</Link>
@@ -577,5 +580,72 @@ function AdminLink() {
       <Shield className="h-5 w-5 text-primary" />
       <span className="font-medium text-sm">Admin Dashboard</span>
     </button>
+  );
+}
+
+function DeleteAccountSection() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      const res = await supabase.functions.invoke('delete-account', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (res.error) throw res.error;
+
+      toast.success(t('profile.deleteAccountSuccess'));
+      await supabase.auth.signOut();
+      navigate('/', { replace: true });
+    } catch {
+      toast.error(t('profile.deleteAccountError'));
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <motion.div variants={fadeUp} className="pt-4">
+      {!showConfirm ? (
+        <button
+          onClick={() => setShowConfirm(true)}
+          className="w-full flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-destructive transition-colors py-2"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          {t('profile.deleteAccount')}
+        </button>
+      ) : (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 space-y-3">
+          <p className="text-sm text-foreground font-medium">{t('profile.deleteAccountTitle')}</p>
+          <p className="text-xs text-muted-foreground">{t('profile.deleteAccountConfirm')}</p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowConfirm(false)}
+              disabled={deleting}
+              className="flex-1 rounded-lg text-xs"
+            >
+              {t('profile.deleteAccountCancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="flex-1 rounded-lg text-xs"
+            >
+              {deleting ? '...' : t('profile.deleteAccountButton')}
+            </Button>
+          </div>
+        </div>
+      )}
+    </motion.div>
   );
 }
