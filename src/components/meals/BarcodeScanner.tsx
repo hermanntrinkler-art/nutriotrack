@@ -234,6 +234,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     processedRef.current = true;
     setLoading(true);
     setNotFound(null);
+    setBarcodeResults([]);
 
     // Stop scanner FIRST, before any state changes that trigger effect cleanup
     try { 
@@ -251,14 +252,14 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     // Now safe to change scanning state
     setScanning(false);
 
-    // 1. Check personal DB first
+    const results: { item: AnalyzedFoodItem; source: string; label: string }[] = [];
+
+    // 1. Check personal DB
     if (user) {
       try {
         const custom = await lookupCustomProduct(code, user.id);
         if (custom) {
-          toast.success(`${custom.food_name} ${t('meals.barcodeFound')}`);
-          onResult(custom);
-          return;
+          results.push({ item: custom, source: 'custom', label: '⭐ Mein Produkt' });
         }
       } catch {}
     }
@@ -267,11 +268,11 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     try {
       const community = await lookupCommunityProduct(code);
       if (community) {
-        toast.success(`${community.item.food_name} ${t('meals.barcodeFound')}`, {
-          description: `${community.contributorEmoji} ${community.contributorName}`,
+        results.push({
+          item: { ...community.item, barcode: code },
+          source: 'community',
+          label: `👥 ${community.contributorEmoji} ${community.contributorName}`,
         });
-        onResult(community.item);
-        return;
       }
     } catch {}
 
@@ -279,18 +280,27 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     try {
       const offResult = await lookupOpenFoodFacts(code);
       if (offResult.item) {
-        toast.success(`${offResult.item.food_name} ${t('meals.barcodeFound')}`);
-        onResult(offResult.item);
-        return;
-      }
-
-      // 4. Not found or no nutrition → offer manual creation
-      if (offResult.productName) {
+        results.push({ item: offResult.item, source: 'off', label: '🌐 Open Food Facts' });
+      } else if (offResult.productName) {
         setCustomForm(f => ({ ...f, food_name: offResult.productName! }));
       }
     } catch {}
 
-    setNotFound(code);
+    if (results.length === 0) {
+      setNotFound(code);
+      setLoading(false);
+      return;
+    }
+
+    // If only 1 result, auto-select it
+    if (results.length === 1) {
+      toast.success(`${results[0].item.food_name} ${t('meals.barcodeFound')}`);
+      onResult(results[0].item);
+      return;
+    }
+
+    // Multiple results → show selection
+    setBarcodeResults(results);
     setLoading(false);
   };
 
