@@ -694,6 +694,7 @@ export default function MealsPage() {
                 hideHeader
                 onBarcodeScan={() => setStep('barcode')}
                 onCameraOpen={handleOpenCamera}
+                onPhotoUpload={() => fileInputRef.current?.click()}
                 initialItem={initialSearchItem}
               />
 

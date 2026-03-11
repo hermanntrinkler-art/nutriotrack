@@ -9,7 +9,8 @@ import type { AnalyzedFoodItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import { Search, Plus, Minus, Globe, Loader2, X, ArrowLeft, ChevronRight, Flame, Star, Users, ScanBarcode, Trash2, Camera } from 'lucide-react';
+import { Search, Plus, Minus, Globe, Loader2, X, ArrowLeft, ChevronRight, Flame, Star, Users, ScanBarcode, Trash2, Camera, Upload } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { motion, AnimatePresence } from 'framer-motion';
 import { hapticFeedback } from '@/lib/haptics';
 import { toast } from 'sonner';
@@ -22,6 +23,7 @@ interface FoodSearchScreenProps {
   hideHeader?: boolean;
   onBarcodeScan?: () => void;
   onCameraOpen?: () => void;
+  onPhotoUpload?: () => void;
   // Direct save mode — no more review step
   onSave: (items: AnalyzedFoodItem[]) => void;
   saving: boolean;
@@ -79,6 +81,7 @@ export default function FoodSearchScreen({
   hideHeader,
   onBarcodeScan,
   onCameraOpen,
+  onPhotoUpload,
   onSave,
   saving,
   initialItems,
@@ -401,14 +404,37 @@ export default function FoodSearchScreen({
             </button>
           )}
         </div>
-        {onCameraOpen && (
-          <button
-            onClick={onCameraOpen}
-            className="h-12 w-12 rounded-2xl border border-border bg-card flex items-center justify-center hover:bg-muted transition-colors shrink-0"
-            title={language === 'de' ? 'Foto aufnehmen' : 'Take photo'}
-          >
-            <Camera className="h-5 w-5 text-muted-foreground" />
-          </button>
+        {(onCameraOpen || onPhotoUpload) && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                className="h-12 w-12 rounded-2xl border border-border bg-card flex items-center justify-center hover:bg-muted transition-colors shrink-0"
+                title={language === 'de' ? 'Foto' : 'Photo'}
+              >
+                <Camera className="h-5 w-5 text-muted-foreground" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-1.5" align="end" sideOffset={6}>
+              {onCameraOpen && (
+                <button
+                  onClick={onCameraOpen}
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm rounded-lg hover:bg-muted transition-colors"
+                >
+                  <Camera className="h-4 w-4 text-muted-foreground" />
+                  {language === 'de' ? 'Foto aufnehmen' : 'Take photo'}
+                </button>
+              )}
+              {onPhotoUpload && (
+                <button
+                  onClick={onPhotoUpload}
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm rounded-lg hover:bg-muted transition-colors"
+                >
+                  <Upload className="h-4 w-4 text-muted-foreground" />
+                  {language === 'de' ? 'Bild hochladen' : 'Upload image'}
+                </button>
+              )}
+            </PopoverContent>
+          </Popover>
         )}
         {onBarcodeScan && (
           <button
