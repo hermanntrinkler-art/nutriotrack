@@ -7,7 +7,7 @@ import { calculateNutrition } from '@/lib/nutrition';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { LogOut, Globe, Target, Leaf, AlertTriangle, ShieldCheck, ShieldAlert, Skull, Activity, Crown, Sun, Moon, Monitor, Shield, BarChart3 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
