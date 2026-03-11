@@ -282,7 +282,7 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
 
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()} handleOnly={true}>
-      <DrawerContent className="max-h-[90vh]">
+      <DrawerContent className="max-h-[90vh] flex flex-col">
         <DrawerHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
