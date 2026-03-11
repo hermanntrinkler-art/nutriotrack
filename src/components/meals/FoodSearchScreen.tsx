@@ -305,6 +305,13 @@ export default function FoodSearchScreen({
     setSelectedItems(prev => prev.map((item, i) => i === index ? { ...newItem, confidence_score: 1 } : item));
   };
 
+  const handleDeleteFavorite = async (id: string) => {
+    hapticFeedback('light');
+    setFavorites(prev => prev.filter(f => f.id !== id));
+    await supabase.from('saved_recipes').delete().eq('id', id);
+    toast.success(language === 'de' ? 'Favorit gelöscht' : 'Favorite deleted');
+  };
+
   const handleSelectFavorite = async (fav: SavedFavorite) => {
     hapticFeedback('light');
     // Load items to compute total quantity
