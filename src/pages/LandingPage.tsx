@@ -298,16 +298,48 @@ export default function LandingPage() {
       </AnimatedSection>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8 px-4">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-              <Zap className="h-3 w-3 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-sm">NutrioTrack</span>
+      <footer className="border-t border-border py-10 px-4">
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Newsletter */}
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-sm font-semibold text-foreground">Newsletter</p>
+            <form
+              onSubmit={(e) => { e.preventDefault(); /* TODO: newsletter integration */ }}
+              className="flex gap-2 w-full max-w-sm"
+            >
+              <input
+                type="email"
+                placeholder="E-Mail für Newsletter"
+                className="flex-1 h-10 px-3 rounded-lg border border-border bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              <button type="submit" className="h-10 w-10 rounded-lg bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors">
+                <ArrowRight className="h-4 w-4 text-primary" />
+              </button>
+            </form>
           </div>
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} NutrioTrack. {t('landing.rights')}
+
+          {/* Contact */}
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <span>✉</span>
+            <a href="mailto:support@harborstudios.app" className="hover:text-foreground transition-colors">
+              support@harborstudios.app
+            </a>
+          </div>
+
+          {/* Legal Links */}
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground flex-wrap">
+            <Link to="/impressum" className="hover:text-foreground transition-colors">Impressum</Link>
+            <span>·</span>
+            <Link to="/datenschutz" className="hover:text-foreground transition-colors">Datenschutz</Link>
+            <span>·</span>
+            <Link to="/agb" className="hover:text-foreground transition-colors">AGB</Link>
+            <span>·</span>
+            <Link to="/datenloeschung" className="hover:text-foreground transition-colors">Datenlöschung</Link>
+          </div>
+
+          {/* Copyright */}
+          <p className="text-center text-xs text-muted-foreground">
+            © {new Date().getFullYear()} Harbor Studios
           </p>
         </div>
       </footer>
