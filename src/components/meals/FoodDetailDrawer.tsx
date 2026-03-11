@@ -282,7 +282,7 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
 
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()} handleOnly={true}>
-      <DrawerContent className="max-h-[90vh]">
+      <DrawerContent className="max-h-[90vh] flex flex-col">
         <DrawerHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
@@ -338,7 +338,7 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
           </div>
         </DrawerHeader>
 
-        <div className="px-4 pb-6 space-y-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+        <div className="px-4 pb-4 space-y-4 overflow-y-auto flex-1 min-h-0">
           {/* Warning when no nutrition data */}
           {scaled.calories === 0 && scaled.protein_g === 0 && scaled.fat_g === 0 && scaled.carbs_g === 0 && (
             <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 px-4 py-3 text-sm">
@@ -418,16 +418,6 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
               <Plus className="h-4 w-4 text-foreground" />
             </button>
           </div>
-
-          {/* Add button */}
-          <Button
-            onClick={handleAdd}
-            className="w-full h-12 rounded-xl font-bold text-base"
-            disabled={quantity <= 0}
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            {language === 'de' ? 'Eintragen' : 'Add'}
-          </Button>
 
           {/* Quick presets */}
           {presets.length > 0 && (
@@ -552,6 +542,18 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
               </div>
             </div>
           )}
+        </div>
+
+        {/* Sticky add button */}
+        <div className="px-4 py-3 border-t border-border bg-background shrink-0">
+          <Button
+            onClick={handleAdd}
+            className="w-full h-12 rounded-xl font-bold text-base"
+            disabled={quantity <= 0}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            {language === 'de' ? 'Eintragen' : 'Add'}
+          </Button>
         </div>
       </DrawerContent>
     </Drawer>
