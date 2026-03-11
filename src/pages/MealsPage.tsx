@@ -376,6 +376,7 @@ export default function MealsPage() {
       sodium_mg: item.sodium_mg || 0,
       phosphorus_mg: item.phosphorus_mg || 0,
       zinc_mg: item.zinc_mg || 0,
+      barcode: item.barcode || null,
     })) as any);
 
     // Upsert edited items with barcode into custom_products

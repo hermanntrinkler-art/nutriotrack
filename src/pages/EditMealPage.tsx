@@ -117,6 +117,7 @@ export default function EditMealPage() {
       sodium_mg: item.sodium_mg || 0,
       phosphorus_mg: item.phosphorus_mg || 0,
       zinc_mg: item.zinc_mg || 0,
+      barcode: item.barcode || null,
     }));
     await supabase.from('meal_food_items').insert(foodItems as any);
 
