@@ -223,20 +223,31 @@ export default function SavedRecipesScreen({ onSelect, onCancel, hideHeader }: S
                   </p>
                 )}
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(recipe.id);
-                }}
-                disabled={deletingId === recipe.id}
-                className="p-2 rounded-lg hover:bg-destructive/10 transition-colors"
-              >
-                {deletingId === recipe.id ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                ) : (
-                  <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                )}
-              </button>
+              <div className="flex items-center gap-0.5">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingRecipe(recipe);
+                  }}
+                  className="p-2 rounded-lg hover:bg-accent transition-colors"
+                >
+                  <Pencil className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(recipe.id);
+                  }}
+                  disabled={deletingId === recipe.id}
+                  className="p-2 rounded-lg hover:bg-destructive/10 transition-colors"
+                >
+                  {deletingId === recipe.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                  )}
+                </button>
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>
