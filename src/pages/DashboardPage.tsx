@@ -669,7 +669,7 @@ export default function DashboardPage() {
 
       {/* FAB - Floating Action Button */}
       <motion.button
-        onClick={() => navigate('/meals')}
+        onClick={() => navigate('/meals?quick=1')}
         className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}

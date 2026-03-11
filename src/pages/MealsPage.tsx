@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/integrations/supabase/client';
@@ -74,6 +74,7 @@ function formatDateStr(d: Date): string {
 export default function MealsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t, language } = useTranslation();
   const subscription = useSubscription();
 
@@ -108,6 +109,20 @@ export default function MealsPage() {
 
   const dateStr = formatDateStr(selectedDate);
   const weekDays = useMemo(() => getWeekDays(selectedDate), [dateStr]);
+
+  // Quick-add mode: skip overview, auto-select slot by time
+  useEffect(() => {
+    if (searchParams.get('quick') === '1') {
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      const slot = getSlotForTime(timeStr);
+      const slotInfo = MEAL_SLOTS.find(s => s.slot === slot);
+      setActiveSlot(slot);
+      setMealType(slotInfo?.type || 'lunch');
+      setStep('diary-entry');
+      setSearchParams({}, { replace: true });
+    }
+  }, []);
 
   useEffect(() => {
     if (!user) return;
