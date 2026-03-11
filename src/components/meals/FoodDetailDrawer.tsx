@@ -338,7 +338,7 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
           </div>
         </DrawerHeader>
 
-        <div className="px-4 pb-6 space-y-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+        <div className="px-4 pb-4 space-y-4 overflow-y-auto flex-1 min-h-0">
           {/* Warning when no nutrition data */}
           {scaled.calories === 0 && scaled.protein_g === 0 && scaled.fat_g === 0 && scaled.carbs_g === 0 && (
             <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 px-4 py-3 text-sm">
