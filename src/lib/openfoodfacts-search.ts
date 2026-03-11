@@ -11,7 +11,7 @@ const toNumber = (value: unknown) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-function getCacheKey(query: string, lang: 'de' | 'en') {
+function getCacheKey(query: string, lang: string) {
   return `${lang}:${query.trim().toLowerCase()}`;
 }
 
