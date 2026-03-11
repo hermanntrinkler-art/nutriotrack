@@ -36,7 +36,8 @@ export async function searchOpenFoodFacts(
 
   const requestPromise = (async () => {
     const searchTerms = encodeURIComponent(normalizedQuery);
-    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${searchTerms}&search_simple=1&action=process&json=1&page_size=8&page=1&fields=product_name,product_name_de,product_name_en,energy-kcal_100g,proteins_100g,fat_100g,carbohydrates_100g`;
+    const domain = lang === 'de' ? 'de.openfoodfacts.org' : 'world.openfoodfacts.org';
+    const url = `https://${domain}/cgi/search.pl?search_terms=${searchTerms}&search_simple=1&action=process&json=1&page_size=20&page=1&sort_by=unique_scans_n&fields=product_name,product_name_de,product_name_en,energy-kcal_100g,proteins_100g,fat_100g,carbohydrates_100g,serving_size,product_quantity`;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -85,7 +86,7 @@ export async function searchOpenFoodFacts(
           } as FoodEntry;
         })
         .filter((e: FoodEntry) => e.calories > 0 || e.protein_g > 0 || e.fat_g > 0 || e.carbs_g > 0)
-        .slice(0, 8);
+        .slice(0, 15);
 
       searchCache.set(cacheKey, { timestamp: Date.now(), results: mapped });
       return mapped;
