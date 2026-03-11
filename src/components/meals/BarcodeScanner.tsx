@@ -447,6 +447,53 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     setCustomForm({ food_name: '', calories: '', protein_g: '', fat_g: '', carbs_g: '', quantity: '100', unit: 'g' });
   };
 
+  // --- Multiple results: show selection ---
+  if (barcodeResults.length > 0) {
+    return (
+      <div className="space-y-4 animate-fade-in">
+        <div className="flex items-center gap-2 mb-1">
+          <ScanBarcode className="h-5 w-5 text-primary" />
+          <h2 className="font-semibold">Produkt wählen</h2>
+        </div>
+        <p className="text-sm text-muted-foreground">Mehrere Einträge gefunden — wähle den passenden:</p>
+
+        <div className="space-y-2">
+          {barcodeResults.map((result, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                toast.success(`${result.item.food_name} ${t('meals.barcodeFound')}`);
+                onResult(result.item);
+              }}
+              className="w-full text-left rounded-xl border border-border bg-card p-3 hover:bg-accent/50 active:scale-[0.98] transition-all"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-medium text-sm">{result.item.food_name}</span>
+                <span className="text-xs text-muted-foreground">{result.label}</span>
+              </div>
+              <div className="flex gap-3 text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">{Math.round(result.item.calories)} kcal</span>
+                <span>P {Math.round(result.item.protein_g * 10) / 10}g</span>
+                <span>F {Math.round(result.item.fat_g * 10) / 10}g</span>
+                <span>K {Math.round(result.item.carbs_g * 10) / 10}g</span>
+                <span>/ {result.item.quantity}{result.item.unit}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={resetScan} className="flex-1">
+            {t('meals.barcodeScanAgain')}
+          </Button>
+          <Button variant="ghost" onClick={onCancel} className="flex-1">
+            {t('meals.cancel')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // --- Not found: show create form ---
   if (notFound) {
     return (
