@@ -801,8 +801,6 @@ const SYNONYMS: Record<string, string[]> = {
   // === Wurst / Aufschnitt ===
   'fleischwurst': ['salami'],
   'mortadella': ['salami'],
-  'putenbrust': ['schinken', 'ham'],
-  'truthahn': ['schinken', 'ham'],
   'lyoner': ['salami'],
   'leberwurst': ['salami'],
   'extrawurst': ['schinken', 'ham'],
