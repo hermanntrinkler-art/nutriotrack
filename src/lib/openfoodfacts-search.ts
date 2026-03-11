@@ -86,7 +86,7 @@ export async function searchOpenFoodFacts(
           } as FoodEntry;
         })
         .filter((e: FoodEntry) => e.calories > 0 || e.protein_g > 0 || e.fat_g > 0 || e.carbs_g > 0)
-        .slice(0, 8);
+        .slice(0, 15);
 
       searchCache.set(cacheKey, { timestamp: Date.now(), results: mapped });
       return mapped;

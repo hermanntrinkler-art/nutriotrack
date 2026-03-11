@@ -237,7 +237,7 @@ export default function FoodSearchScreen({
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
-    }).slice(0, 25);
+    }).slice(0, 40);
 
     setResults(deduped);
   }, [language, customProducts, communityProducts]);
