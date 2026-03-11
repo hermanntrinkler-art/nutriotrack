@@ -15,6 +15,7 @@ export interface FoodEntry {
   communityBrand?: string;
   communityStore?: string;
   communityProductId?: string;
+  imageUrl?: string; // Product image URL (from OFF or community)
 }
 
 // Common foods with typical portion sizes and nutritional values
