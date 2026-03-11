@@ -21,6 +21,10 @@ import WeightPage from "@/pages/WeightPage";
 import ProfilePage from "@/pages/ProfilePage";
 import AdminPage from "@/pages/AdminPage";
 import ShareBadgePage from "@/pages/ShareBadgePage";
+import ImpressumPage from "@/pages/ImpressumPage";
+import DatenschutzPage from "@/pages/DatenschutzPage";
+import AGBPage from "@/pages/AGBPage";
+import DatenloeschungPage from "@/pages/DatenloeschungPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
