@@ -34,6 +34,11 @@ export const foodDatabase: FoodEntry[] = [
   { name: 'Proteinshake', name_en: 'Protein Shake', quantity: 1, unit: 'Portion', calories: 150, protein_g: 25, fat_g: 2, carbs_g: 8, category: 'drinks', gram_per_portion: 30 },
 
   // Kaffee-Zutaten / Coffee Add-ins
+  { name: 'Instantkaffee (Pulver)', name_en: 'Instant Coffee (Powder)', quantity: 2, unit: 'g', calories: 5, protein_g: 0.2, fat_g: 0, carbs_g: 0.8, category: 'drinks', gram_per_piece: 2 },
+  { name: 'Nescafé Gold', name_en: 'Nescafé Gold', quantity: 2, unit: 'g', calories: 5, protein_g: 0.2, fat_g: 0, carbs_g: 0.8, category: 'drinks', gram_per_piece: 2 },
+  { name: 'Cappuccino Pulver', name_en: 'Cappuccino Powder', quantity: 18, unit: 'g', calories: 78, protein_g: 1.5, fat_g: 2.5, carbs_g: 12, category: 'drinks', gram_per_piece: 18 },
+  { name: 'Kaffee 3in1', name_en: 'Coffee 3in1', quantity: 18, unit: 'g', calories: 80, protein_g: 1, fat_g: 3, carbs_g: 12, category: 'drinks', gram_per_piece: 18 },
+  { name: 'Kakaopulver', name_en: 'Cocoa Powder', quantity: 10, unit: 'g', calories: 35, protein_g: 2, fat_g: 1, carbs_g: 4, category: 'drinks' },
   { name: 'Sahne (Kaffee)', name_en: 'Coffee Cream', quantity: 50, unit: 'g', calories: 150, protein_g: 1, fat_g: 15, carbs_g: 2, category: 'drinks' },
   { name: 'Milch (zum Kaffee)', name_en: 'Milk (for coffee)', quantity: 30, unit: 'ml', calories: 19, protein_g: 1, fat_g: 1, carbs_g: 1, category: 'drinks' },
   { name: 'Kondensmilch', name_en: 'Condensed Milk', quantity: 15, unit: 'ml', calories: 20, protein_g: 1, fat_g: 1, carbs_g: 2, category: 'drinks' },
@@ -592,6 +597,16 @@ const SYNONYMS: Record<string, string[]> = {
   'brezel': ['broetchen', 'roll'],
 
   // === Getränke ===
+  'nescafe': ['nescafe gold', 'instantkaffee (pulver)', 'instant coffee'],
+  'nescaffe': ['nescafe gold', 'instantkaffee (pulver)', 'instant coffee'],
+  'instant kaffee': ['instantkaffee (pulver)', 'nescafe gold'],
+  'loeslicher kaffee': ['instantkaffee (pulver)', 'nescafe gold'],
+  'kaffeepulver': ['instantkaffee (pulver)', 'nescafe gold'],
+  'kaffee pulver': ['instantkaffee (pulver)', 'nescafe gold'],
+  'jacobs': ['instantkaffee (pulver)', 'nescafe gold'],
+  'dallmayr': ['kaffee schwarz', 'black coffee'],
+  'senseo': ['kaffee schwarz', 'black coffee'],
+  'dolce gusto': ['cappuccino pulver', 'cappuccino powder'],
   'cola zero': ['cola'],
   'pepsi': ['cola'],
   'fanta': ['orangensaft', 'orange juice'],
@@ -603,8 +618,8 @@ const SYNONYMS: Record<string, string[]> = {
   'apfelschorle': ['apfelsaft', 'apple juice'],
   'limo': ['cola'],
   'limonade': ['cola'],
-  'kakao': ['milch', 'milk'],
-  'heisse schokolade': ['milch', 'milk'],
+  'kakao': ['kakaopulver', 'cocoa powder', 'milch'],
+  'heisse schokolade': ['kakaopulver', 'cocoa powder', 'milch'],
 
   // === Fleisch ===
   'haehnchen': ['haehnchenbrust', 'chicken breast'],
