@@ -204,6 +204,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
   });
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastCandidateRef = useRef<string | null>(null);
   const processedRef = useRef(false);
   const [foodSuggestions, setFoodSuggestions] = useState<FoodEntry[]>([]);
 
