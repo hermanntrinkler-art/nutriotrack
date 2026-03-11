@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { I18nProvider } from "@/lib/i18n";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import BottomNav from "@/components/BottomNav";
+import FloatingAddButton from "@/components/FloatingAddButton";
 import LandingPage from "@/pages/LandingPage";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
@@ -74,6 +75,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
+      <FloatingAddButton />
       <BottomNav />
     </>
   );
