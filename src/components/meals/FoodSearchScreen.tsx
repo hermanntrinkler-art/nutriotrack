@@ -22,6 +22,7 @@ interface FoodSearchScreenProps {
   hideHeader?: boolean;
   onBarcodeScan?: () => void;
   onCameraOpen?: () => void;
+  onPhotoUpload?: () => void;
   // Direct save mode — no more review step
   onSave: (items: AnalyzedFoodItem[]) => void;
   saving: boolean;
