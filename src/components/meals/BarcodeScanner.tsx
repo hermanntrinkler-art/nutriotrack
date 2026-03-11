@@ -193,6 +193,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
   const [showManual, setShowManual] = useState(false);
   const [notFound, setNotFound] = useState<string | null>(null);
   const [savingCustom, setSavingCustom] = useState(false);
+  const [barcodeResults, setBarcodeResults] = useState<{ item: AnalyzedFoodItem; source: string; label: string }[]>([]);
   const [customForm, setCustomForm] = useState({
     food_name: '',
     calories: '',
@@ -233,6 +234,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     processedRef.current = true;
     setLoading(true);
     setNotFound(null);
+    setBarcodeResults([]);
 
     // Stop scanner FIRST, before any state changes that trigger effect cleanup
     try { 
@@ -250,14 +252,14 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     // Now safe to change scanning state
     setScanning(false);
 
-    // 1. Check personal DB first
+    const results: { item: AnalyzedFoodItem; source: string; label: string }[] = [];
+
+    // 1. Check personal DB
     if (user) {
       try {
         const custom = await lookupCustomProduct(code, user.id);
         if (custom) {
-          toast.success(`${custom.food_name} ${t('meals.barcodeFound')}`);
-          onResult(custom);
-          return;
+          results.push({ item: custom, source: 'custom', label: '⭐ Mein Produkt' });
         }
       } catch {}
     }
@@ -266,11 +268,11 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     try {
       const community = await lookupCommunityProduct(code);
       if (community) {
-        toast.success(`${community.item.food_name} ${t('meals.barcodeFound')}`, {
-          description: `${community.contributorEmoji} ${community.contributorName}`,
+        results.push({
+          item: { ...community.item, barcode: code },
+          source: 'community',
+          label: `👥 ${community.contributorEmoji} ${community.contributorName}`,
         });
-        onResult(community.item);
-        return;
       }
     } catch {}
 
@@ -278,18 +280,27 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     try {
       const offResult = await lookupOpenFoodFacts(code);
       if (offResult.item) {
-        toast.success(`${offResult.item.food_name} ${t('meals.barcodeFound')}`);
-        onResult(offResult.item);
-        return;
-      }
-
-      // 4. Not found or no nutrition → offer manual creation
-      if (offResult.productName) {
+        results.push({ item: offResult.item, source: 'off', label: '🌐 Open Food Facts' });
+      } else if (offResult.productName) {
         setCustomForm(f => ({ ...f, food_name: offResult.productName! }));
       }
     } catch {}
 
-    setNotFound(code);
+    if (results.length === 0) {
+      setNotFound(code);
+      setLoading(false);
+      return;
+    }
+
+    // If only 1 result, auto-select it
+    if (results.length === 1) {
+      toast.success(`${results[0].item.food_name} ${t('meals.barcodeFound')}`);
+      onResult(results[0].item);
+      return;
+    }
+
+    // Multiple results → show selection
+    setBarcodeResults(results);
     setLoading(false);
   };
 
@@ -431,9 +442,57 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
     setNotFound(null);
     setShowManual(false);
     setScanning(true);
+    setBarcodeResults([]);
     processedRef.current = false;
     setCustomForm({ food_name: '', calories: '', protein_g: '', fat_g: '', carbs_g: '', quantity: '100', unit: 'g' });
   };
+
+  // --- Multiple results: show selection ---
+  if (barcodeResults.length > 0) {
+    return (
+      <div className="space-y-4 animate-fade-in">
+        <div className="flex items-center gap-2 mb-1">
+          <ScanBarcode className="h-5 w-5 text-primary" />
+          <h2 className="font-semibold">Produkt wählen</h2>
+        </div>
+        <p className="text-sm text-muted-foreground">Mehrere Einträge gefunden — wähle den passenden:</p>
+
+        <div className="space-y-2">
+          {barcodeResults.map((result, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                toast.success(`${result.item.food_name} ${t('meals.barcodeFound')}`);
+                onResult(result.item);
+              }}
+              className="w-full text-left rounded-xl border border-border bg-card p-3 hover:bg-accent/50 active:scale-[0.98] transition-all"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-medium text-sm">{result.item.food_name}</span>
+                <span className="text-xs text-muted-foreground">{result.label}</span>
+              </div>
+              <div className="flex gap-3 text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">{Math.round(result.item.calories)} kcal</span>
+                <span>P {Math.round(result.item.protein_g * 10) / 10}g</span>
+                <span>F {Math.round(result.item.fat_g * 10) / 10}g</span>
+                <span>K {Math.round(result.item.carbs_g * 10) / 10}g</span>
+                <span>/ {result.item.quantity}{result.item.unit}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={resetScan} className="flex-1">
+            {t('meals.barcodeScanAgain')}
+          </Button>
+          <Button variant="ghost" onClick={onCancel} className="flex-1">
+            {t('meals.cancel')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   // --- Not found: show create form ---
   if (notFound) {
