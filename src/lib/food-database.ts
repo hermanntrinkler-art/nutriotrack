@@ -83,6 +83,16 @@ export const foodDatabase: FoodEntry[] = [
 
   // Aufschnitt / Toppings
   { name: 'Butter', name_en: 'Butter', quantity: 10, unit: 'g', calories: 74, protein_g: 0, fat_g: 8, carbs_g: 0, category: 'toppings' },
+  { name: 'Margarine', name_en: 'Margarine', quantity: 10, unit: 'g', calories: 72, protein_g: 0, fat_g: 8, carbs_g: 0.1, category: 'toppings' },
+  { name: 'Halbfettmargarine', name_en: 'Low-fat Margarine', quantity: 10, unit: 'g', calories: 36, protein_g: 0, fat_g: 4, carbs_g: 0.1, category: 'toppings' },
+  { name: 'Rama Original', name_en: 'Rama Original', quantity: 10, unit: 'g', calories: 62, protein_g: 0, fat_g: 7, carbs_g: 0.1, category: 'toppings' },
+  { name: 'Lätta', name_en: 'Lätta', quantity: 10, unit: 'g', calories: 35, protein_g: 0, fat_g: 4, carbs_g: 0.1, category: 'toppings' },
+  { name: 'Halbfettbutter', name_en: 'Half-fat Butter', quantity: 10, unit: 'g', calories: 37, protein_g: 0, fat_g: 4, carbs_g: 0, category: 'toppings' },
+  { name: 'Butterschmalz / Ghee', name_en: 'Clarified Butter / Ghee', quantity: 10, unit: 'g', calories: 90, protein_g: 0, fat_g: 10, carbs_g: 0, category: 'toppings' },
+  { name: 'Kokosöl', name_en: 'Coconut Oil', quantity: 10, unit: 'g', calories: 86, protein_g: 0, fat_g: 10, carbs_g: 0, category: 'toppings' },
+  { name: 'Olivenöl', name_en: 'Olive Oil', quantity: 10, unit: 'ml', calories: 82, protein_g: 0, fat_g: 9, carbs_g: 0, category: 'toppings' },
+  { name: 'Sonnenblumenöl', name_en: 'Sunflower Oil', quantity: 10, unit: 'ml', calories: 82, protein_g: 0, fat_g: 9, carbs_g: 0, category: 'toppings' },
+  { name: 'Rapsöl', name_en: 'Rapeseed Oil', quantity: 10, unit: 'ml', calories: 82, protein_g: 0, fat_g: 9, carbs_g: 0, category: 'toppings' },
   { name: 'Marmelade', name_en: 'Jam', quantity: 20, unit: 'g', calories: 52, protein_g: 0, fat_g: 0, carbs_g: 13, category: 'toppings' },
   { name: 'Nutella', name_en: 'Nutella', quantity: 15, unit: 'g', calories: 81, protein_g: 1, fat_g: 5, carbs_g: 8, category: 'toppings' },
   { name: 'Honig', name_en: 'Honey', quantity: 15, unit: 'g', calories: 46, protein_g: 0, fat_g: 0, carbs_g: 12, category: 'toppings' },
@@ -543,6 +553,19 @@ const SYNONYMS: Record<string, string[]> = {
   'chunky flavor': ['chunky flavour'],
   'geschmackspulver': ['chunky flavour'],
   'flavour pulver': ['chunky flavour'],
+
+  // === Streichfette & Öle / Spreads & Oils ===
+  'rama': ['rama original'],
+  'laetta': ['lätta'],
+  'latta': ['lätta'],
+  'ghee': ['butterschmalz / ghee', 'clarified butter / ghee'],
+  'butterschmalz': ['butterschmalz / ghee', 'clarified butter / ghee'],
+  'kokosoel': ['kokosöl', 'coconut oil'],
+  'kokosfett': ['kokosöl', 'coconut oil'],
+  'olivenoel': ['olivenöl', 'olive oil'],
+  'sonnenblumenoel': ['sonnenblumenöl', 'sunflower oil'],
+  'rapsoel': ['rapsöl', 'rapeseed oil'],
+  'halbfettbutter': ['halbfettbutter', 'half-fat butter'],
 
   // === Frischkäse / Cream Cheese brands ===
   'philadelphia': ['frischkaese', 'cream cheese', 'philadelphia'],
