@@ -193,6 +193,7 @@ export default function BarcodeScanner({ onResult, onCancel }: BarcodeScannerPro
   const [showManual, setShowManual] = useState(false);
   const [notFound, setNotFound] = useState<string | null>(null);
   const [savingCustom, setSavingCustom] = useState(false);
+  const [barcodeResults, setBarcodeResults] = useState<{ item: AnalyzedFoodItem; source: string; label: string }[]>([]);
   const [customForm, setCustomForm] = useState({
     food_name: '',
     calories: '',
