@@ -96,6 +96,10 @@ function AppRoutes() {
       <Route path="/profile" element={<ProtectedRoute><AppLayout><ProfilePage /></AppLayout></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
       <Route path="/share/:badgeId" element={<ShareBadgePage />} />
+      <Route path="/impressum" element={<ImpressumPage />} />
+      <Route path="/datenschutz" element={<DatenschutzPage />} />
+      <Route path="/agb" element={<AGBPage />} />
+      <Route path="/datenloeschung" element={<DatenloeschungPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
