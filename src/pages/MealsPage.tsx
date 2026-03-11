@@ -693,6 +693,7 @@ export default function MealsPage() {
                 onCancel={handleReset}
                 hideHeader
                 onBarcodeScan={() => setStep('barcode')}
+                onCameraOpen={handleOpenCamera}
                 initialItem={initialSearchItem}
               />
 
