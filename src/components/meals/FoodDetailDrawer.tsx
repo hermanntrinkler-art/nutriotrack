@@ -543,6 +543,18 @@ export default function FoodDetailDrawer({ food, open, onClose, onAdd, onShowCom
             </div>
           )}
         </div>
+
+        {/* Sticky add button */}
+        <div className="px-4 py-3 border-t border-border bg-background shrink-0">
+          <Button
+            onClick={handleAdd}
+            className="w-full h-12 rounded-xl font-bold text-base"
+            disabled={quantity <= 0}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            {language === 'de' ? 'Eintragen' : 'Add'}
+          </Button>
+        </div>
       </DrawerContent>
     </Drawer>
   );
